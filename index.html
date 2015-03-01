@@ -14,13 +14,138 @@
         <header id="banner" class="body">
                 <h1><a href="/">Step by Step </a></h1>
                 <nav><ul>
+                    <li><a href="/category/persional.html">persional</a></li>
                     <li><a href="/category/python.html">Python</a></li>
                 </ul></nav>
         </header><!-- /#banner -->
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="/my-first-post.html">My Test Article</a></h1>
+                    <h1 class="entry-title"><a href="/blog_setup.html">用Pelican+GithubPage搭建个人静态博客</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2015-02-28T00:00:00+01:00">
+                Published: Sat 28 February 2015
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/sine-yuan.html">Sine Yuan</a>
+        </address>
+<p>In <a href="/category/persional.html">persional</a>. </p>
+<p>tags: <a href="/tag/pelican.html">pelican</a> <a href="/tag/blog.html">blog</a> </p>
+</footer><!-- /.post-info --><hr />
+<h2>为什么要写博客</h2>
+<p>关于为什么要写博客，其实刘未鹏写过两篇非常好的博文：<a href="http://mindhacks.cn/2009/02/09/writing-is-better-thinking/">书写是为了更好的思考</a>，<a href="http://mindhacks.cn/2009/02/15/why-you-should-start-blogging-now/">为什么你应该（从现在开始就）写博客</a>，希望大家都能看一看。其实我知道我这个博客一年除了我之外访客可能没有多少个，所以这里更多的是关于自己思考的一个整理和学习的记录，如果能够帮到其他的人，那对我来说也是十分开心的事情了。</p>
+<h2>技术选择</h2>
+<p>搭建博客的方法有很多，主流的是使用wordpress，不过对于我这种小博客来说，用不着太过复杂的技术，静态网页就足够了。所以我选择了GithubPage来托管网站，因为我使用python，所以我使用了基于python的pelican作为静态网页生成器。看的有点晕？没关系，接着走下去，我会解释清楚的。</p>
+<h2>GithubPage</h2>
+<p>如果你对编程有所了解，就一定听说过<a href="https://github.com/">github</a>。它号称程序员的Facebook。有着极高的人气，许多重要的项目都托管在上面。
+简单说，它是一个具有版本管理功能的代码仓库，你可以将你的项目代码存放到github的服务器上，就像网盘一样，你可以在github上管理的的项目代码，也可以和别人一起共同协做开发。github对于程序员来说是个非常重要的网站。
+对于一个想参与到一个项目的新手来说，看到一大堆源码，只会让人头晕脑涨，不知何处入手。他希望看到的是，一个简明易懂的网页，说明这个项目的具体情况。或者对于一个想使用github上项目软件的人来说，他需要一个向使用说明书一样的东西，来告诉他这个软件怎么使用，如何配置。因此，github就设计了Pages功能，允许用户自定义项目首页，用来替代默认的源码列表。上面有关于项目的wiki等信息，方便用户使用或参与到项目中来。所以，github Pages可以被认为是用户编写的、托管在github上的静态网页。
+GithubPage也允许托管个人主页，所以我们将我们的博客当做一个项目托管在github上，当我们访问GithubPage时，github服务器就会根据我们博客项目中的文件生成网页文件，发送给我们。我们只要修改项目中的文件，就能够管理我们的博客。
+使用GithubPage的好处还有：</p>
+<blockquote>
+<ul>
+<li>免费，无限流量，300M的存储空间对于中小型博客来说够用了</li>
+<li>管理发布简单方便，你只需要关注与内容，其他的都有github帮你搞定</li>
+<li>享受git的版本管理功能，不用担心文章遗失。</li>
+</ul>
+</blockquote>
+<h3>git入门</h3>
+<p>当然，github是需要有一定的使用git基础的，不过如果只是为了写博客的话，不要求完全掌握git，只需要知道git是干什么的和最基本的命令的使用即可。这方面推荐先看一看git的入门教程，goole一下git + 入门就有很多了。对于懒人来说下面为你准备了几个教程，跟着教程走，将git安装上，走一遍流程就行了
+<a href="http://rogerdudler.github.io/git-guide/index.zh.html">git - 简明指南</a>
+<a href="http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000">git教程——廖雪峰的官方网站</a>
+<a href="http://backlogtool.com/git-guide/cn/intro/intro1_1.html">猴子都能懂的GIT入门</a></p>
+<h3>github帐号</h3>
+<p>要使用GithubPage先要有github帐号，赶紧<a href="https://github.com/">去注册</a>一个吧
+注册之后再把GitHub Bootcmap过一遍，熟悉一下流程</p>
+<h3>建立GitHubPage</h3>
+<p>这里再次偷个懒，如何建立GithubPage<a href="https://pages.github.com/">官方主页</a>上已经写的很清楚了，跟着做就可以了。
+完成github官方的教程后你访问你的 username.github.io应该就有一个 "hello world"的页面了，除此之外什么也没有。下面我们就要使用pelican生产自己博客的html文件，放上GithubPage上去。
+ps：你可以绑定自己的域名到GithubPage上，不过首先你需要先购买一个域名，如何购买域名，绑定域名这又是另外一个故事了，网上有这方面的教程，善用google就出来了。这里也不做展开了。</p>
+<h2>Pelican</h2>
+<p>建立好GithubPage之后我们看到只有一个index.html的页面，我们必须事先做好我们博客的html文件再放上GithubPage上别人才能访问的到。写html十分的复杂，这样机械的任务当然是要交给机器来做，人就只是关注与内容如何写就好了。所以我们需要一个程序来将我们的文章转化为我们博客的html文件的程序。Pelican就是这样的一个静态网页生成程序。项目中文指南<a href="https://pelican-docs-chs.readthedocs.org/en/latest/">在此</a>，可以去看看简介。当然你也可以使用其他的静态网页生成程序，如基于ruby的 Jekyll，其使用都是大同小异的。
+Pelican是基于python的程序，所以首先需要安装python。如何安装python？还是找老朋友谷歌和度娘吧。其实最好的教程还是推荐官方网站 <a href="https://www.python.org/">python.org</a>。
+安装好python之后我们还需要安装pip来安装Pelican（绕晕了，有完没完啊！————革命尚未成功，同志仍需努力，小伙伴们撑住啊！）pip是一个python包的管理程序，有了它就可以很方便的下载管理python的软件包，是使用python的必备工具。不同平台有不同的安装方法，具体怎么做？还是问问老朋友吧 ╮(╯_╰)╭  （摊手～～）</p>
+<h3>下载安装</h3>
+<p>很简单，在终端或cmd下一个命令就可以了</p>
+<blockquote>
+<p>pip install pelican</p>
+</blockquote>
+<h3>建一个博客</h3>
+<p>先建一个文件夹，再cd进文件夹里面，运行下面的命令，回答一串问题就可以了</p>
+<blockquote>
+<p>mkdir /path/to/your/blog</p>
+<p>cd /path/to/your/blog</p>
+<p>pelican-quickstart</p>
+</blockquote>
+<p>之后你就会看到文件夹里有一些的东东，这些文件具体的是：</p>
+<blockquote>
+<p>blog/</p>
+<p>├── content              #你写的文章放在这里</p>
+<p>│   └── (pages)</p>
+<p>├── output               #这里放生成的html文件</p>
+<p>├── develop_server.sh    #一个程序用于开启本地测试服务器</p>
+<p>├── Makefile</p>
+<p>├── pelicanconf.py       # 关于博客的配置文件</p>
+<p>└── publishconf.py       # 关于发布的配置文件</p>
+</blockquote>
+<h3>写文章</h3>
+<p>现在走一遍发布博客的流程</p>
+<p>这里我们使用markdown来撰写博文，markdown是一门轻量级的标记语言，用markdown来写作是一件十分惬意的事情。markdown的语法非常简单，一下子就可以掌握，推荐先google看一看一些教程吧。<a href="http://www.jianshu.com/p/q81RER">献给写作者的 Markdown 新手指南</a>
+要使用markdown之前，需要先安装markdown支持，也是一句话</p>
+<blockquote>
+<p>pip install markdown</p>
+</blockquote>
+<p>现在先来写一篇测试文章，放在content下，保存为test.md。pelican会自动解析.md文件作为博文的</p>
+<blockquote>
+<p>This is a test of my  blog post.itle: My Test Article</p>
+<p>Date: 2015-2-28</p>
+<p>Category: Python</p>
+<p>Tags: pelican, publishing</p>
+<p>Slug: my-first-post</p>
+<p>Author:Your Name</p>
+<p>Summary: Short version for index and feeds </p>
+<p>This is a test of my  blog post.
+~       </p>
+</blockquote>
+<p>前面的部分是关于这篇文章的些信息，具体情况参阅<a href="https://pelican-docs-chs.readthedocs.org/en/latest/getting_started.html#id7">官方指南</a></p>
+<p>写完之后cd回上一级目录，也就是blog目录中，用make生成html文件，window下没有make的请先按照make</p>
+<blockquote>
+<p>cd ..</p>
+<p>make html</p>
+</blockquote>
+<p>之后就可以在output文件夹里找到一堆东东，这就是你的博客文件。在blog目录下，可以运行</p>
+<blockquote>
+<p>make serve</p>
+</blockquote>
+<p>启动一个本地的测试服务器，现在在浏览器地址栏中输入127.0.0.1:8000跳转就可以预览你的博客。</p>
+<h3>发布</h3>
+<p>现在博客文件已经准备好，要将它们发布到github上去。先初始化git，添加你的GithubPage远程仓库，commit所有文件，在push上去即可</p>
+<blockquote>
+<p>cd output      #切换到output文件夹下</p>
+<p>git init</p>
+<p>git add --all</p>
+<p>git remote add origin https://github.com/username.github.io.git</p>
+<p>git pull origin master</p>
+<p>git commit -am 'commit'</p>
+<p>git push  origin master</p>
+</blockquote>
+<p>现在访问 username.github.io 就可以看到你的博客已经放到网上去了。
+以后更新了文章也是一样先make html，再commit，最后push上github就可以了</p>
+<p>更多博客的使用和配置请期待下一篇。</p>                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/my-first-post.html" rel="bookmark"
+                           title="Permalink to My Test Article">My Test Article</a></h1>
+                </header>
+
+                <div class="entry-content">
 <footer class="post-info">
         <abbr class="published" title="2015-02-28T00:00:00+01:00">
                 Published: Sat 28 February 2015
@@ -31,11 +156,15 @@
         </address>
 <p>In <a href="/category/python.html">Python</a>. </p>
 <p>tags: <a href="/tag/pelican.html">pelican</a> <a href="/tag/publishing.html">publishing</a> </p>
-</footer><!-- /.post-info --><p>This is a test of my  blog post.</p>                </article>
+</footer><!-- /.post-info -->                <p>Short version for index and feeds</p>
+                <a class="readmore" href="/my-first-post.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
 <p class="paginator">
     Page 1 / 1
 </p>
-            </aside><!-- /#featured -->
+                </section><!-- /#content -->
         <section id="extras" class="body">
                 <div class="blogroll">
                         <h2>blogroll</h2>

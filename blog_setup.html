@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
         <meta charset="utf-8" />
-        <title>Step by Step - pelican</title>
+        <title>用Pelican+GithubPage搭建个人静态博客</title>
         <link rel="stylesheet" href="/theme/css/main.css" />
 
         <!--[if IE]>
@@ -14,14 +14,19 @@
         <header id="banner" class="body">
                 <h1><a href="/">Step by Step </a></h1>
                 <nav><ul>
-                    <li><a href="/category/persional.html">persional</a></li>
+                    <li class="active"><a href="/category/persional.html">persional</a></li>
                     <li><a href="/category/python.html">Python</a></li>
                 </ul></nav>
         </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/blog_setup.html" rel="bookmark"
+           title="Permalink to 用Pelican+GithubPage搭建个人静态博客">用Pelican+GithubPage搭建个人静态博客</a></h1>
+    </header>
 
-            <aside id="featured" class="body">
-                <article>
-                    <h1 class="entry-title"><a href="/blog_setup.html">用Pelican+GithubPage搭建个人静态博客</a></h1>
+    <div class="entry-content">
 <footer class="post-info">
         <abbr class="published" title="2015-02-28T00:00:00+01:00">
                 Published: Sat 28 February 2015
@@ -32,7 +37,7 @@
         </address>
 <p>In <a href="/category/persional.html">persional</a>. </p>
 <p>tags: <a href="/tag/pelican.html">pelican</a> <a href="/tag/blog.html">blog</a> </p>
-</footer><!-- /.post-info --><hr />
+</footer><!-- /.post-info -->      <hr />
 <h2>为什么要写博客</h2>
 <p>关于为什么要写博客，其实刘未鹏写过两篇非常好的博文：<a href="http://mindhacks.cn/2009/02/09/writing-is-better-thinking/">书写是为了更好的思考</a>，<a href="http://mindhacks.cn/2009/02/15/why-you-should-start-blogging-now/">为什么你应该（从现在开始就）写博客</a>，希望大家都能看一看。其实我知道我这个博客一年除了我之外访客可能没有多少个，所以这里更多的是关于自己思考的一个整理和学习的记录，如果能够帮到其他的人，那对我来说也是十分开心的事情了。</p>
 <h2>技术选择</h2>
@@ -132,39 +137,11 @@ Pelican是基于python的程序，所以首先需要安装python。如何安装p
 </blockquote>
 <p>现在访问 username.github.io 就可以看到你的博客已经放到网上去了。
 以后更新了文章也是一样先make html，再commit，最后push上github就可以了</p>
-<p>更多博客的使用和配置请期待下一篇。</p>                </article>
-            </aside><!-- /#featured -->
-                <section id="content" class="body">
-                    <h1>Other articles</h1>
-                    <hr />
-                    <ol id="posts-list" class="hfeed">
+<p>更多博客的使用和配置请期待下一篇。</p>
+    </div><!-- /.entry-content -->
 
-            <li><article class="hentry">
-                <header>
-                    <h1><a href="/my-first-post.html" rel="bookmark"
-                           title="Permalink to My Test Article">My Test Article</a></h1>
-                </header>
-
-                <div class="entry-content">
-<footer class="post-info">
-        <abbr class="published" title="2015-02-28T00:00:00+01:00">
-                Published: Sat 28 February 2015
-        </abbr>
-
-        <address class="vcard author">
-                By                         <a class="url fn" href="/author/your-name.html">Your Name</a>
-        </address>
-<p>In <a href="/category/python.html">Python</a>. </p>
-<p>tags: <a href="/tag/pelican.html">pelican</a> <a href="/tag/publishing.html">publishing</a> </p>
-</footer><!-- /.post-info -->                <p>Short version for index and feeds</p>
-                <a class="readmore" href="/my-first-post.html">read more</a>
-                </div><!-- /.entry-content -->
-            </article></li>
-                </ol><!-- /#posts-list -->
-<p class="paginator">
-    Page 1 / 1
-</p>
-                </section><!-- /#content -->
+  </article>
+</section>
         <section id="extras" class="body">
                 <div class="blogroll">
                         <h2>blogroll</h2>
