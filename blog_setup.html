@@ -93,7 +93,8 @@ GithubPage也允许托管个人主页，所以我们将我们的博客当做一�
 <a href="http://backlogtool.com/git-guide/cn/intro/intro1_1.html">猴子都能懂的GIT入门</a></p>
 <h3>github帐号</h3>
 <p>要使用GithubPage先要有github帐号，赶紧<a href="https://github.com/">去注册</a>一个吧
-注册之后再把GitHub Bootcmap过一遍，熟悉一下流程</p>
+注册之后再把GitHub Bootcmap过一遍，熟悉一下流程
+<img alt="alt tag" src="http://7vzu7p.com1.z0.glb.clouddn.com/github_bootscamp.png" /></p>
 <h3>建立GitHubPage</h3>
 <p>这里再次偷个懒，如何建立GithubPage<a href="https://pages.github.com/">官方主页</a>上已经写的很清楚了，跟着做就可以了。
 完成github官方的教程后你访问你的 username.github.io应该就有一个 "hello world"的页面了，除此之外什么也没有。下面我们就要使用pelican生产自己博客的html文件，放上GithubPage上去。
@@ -150,9 +151,17 @@ This is a test of my  blog post.<br />
 <p>cd ..<br />
 make html</p>
 </blockquote>
+<p>没有make的同学可以直接在主目录下用pelican就可以了</p>
+<blockquote>
+<p>pelican</p>
+</blockquote>
 <p>之后就可以在output文件夹里找到一堆东东，这就是你的博客文件。在blog目录下，可以运行</p>
 <blockquote>
 <p>make serve</p>
+</blockquote>
+<p>没有make的同学可以直接用主目录下的develop_server.sh,具体用法如下：</p>
+<blockquote>
+<p>./develop_server.sh (stop) (start) (restart) [port]</p>
 </blockquote>
 <p>启动一个本地的测试服务器，现在在浏览器地址栏中输入127.0.0.1:8000跳转就可以预览你的博客。</p>
 <h3>发布</h3>
@@ -215,10 +224,10 @@ git push  origin master</p>
             <h4>Tags</h4>
             <ul class="list-of-tags tags-in-article">
                 <li><a href="http://sineyuan.github.io/tags.html#blog-ref">blog
-                    <span>1</span>
+                    <span>2</span>
 </a></li>
                 <li><a href="http://sineyuan.github.io/tags.html#pelican-ref">pelican
-                    <span>2</span>
+                    <span>3</span>
 </a></li>
             </ul>
 <h4>Contact</h4>
