@@ -78,14 +78,10 @@
 简单说，它是一个具有版本管理功能的代码仓库，你可以将你的项目代码存放到github的服务器上，就像网盘一样，你可以在github上管理的的项目代码，也可以和别人一起共同协做开发。github对于程序员来说是个非常重要的网站。
 对于一个想参与到一个项目的新手来说，看到一大堆源码，只会让人头晕脑涨，不知何处入手。他希望看到的是，一个简明易懂的网页，说明这个项目的具体情况。或者对于一个想使用github上项目软件的人来说，他需要一个向使用说明书一样的东西，来告诉他这个软件怎么使用，如何配置。因此，github就设计了Pages功能，允许用户自定义项目首页，用来替代默认的源码列表。上面有关于项目的wiki等信息，方便用户使用或参与到项目中来。所以，github Pages可以被认为是用户编写的、托管在github上的静态网页。
 GithubPage也允许托管个人主页，所以我们将我们的博客当做一个项目托管在github上，当我们访问GithubPage时，github服务器就会根据我们博客项目中的文件生成网页文件，发送给我们。我们只要修改项目中的文件，就能够管理我们的博客。
-使用GithubPage的好处还有：</p>
-<blockquote>
-<ul>
-<li>免费，无限流量，300M的存储空间对于中小型博客来说够用了</li>
-<li>管理发布简单方便，你只需要关注与内容，其他的都有github帮你搞定</li>
-<li>享受git的版本管理功能，不用担心文章遗失。</li>
-</ul>
-</blockquote>
+使用GithubPage的好处还有：
++ 免费，无限流量，300M的存储空间对于中小型博客来说够用了
++ 管理发布简单方便，你只需要关注与内容，其他的都有github帮你搞定
++ 享受git的版本管理功能，不用担心文章遗失。</p>
 <h3>git入门</h3>
 <p>当然，github是需要有一定的使用git基础的，不过如果只是为了写博客的话，不要求完全掌握git，只需要知道git是干什么的和最基本的命令的使用即可。这方面推荐先看一看git的入门教程，goole一下git + 入门就有很多了。对于懒人来说下面为你准备了几个教程，跟着教程走，将git安装上，走一遍流程就行了
 <a href="http://rogerdudler.github.io/git-guide/index.zh.html">git - 简明指南</a>
@@ -105,76 +101,86 @@ Pelican是基于python的程序，所以首先需要安装python。如何安装p
 安装好python之后我们还需要安装pip来安装Pelican（绕晕了，有完没完啊！————革命尚未成功，同志仍需努力，小伙伴们撑住啊！）pip是一个python包的管理程序，有了它就可以很方便的下载管理python的软件包，是使用python的必备工具。不同平台有不同的安装方法，具体怎么做？还是问问老朋友吧 ╮(╯_╰)╭  （摊手～～）</p>
 <h3>下载安装</h3>
 <p>很简单，在终端或cmd下一个命令就可以了</p>
-<blockquote>
-<p>pip install pelican</p>
-</blockquote>
+<div class="highlight"><pre><span class="n">pip</span> <span class="n">install</span> <span class="n">pelican</span>
+</pre></div>
+
+
 <h3>建一个博客</h3>
 <p>先建一个文件夹，再cd进文件夹里面，运行下面的命令，回答一串问题就可以了</p>
-<blockquote>
-<p>mkdir /path/to/your/blog<br />
-cd /path/to/your/blog<br />
-pelican-quickstart</p>
-</blockquote>
+<div class="highlight"><pre><span class="n">mkdir</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">your</span><span class="o">/</span><span class="n">blog</span>  
+<span class="n">cd</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">your</span><span class="o">/</span><span class="n">blog</span>  
+<span class="n">pelican</span><span class="o">-</span><span class="n">quickstart</span>
+</pre></div>
+
+
 <p>之后你就会看到文件夹里有一些的东东，这些文件具体的是：</p>
-<blockquote>
-<p>blog/</p>
-<p>├── content              #你写的文章放在这里<br />
-│   └── (pages)<br />
-├── output               #这里放生成的html文件 <br />
-├── develop_server.sh    #一个程序用于开启本地测试服务器<br />
-├── Makefile<br />
-├── pelicanconf.py       # 关于博客的配置文件<br />
-└── publishconf.py       # 关于发布的配置文件  </p>
-</blockquote>
+<div class="highlight"><pre><span class="n">blog</span><span class="o">/</span>
+<span class="err">├──</span> <span class="n">content</span>              <span class="err">#你写的文章放在这里</span>  
+<span class="err">│</span>   <span class="err">└──</span> <span class="p">(</span><span class="n">pages</span><span class="p">)</span>  
+<span class="err">├──</span> <span class="n">output</span>               <span class="err">#这里放生成的</span><span class="n">html</span><span class="err">文件</span>   
+<span class="err">├──</span> <span class="n">develop_server</span><span class="p">.</span><span class="n">sh</span>    <span class="err">#一个程序用于开启本地测试服务器</span>  
+<span class="err">├──</span> <span class="n">Makefile</span>  
+<span class="err">├──</span> <span class="n">pelicanconf</span><span class="p">.</span><span class="n">py</span>       <span class="err">#</span> <span class="err">关于博客的配置文件</span>  
+<span class="err">└──</span> <span class="n">publishconf</span><span class="p">.</span><span class="n">py</span>       <span class="err">#</span> <span class="err">关于发布的配置文件</span>
+</pre></div>
+
+
 <h3>写文章</h3>
 <p>现在走一遍发布博客的流程</p>
 <p>这里我们使用markdown来撰写博文，markdown是一门轻量级的标记语言，用markdown来写作是一件十分惬意的事情。markdown的语法非常简单，一下子就可以掌握，推荐先google看一看一些教程吧。<a href="http://www.jianshu.com/p/q81RER">献给写作者的 Markdown 新手指南</a>
 要使用markdown之前，需要先安装markdown支持，也是一句话</p>
-<blockquote>
-<p>pip install markdown</p>
-</blockquote>
+<div class="highlight"><pre><span class="n">pip</span> <span class="n">install</span> <span class="n">markdown</span>
+</pre></div>
+
+
 <p>现在先来写一篇测试文章，放在content下，保存为test.md。pelican会自动解析.md文件作为博文的</p>
-<blockquote>
-<p>This is a test of my  blog post.itle: My Test Article<br />
-Date: 2015-2-28<br />
-Category: Python<br />
-Tags: pelican, publishing<br />
-Slug: my-first-post<br />
-Author:Your Name<br />
-Summary: Short version for index and feeds <br />
-This is a test of my  blog post.<br />
-~       </p>
-</blockquote>
+<div class="highlight"><pre><span class="n">This</span> <span class="n">is</span> <span class="n">a</span> <span class="n">test</span> <span class="n">of</span> <span class="n">my</span>  <span class="n">blog</span> <span class="n">post</span><span class="p">.</span><span class="n">itle</span><span class="o">:</span> <span class="n">My</span> <span class="n">Test</span> <span class="n">Article</span>  
+<span class="nl">Date:</span> <span class="mi">2015</span><span class="o">-</span><span class="mi">2</span><span class="o">-</span><span class="mi">28</span>  
+<span class="nl">Category:</span> <span class="n">Python</span>  
+<span class="nl">Tags:</span> <span class="n">pelican</span><span class="p">,</span> <span class="n">publishing</span>  
+<span class="nl">Slug:</span> <span class="n">my</span><span class="o">-</span><span class="n">first</span><span class="o">-</span><span class="n">post</span>  
+<span class="nl">Author:</span><span class="n">Your</span> <span class="n">Name</span>  
+<span class="nl">Summary:</span> <span class="n">Short</span> <span class="n">version</span> <span class="k">for</span> <span class="n">index</span> <span class="n">and</span> <span class="n">feeds</span>   
+<span class="n">This</span> <span class="n">is</span> <span class="n">a</span> <span class="n">test</span> <span class="n">of</span> <span class="n">my</span>  <span class="n">blog</span> <span class="n">post</span><span class="p">.</span>  
+<span class="o">~</span>
+</pre></div>
+
+
 <p>前面的部分是关于这篇文章的些信息，具体情况参阅<a href="https://pelican-docs-chs.readthedocs.org/en/latest/getting_started.html#id7">官方指南</a></p>
 <p>写完之后cd回上一级目录，也就是blog目录中，用make生成html文件，window下没有make的请先按照make</p>
-<blockquote>
-<p>cd ..<br />
-make html</p>
-</blockquote>
+<div class="highlight"><pre><span class="n">cd</span> <span class="p">..</span>  
+<span class="n">make</span> <span class="n">html</span>
+</pre></div>
+
+
 <p>没有make的同学可以直接在主目录下用pelican就可以了</p>
-<blockquote>
-<p>pelican</p>
-</blockquote>
+<div class="highlight"><pre><span class="n">pelican</span>
+</pre></div>
+
+
 <p>之后就可以在output文件夹里找到一堆东东，这就是你的博客文件。在blog目录下，可以运行</p>
-<blockquote>
-<p>make serve</p>
-</blockquote>
+<div class="highlight"><pre><span class="n">make</span> <span class="n">serve</span>
+</pre></div>
+
+
 <p>没有make的同学可以直接用主目录下的develop_server.sh,具体用法如下：</p>
-<blockquote>
-<p>./develop_server.sh (stop) (start) (restart) [port]</p>
-</blockquote>
+<div class="highlight"><pre><span class="p">.</span><span class="o">/</span><span class="n">develop_server</span><span class="p">.</span><span class="n">sh</span> <span class="p">(</span><span class="n">stop</span><span class="p">)</span> <span class="p">(</span><span class="n">start</span><span class="p">)</span> <span class="p">(</span><span class="n">restart</span><span class="p">)</span> <span class="p">[</span><span class="n">port</span><span class="p">]</span>
+</pre></div>
+
+
 <p>启动一个本地的测试服务器，现在在浏览器地址栏中输入127.0.0.1:8000跳转就可以预览你的博客。</p>
 <h3>发布</h3>
 <p>现在博客文件已经准备好，要将它们发布到github上去。先初始化git，添加你的GithubPage远程仓库，commit所有文件，在push上去即可</p>
-<blockquote>
-<p>cd output      #切换到output文件夹下<br />
-git init<br />
-git add --all<br />
-git remote add origin https://github.com/username.github.io.git<br />
-git pull origin master<br />
-git commit -am 'commit'<br />
-git push  origin master</p>
-</blockquote>
+<div class="highlight"><pre><span class="n">cd</span> <span class="n">output</span>      <span class="err">#切换到</span><span class="n">output</span><span class="err">文件夹下</span>  
+<span class="n">git</span> <span class="n">init</span>  
+<span class="n">git</span> <span class="n">add</span> <span class="o">--</span><span class="n">all</span>  
+<span class="n">git</span> <span class="n">remote</span> <span class="n">add</span> <span class="n">origin</span> <span class="n">https</span><span class="o">:</span><span class="c1">//github.com/username.github.io.git  </span>
+<span class="n">git</span> <span class="n">pull</span> <span class="n">origin</span> <span class="n">master</span>  
+<span class="n">git</span> <span class="n">commit</span> <span class="o">-</span><span class="n">am</span> <span class="err">&#39;</span><span class="n">commit</span><span class="err">&#39;</span>  
+<span class="n">git</span> <span class="n">push</span>  <span class="n">origin</span> <span class="n">master</span>
+</pre></div>
+
+
 <p>现在访问 username.github.io 就可以看到你的博客已经放到网上去了。
 以后更新了文章也是一样先make html，再commit，最后push上github就可以了</p>
 <p>更多博客的使用和配置请期待下一篇。</p>
@@ -218,7 +224,7 @@ git push  origin master</p>
         <section>
         <div class="span2" style="float:right;font-size:0.9em;">
             <h4>Published</h4>
-            <time pubdate="pubdate" datetime="2015-02-28T00:00:00+01:00">Feb 28, 2015</time>
+            <time pubdate="pubdate" datetime="2015-02-28T00:00:00+01:00"> 2月 28, 2015</time>
             <h4>Category</h4>
             <a class="category-link" href="http://sineyuan.github.io/categories.html#persional-ref">persional</a>
             <h4>Tags</h4>
@@ -227,7 +233,7 @@ git push  origin master</p>
                     <span>2</span>
 </a></li>
                 <li><a href="http://sineyuan.github.io/tags.html#pelican-ref">pelican
-                    <span>3</span>
+                    <span>2</span>
 </a></li>
             </ul>
 <h4>Contact</h4>

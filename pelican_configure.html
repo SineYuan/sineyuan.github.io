@@ -72,15 +72,16 @@
 <p><a href="http://sineyuan.github.io/blog_setup.html">上一篇教程</a>讲了如何使用GithubPage和Pelican来搭建个人静态博客，这篇是上一篇的继续，主要说明一下Pelican的配置和在写博客过程中遇到的问题及其解决方法。闲话不说，我们继续。</p>
 <h2>Pelican插件的使用</h2>
 <p>大部分的时候Pelican提供的功能是不能够满足我们的需求的，比如Google的Analytical，sitemap，评论系统，导航页面等。这时就需要安装相应的插件来提供这些功能了。其实Pelican插件的安装使用非常简单，Pelican的全部插件都在<a href="https://github.com/getpelican/pelican-plugins">pelican-plugins</a>这个项目上，先从github上clone这个项目</p>
-<blockquote>
-<p>cd blog<br />
-git clone git://github.com/getpelican/pelican-plugins.git</p>
-</blockquote>
+<div class="highlight"><pre><span class="n">cd</span> <span class="n">blog</span>  
+<span class="n">git</span> <span class="n">clone</span> <span class="n">git</span><span class="o">:</span><span class="c1">//github.com/getpelican/pelican-plugins.git</span>
+</pre></div>
+
+
 <p>然后需要什么差件，就在主目录下的配置文件pelicanconf.py中声明并设置就可以了，例如在要使用设置Sitemap插件，就在pelicanconf.py中设置如下
 <pre><code>PLUGIN_PATH=u"pelican-plugins"              #指定插件源文件的存放目录
-PLUGINS = ['summary','sitemap','neighbors'] #[]里面的是启用的插</p>
-<h1>配置sitemap 插件</h1>
-<p>SITEMAP = {
+PLUGINS = ['summary','sitemap','neighbors'] #[]里面的是启用的插
+# 配置sitemap 插件
+SITEMAP = {
     "format": "xml",
     "priorities": {
         "articles": 0.7,
@@ -97,47 +98,58 @@ PLUGINS = ['summary','sitemap','neighbors'] #[]里面的是启用的插</p>
 在<a href="https://github.com/getpelican/pelican-plugins">pelican-plugins</a>项目主页上有这些插件的功能简介</p>
 <h2>Pelican主题</h2>
 <p>同样，Pelican的主题也有一个主页：<a href="https://github.com/getpelican/pelican-themes">pelican-themes</a>，同样先clone下来</p>
-<blockquote>
-<p>git clone https://github.com/getpelican/pelican-themes.git</p>
-</blockquote>
+<div class="highlight"><pre><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="o">:</span><span class="c1">//github.com/getpelican/pelican-themes.git</span>
+</pre></div>
+
+
 <p>之后cd进pelican-themes中，想装什么主题就用pelican-themes -i语句安装</p>
-<blockquote>
-<p>cd pelican-themes<br />
-pelican-themes -i bootstrap2</p>
-</blockquote>
+<div class="highlight"><pre><span class="n">cd</span> <span class="n">pelican</span><span class="o">-</span><span class="n">themes</span>  
+<span class="n">pelican</span><span class="o">-</span><span class="n">themes</span> <span class="o">-</span><span class="n">i</span> <span class="n">bootstrap2</span>
+</pre></div>
+
+
 <p>最后在pelicanconf.py中添加下面的语句设置安装过的主题，最后make一下就可以了</p>
-<blockquote>
-<p>THEME = 'bootstrap2'</p>
-</blockquote>
+<div class="highlight"><pre><span class="n">THEME</span> <span class="o">=</span> <span class="err">&#39;</span><span class="n">bootstrap2</span><span class="err">&#39;</span>
+</pre></div>
+
+
 <p>能够成功的前提是在主题的文件夹中源文件确实存在，有些主题文件夹是空的，这时只需要去到相应的项目主页clone下来就可以了。
 在<a href="http://pelicanthemes.com/">http://pelicanthemes.com/</a>这个网页上可以预览到所有的主题，喜欢的就clone下来吧。</p>
 <h2>第三方评论系统</h2>
 <p>因为GithubPage是静态博客，所以不支持评论系统，不过我们可以通过Disqus解决这个问题。Disqus是一家第三方社会化评论系统，主要为网站主提供评论托管服。首先要到<a href="https://disqus.com/">Disqus</a>上注册一个帐号，注册完后点击右上角的齿轮，在弹出的选项中点击add Disqus to Site,在弹出的页面中注册你的博客名。完成注册后，回到小齿轮那就会多了个admin选项，点进去，在跳出的页面中我们就可以管理你博客的评论了。在Settings=&gt;Site Identity中可以看到shortname，请记下来。
 <p style="text-align:center"><img src="http://7vzu7p.com1.z0.glb.clouddn.com/disqus_setting.png"></p>
 然后在pelicanconf.py文件中添加</p>
-<blockquote>
-<p>DISQUS_SITENAME = "shortname"</p>
-</blockquote>
+<div class="highlight"><pre><span class="n">DISQUS_SITENAME</span> <span class="o">=</span> <span class="s">&quot;shortname&quot;</span>
+</pre></div>
+
+
 <p>然后重新make一遍，上传就会出现评论了。</p>
 <h2>文章中的图片</h2>
 <p>在markdown中想要插入图片很简单</p>
-<blockquote>
-<p>![alt tag](http://url/to/img.png)</p>
-</blockquote>
+<div class="highlight"><pre><span class="o">!</span><span class="p">[</span><span class="n">alt</span> <span class="n">tag</span><span class="p">]</span><span class="err">\</span><span class="p">(</span><span class="n">http</span><span class="o">:</span><span class="c1">//url/to/img.png)</span>
+</pre></div>
+
+
 <p>但问题是如何指定我想要的图片的url
 一种方法是上传图片到github中，再将url指向github中的图片。
 比如说在output文件夹中新建一个img文件夹，将图片放进去，在文章中引用的url路径为：</p>
-<blockquote>
-<p>https://raw.github.com/username/projectname/branch/path/to/img.png     </p>
-</blockquote>
+<div class="highlight"><pre><span class="nl">https:</span><span class="c1">//raw.github.com/username/projectname/branch/path/to/img.png</span>
+</pre></div>
+
+
 <p>不过github的空间有限，只有300M，所以另一种方法推荐使用专业的图床</p>
 <h2>数学公式</h2>
 <p>有时候博文中需要一些数学公式，这时只要在添加插件render_math,之后就可以用latex书写公式了</p>
-<blockquote>
-<p>PLUGINS = ["render_math"]</p>
-</blockquote>
-<p>在文章中插入latex：<br />
-欧拉公式
+<div class="highlight"><pre><span class="n">PLUGINS</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;render_math&quot;</span><span class="p">]</span>
+</pre></div>
+
+
+<p>在文章中插入latex：  </p>
+<div class="highlight"><pre><span class="err">$$</span> <span class="n">e</span><span class="o">^</span><span class="p">{</span><span class="n">i</span><span class="err">\</span><span class="n">pi</span><span class="p">}</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">=</span> <span class="mi">0</span><span class="err">$$</span>
+</pre></div>
+
+
+<p>欧拉公式
 </p>
 <div class="math">$$e^{i\pi} + 1 = 0$$</div>
 <script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
@@ -218,7 +230,7 @@ pelican-themes -i bootstrap2</p>
         <section>
         <div class="span2" style="float:right;font-size:0.9em;">
             <h4>Published</h4>
-            <time pubdate="pubdate" datetime="2015-03-01T00:00:00+01:00">Mar 1, 2015</time>
+            <time pubdate="pubdate" datetime="2015-03-01T00:00:00+01:00"> 3月 1, 2015</time>
             <h4>Category</h4>
             <a class="category-link" href="http://sineyuan.github.io/categories.html#persional-ref">persional</a>
             <h4>Tags</h4>
@@ -227,7 +239,7 @@ pelican-themes -i bootstrap2</p>
                     <span>2</span>
 </a></li>
                 <li><a href="http://sineyuan.github.io/tags.html#pelican-ref">pelican
-                    <span>3</span>
+                    <span>2</span>
 </a></li>
             </ul>
 <h4>Contact</h4>
