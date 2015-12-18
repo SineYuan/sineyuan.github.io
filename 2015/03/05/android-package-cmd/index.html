@@ -6,28 +6,28 @@
   <title>命令行编译打包android应用 | STep by STep</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="在eclipse中点击一下就能将android项目一键构建，但在这个过程中发生了什么？我们亲手用命令行来实践一下吧.
-##构建流程先上一张google官方的构建流程图
+构建流程先上一张google官方的构建流程图
 
 Android Asset Packaging Tool (aapt) 将文资源件如AndroidManifest.xml还有其他Activity的XML文件编译成二进制文件。将他们打包和生成R.java文件
-aidl将.aidl">
+aidl将.aidl接口">
 <meta property="og:type" content="article">
 <meta property="og:title" content="命令行编译打包android应用">
 <meta property="og:url" content="http://sineyuan.github.io/2015/03/05/android-package-cmd/index.html">
 <meta property="og:site_name" content="STep by STep">
 <meta property="og:description" content="在eclipse中点击一下就能将android项目一键构建，但在这个过程中发生了什么？我们亲手用命令行来实践一下吧.
-##构建流程先上一张google官方的构建流程图
+构建流程先上一张google官方的构建流程图
 
 Android Asset Packaging Tool (aapt) 将文资源件如AndroidManifest.xml还有其他Activity的XML文件编译成二进制文件。将他们打包和生成R.java文件
-aidl将.aidl">
+aidl将.aidl接口">
 <meta property="og:image" content="http://7vzu7p.com1.z0.glb.clouddn.com/Android_build.png">
-<meta property="og:updated_time" content="2015-07-08T15:01:52.000Z">
+<meta property="og:updated_time" content="2015-12-18T09:18:24.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="命令行编译打包android应用">
 <meta name="twitter:description" content="在eclipse中点击一下就能将android项目一键构建，但在这个过程中发生了什么？我们亲手用命令行来实践一下吧.
-##构建流程先上一张google官方的构建流程图
+构建流程先上一张google官方的构建流程图
 
 Android Asset Packaging Tool (aapt) 将文资源件如AndroidManifest.xml还有其他Activity的XML文件编译成二进制文件。将他们打包和生成R.java文件
-aidl将.aidl">
+aidl将.aidl接口">
   
   
     <link rel="icon" href="/favicon.png">
@@ -104,7 +104,7 @@ aidl将.aidl">
       <ul>
         
           <li>
-            <a href="/2015/09/22/migrate-to-hexo/">migrate to hexo</a>
+            <a href="/2015/09/22/migrate-to-hexo/">博客迁移到Hexo</a>
           </li>
         
           <li>
@@ -172,7 +172,7 @@ aidl将.aidl">
     <div class="article-entry" itemprop="articleBody">
       
         <p>在eclipse中点击一下就能将android项目一键构建，但在这个过程中发生了什么？我们亲手用命令行来实践一下吧.</p>
-<p>##构建流程<br>先上一张google官方的构建流程图<br><img src="http://7vzu7p.com1.z0.glb.clouddn.com/Android_build.png" alt="build process"></p>
+<h2 id="构建流程">构建流程</h2><p>先上一张google官方的构建流程图<br><img src="http://7vzu7p.com1.z0.glb.clouddn.com/Android_build.png" alt="build process"></p>
 <ul>
 <li>Android Asset Packaging Tool (aapt) 将文资源件如AndroidManifest.xml还有其他Activity的XML文件编译成二进制文件。将他们打包和生成R.java文件</li>
 <li>aidl将.aidl接口文件转换为java代码</li>
@@ -182,8 +182,8 @@ aidl将.aidl">
 <li>用debug或release key对apk文件签名。</li>
 <li>发布应用</li>
 </ul>
-<p>##命令行构建<br>下面我们就来用命令行实践一下,我所使用的sdk版本是android-sdk_r24.0.2-linux<br>首先新建一个Android应用项目<br>    android create project –target 19 –name TestApp –path ~/workspace/TestApp –activity MainActivity –package com.example.testapp</p>
-<p>###使用aapt生成R.java和编译的资源包<br>aapt在sdk中的build-tools中找到，从build-tools中选最新的版本的aapt<br>appt的使用方法</p>
+<h2 id="命令行构建">命令行构建</h2><p>下面我们就来用命令行实践一下,我所使用的sdk版本是android-sdk_r24.0.2-linux<br>首先新建一个Android应用项目<br>    android create project –target 19 –name TestApp –path ~/workspace/TestApp –activity MainActivity –package com.example.testapp</p>
+<h3 id="使用aapt生成R-java和编译的资源包">使用aapt生成R.java和编译的资源包</h3><p>aapt在sdk中的build-tools中找到，从build-tools中选最新的版本的aapt<br>appt的使用方法</p>
 <pre><code>aapt package -f -M ${manifest.file}   
 -<span class="ruby"><span class="constant">F</span> <span class="variable">${</span>packaged.resource.file}     
 </span>-<span class="ruby"><span class="constant">I</span> <span class="variable">${</span>path.to.android-jar.library}   
@@ -196,36 +196,33 @@ aidl将.aidl">
 -I <span class="regexp">~/Android/</span>SDK<span class="regexp">/platforms/</span>android-<span class="number">21</span>/android.jar \  
 -S <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/res/</span>   \  
 -m -J <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/gen/</span>
-</code></pre><p>###使用aidl命令把.aidl转成.java文件 </p>
-<pre><code><span class="title">aidl</span> -p <span class="variable">${android-framework}</span> -I <span class="variable">${srcdir}</span> dir=<span class="string">"<span class="variable">${srcdir}</span>"</span> <span class="variable">${.aidl files}</span>
+</code></pre><h3 id="使用aidl命令把-aidl转成-java文件">使用aidl命令把.aidl转成.java文件</h3><pre><code><span class="title">aidl</span> -p <span class="variable">${android-framework}</span> -I <span class="variable">${srcdir}</span> dir=<span class="string">"<span class="variable">${srcdir}</span>"</span> <span class="variable">${.aidl files}</span>
 </code></pre><p>这里我们没有.aidl文件，所以跳过</p>
-<p>###编译.java文件<br>使用javac编译所有的.java文件</p>
+<h3 id="编译-java文件">编译.java文件</h3><p>使用javac编译所有的.java文件</p>
 <pre><code>mkdir <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>classes  
 javac -encoding UTF-<span class="number">8</span> -source <span class="number">1.6</span> -target <span class="number">1.6</span> \  
 -bootclasspath  <span class="regexp">~/Android/</span>SDK<span class="regexp">/platforms/</span>android-<span class="number">21</span>/android.jar \  
 -d <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>classes \   
 <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/src/</span>com<span class="regexp">/example/</span>testapp<span class="comment">/*.java \  
 ~/workspace/TestApp/gen/com/example/testapp/R.java</span>
-</code></pre><p>###生成dex文件<br>生成dex文件的工具是dx，跟aapt在同一目录。<br>dx用法：</p>
+</code></pre><h3 id="生成dex文件">生成dex文件</h3><p>生成dex文件的工具是dx，跟aapt在同一目录。<br>dx用法：</p>
 <pre><code><span class="title">dx</span> -–dex --dump-to <span class="variable">${output.dex.file}</span>  --core-library <span class="variable">${compiled.classes.directory}</span> 
 </code></pre><p>实践：</p>
 <pre><code>.<span class="regexp">/dx --dex --dump-to ~/</span>workspace<span class="regexp">/TestApp/</span>bin/classes.dex \  
 --core-library  <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>classes
 </code></pre><p>注意在我使用的build-tools/21.1.2中的dx还不兼容使用jdk 8及以上版本，所以在用javac编译时需指定source和target为1.6或1.7。这点需要注意，不然会出现下面的异常</p>
 <pre><code>UNEXPECTED TOP-LEVEL <span class="string">EXCEPTION:</span>
-</code></pre><p>###打包所有文件成apk文件<br>打包所有文件成apk文件使用的工具是apkbuilder，不过在较新的android sdk中取消了这个工具，不过apkbuilder只是个批处理文件，我们可以自己生成它。在sdk/tools目录中：</p>
+</code></pre><h3 id="打包所有文件成apk文件">打包所有文件成apk文件</h3><p>打包所有文件成apk文件使用的工具是apkbuilder，不过在较新的android sdk中取消了这个工具，不过apkbuilder只是个批处理文件，我们可以自己生成它。在sdk/tools目录中：</p>
 <pre><code><span class="keyword">cat</span> android | sed -<span class="keyword">e</span> 's/com.android.sdkmanager.Main/com.android.sdklib.build.ApkBuilderMain/<span class="keyword">g</span>' &gt; apkbuilder
 chmod a+x apkbuilder
 </code></pre><p>  详情查看stackoverflow的<a href="http://stackoverflow.com/questions/19273237/android-build-fails-no-such-file-or-directory-apkbuilder" target="_blank" rel="external">这个问答</a><br>  apkbuilder用法：</p>
-<blockquote>
-<p>apkbuilder  ${output.apk.file} -u -z  ${packagedresource.file} -f  ${dex.file}</p>
-</blockquote>
-<p>  实践：</p>
+<pre><code>apkbuilder  <span class="label">${output</span>.apk.<span class="keyword">file</span>} -<span class="keyword">u</span> -z  <span class="label">${packagedresource</span>.<span class="keyword">file</span>} -f  <span class="label">${dex</span>.<span class="keyword">file</span>}
+</code></pre><p>  实践：</p>
 <pre><code>mkdir <span class="regexp">~/workspace/</span>TestApp/build  
 .<span class="regexp">/apkbuilder ~/</span>workspace<span class="regexp">/TestApp/</span>build/TestApp-unsigned.apk  -u \  
 -z <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>resources.arsc \  
 -f <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>classes.dex
-</code></pre><p>###签名<br>apk需要正确的签名才能在android系统上安装，要签名apk就需要密钥key。生成key使用jdk中的keytool生成密钥证书</p>
+</code></pre><h3 id="签名">签名</h3><p>apk需要正确的签名才能在android系统上安装，要签名apk就需要密钥key。生成key使用jdk中的keytool生成密钥证书</p>
 <pre><code>keytool -genkeypair -<span class="keyword">alias</span> <span class="variable">${</span>别名} -keyalg <span class="constant">RSA</span> -keystore <span class="variable">${</span>keystore文件的路径+文件名}.keystore
 </code></pre><p>实践：</p>
 <pre><code>keytool -genkeypair -<span class="type">alias</span> <span class="string">"testkey"</span> -keyalg <span class="string">"RSA"</span> -keystore <span class="string">"test.keystore"</span> 
@@ -235,7 +232,7 @@ chmod a+x apkbuilder
 <pre><code>jarsigner -keystore test<span class="class">.keystore</span> -storepass <span class="number">1234567890</span> -keypass <span class="number">1234567890</span> -signedjar \  
 ~/workspace/TestApp/build/TestApp-signed<span class="class">.apk</span> \  
 ~/workspace/TestApp/buildTestApp-unsigned<span class="class">.apk</span> testkey
-</code></pre><p>##一步到位<br>由上可见，apk的构建非常的繁杂。不过好在android应用在创建的时候就已经配置好ant自动构建脚本了。在项目主目录下直接</p>
+</code></pre><h2 id="一步到位">一步到位</h2><p>由上可见，apk的构建非常的繁杂。不过好在android应用在创建的时候就已经配置好ant自动构建脚本了。在项目主目录下直接</p>
 <pre><code><span class="title">ant</span> <span class="built_in">debug</span>
 </code></pre><p>就可在bin下生成debug模式的apk<br>生产release使用</p>
 <pre><code><span class="keyword">ant</span> release
@@ -243,7 +240,7 @@ chmod a+x apkbuilder
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/03/05/android-package-cmd/" data-id="ciibg2fpj0000d01zxrt5ctc6" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/03/05/android-package-cmd/" data-id="ciibgrd020000oj1zl8r6b93d" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/03/05/android-package-cmd/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -258,7 +255,7 @@ chmod a+x apkbuilder
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
-          migrate to hexo
+          博客迁移到Hexo
         
       </div>
     </a>
