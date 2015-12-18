@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Pelican的配置与使用 | STep by STep</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="上一篇教程讲了如何使用GithubPage和Pelican来搭建个人静态博客，这篇是上一篇的继续，主要说明一下Pelican的配置和在写博客过程中遇到的问题及其解决方法。闲话不说，我们继续。
+##Pelican插件的使用大部分的时候Pelican提供的功能是不能够满足我们的需求的，比如Google的Analytical，sitemap，评论系统，导航页面等。这时就需要安装相应的插件来提供这些功能了">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Pelican的配置与使用">
+<meta property="og:url" content="http://sineyuan.github.io/2015/03/01/pelican-configure/index.html">
+<meta property="og:site_name" content="STep by STep">
+<meta property="og:description" content="上一篇教程讲了如何使用GithubPage和Pelican来搭建个人静态博客，这篇是上一篇的继续，主要说明一下Pelican的配置和在写博客过程中遇到的问题及其解决方法。闲话不说，我们继续。
+##Pelican插件的使用大部分的时候Pelican提供的功能是不能够满足我们的需求的，比如Google的Analytical，sitemap，评论系统，导航页面等。这时就需要安装相应的插件来提供这些功能了">
+<meta property="og:image" content="http://7vzu7p.com1.z0.glb.clouddn.com/disqus_setting.png">
+<meta property="og:updated_time" content="2015-12-18T08:49:56.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Pelican的配置与使用">
+<meta name="twitter:description" content="上一篇教程讲了如何使用GithubPage和Pelican来搭建个人静态博客，这篇是上一篇的继续，主要说明一下Pelican的配置和在写博客过程中遇到的问题及其解决方法。闲话不说，我们继续。
+##Pelican插件的使用大部分的时候Pelican提供的功能是不能够满足我们的需求的，比如Google的Analytical，sitemap，评论系统，导航页面等。这时就需要安装相应的插件来提供这些功能了">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <!-- <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,600' rel='stylesheet' type='text/css'> -->
+  <!-- <link href="//fonts.googleapis.com/css?family=Source+Code+Pro:400,700" rel="stylesheet" type="text/css"> -->
+  <link href="//fonts.useso.com/css?family=Source+Code+Pro:400,700" rel="stylesheet" type="text/css">
+  <link href='//fonts.useso.com/css?family=Open+Sans:300,600' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+  
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="header-outer" class="outer">
+    <a href="/" class="logo">STep by STep</a>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about/index.html">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        <div id="search-form-wrap">
+          <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://sineyuan.github.io"></form>
+        </div>
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+        
+        
+          <a id="nav-github-link" class="nav-icon" href="https://github.com/SineYuan" title="Fork me on GitHub"></a>
+        
+      </nav>
+    </div>
+  </div>
+</header>
+      <nav id="mobile-nav" class="off">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about/index.html" class="mobile-nav-link">About</a>
+  
+  <div id="search-form-wrap-mobile">
+    <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://sineyuan.github.io"></form>
+  </div>
+</nav>
+      <div class="outer">
+        
+          <aside id="sidebar">
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2015/09/22/migrate-to-hexo/">migrate to hexo</a>
+          </li>
+        
+          <li>
+            <a href="/2015/03/05/android-package-cmd/">命令行编译打包android应用</a>
+          </li>
+        
+          <li>
+            <a href="/2015/03/02/latex-thesis/">使用LaTex写毕业论文</a>
+          </li>
+        
+          <li>
+            <a href="/2015/03/01/pelican-configure/">Pelican的配置与使用</a>
+          </li>
+        
+          <li>
+            <a href="/2015/02/28/setup-blog/">用Pelican+GithubPage搭建个人静态博客</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+    
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">links</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="http://hexo.io">Hexo</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+        <section id="main"><article id="post-pelican-configure" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/03/01/pelican-configure/" class="article-date">
+  <time datetime="2015-02-28T16:00:00.000Z" itemprop="datePublished">2015-03-01</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Pelican的配置与使用
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="http://sineyuan.github.io/blog_setup.html">上一篇教程</a>讲了如何使用GithubPage和Pelican来搭建个人静态博客，这篇是上一篇的继续，主要说明一下Pelican的配置和在写博客过程中遇到的问题及其解决方法。闲话不说，我们继续。</p>
+<p>##Pelican插件的使用<br>大部分的时候Pelican提供的功能是不能够满足我们的需求的，比如Google的Analytical，sitemap，评论系统，导航页面等。这时就需要安装相应的插件来提供这些功能了。其实Pelican插件的安装使用非常简单，Pelican的全部插件都在<a href="https://github.com/getpelican/pelican-plugins" target="_blank" rel="external">pelican-plugins</a>这个项目上，先从github上clone这个项目</p>
+<pre><code>cd blog  
+git <span class="keyword">clone</span> <span class="title">git</span>://github.com/getpelican/pelican-plugins.git
+</code></pre><p>然后需要什么差件，就在主目录下的配置文件pelicanconf.py中声明并设置就可以了，例如在要使用设置Sitemap插件，就在pelicanconf.py中设置如下</p>
+<p><pre><code>PLUGIN_PATH=u”pelican-plugins”              #指定插件源文件的存放目录<br>PLUGINS = [‘summary’,’sitemap’,’neighbors’] #[]里面的是启用的插<br># 配置sitemap 插件<br>SITEMAP = {<br>    “format”: “xml”,<br>    “priorities”: {<br>        “articles”: 0.7,<br>        “indexes”: 0.5,<br>        “pages”: 0.3,<br>    },<br>    “changefreqs”: {<br>        “articles”: “monthly”,<br>        “indexes”: “daily”,<br>        “pages”: “monthly”,<br>    }</code></pre></p>
+<p>}<br>}<br>在<a href="https://github.com/getpelican/pelican-plugins" target="_blank" rel="external">pelican-plugins</a>项目主页上有这些插件的功能简介</p>
+<p>##Pelican主题<br>同样，Pelican的主题也有一个主页：<a href="https://github.com/getpelican/pelican-themes" target="_blank" rel="external">pelican-themes</a>，同样先clone下来</p>
+<pre><code>git <span class="keyword">clone</span> <span class="title">https</span>://github.com/getpelican/pelican-themes.git
+</code></pre><p>之后cd进pelican-themes中，想装什么主题就用pelican-themes -i语句安装</p>
+<pre><code>cd pelican-themes  
+pelican-themes -<span class="tag">i</span> bootstrap2
+</code></pre><p>最后在pelicanconf.py中添加下面的语句设置安装过的主题，最后make一下就可以了</p>
+<pre><code><span class="setting">THEME = <span class="value"><span class="string">'bootstrap2'</span></span></span>
+</code></pre><p>能够成功的前提是在主题的文件夹中源文件确实存在，有些主题文件夹是空的，这时只需要去到相应的项目主页clone下来就可以了。<br>在<a href="http://pelicanthemes.com/" target="_blank" rel="external">http://pelicanthemes.com/</a>这个网页上可以预览到所有的主题，喜欢的就clone下来吧。</p>
+<p>##第三方评论系统<br>因为GithubPage是静态博客，所以不支持评论系统，不过我们可以通过Disqus解决这个问题。Disqus是一家第三方社会化评论系统，主要为网站主提供评论托管服。首先要到<a href="https://disqus.com/" target="_blank" rel="external">Disqus</a>上注册一个帐号，注册完后点击右上角的齿轮，在弹出的选项中点击add Disqus to Site,在弹出的页面中注册你的博客名。完成注册后，回到小齿轮那就会多了个admin选项，点进去，在跳出的页面中我们就可以管理你博客的评论了。在Settings=&gt;Site Identity中可以看到shortname，请记下来。</p>
+<p></p><p style="text-align:center"><img src="http://7vzu7p.com1.z0.glb.clouddn.com/disqus_setting.png"></p><br>然后在pelicanconf.py文件中添加<p></p>
+<pre><code><span class="setting">DISQUS_SITENAME = <span class="value"><span class="string">"shortname"</span></span></span>
+</code></pre><p>然后重新make一遍，上传就会出现评论了。</p>
+<p>##文章中的图片<br>在markdown中想要插入图片很简单</p>
+<pre><code>!<span class="attr_selector">[alt tag]</span>\(<span class="attribute">http</span>:<span class="comment">//url/to/img.png)</span>
+</code></pre><p>但问题是如何指定我想要的图片的url<br>一种方法是上传图片到github中，再将url指向github中的图片。<br>比如说在output文件夹中新建一个img文件夹，将图片放进去，在文章中引用的url路径为：</p>
+<pre><code><span class="symbol">https:</span>/<span class="regexp">/raw.github.com/username</span><span class="regexp">/projectname/branch</span><span class="regexp">/path/to</span><span class="regexp">/img.png     </span>
+</code></pre><p>不过github的空间有限，只有300M，所以另一种方法推荐使用专业的图床</p>
+<p>##数学公式<br>有时候博文中需要一些数学公式，这时只要在添加插件render_math,之后就可以用latex书写公式了</p>
+<pre><code><span class="setting">PLUGINS = <span class="value">[<span class="string">"render_math"</span>]</span></span>
+</code></pre><p>在文章中插入latex：  </p>
+<pre><code>$<span class="variable">$e</span>^{i\pi} + <span class="number">1</span> = <span class="number">0</span>$$
+</code></pre><p>欧拉公式<br>$$e^{i\pi} + 1 = 0$$</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://sineyuan.github.io/2015/03/01/pelican-configure/" data-id="ciibg2fpw0002d01z7qjy55en" class="article-share-link">Share</a>
+      
+        <a href="http://sineyuan.github.io/2015/03/01/pelican-configure/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2015/03/02/latex-thesis/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          使用LaTex写毕业论文
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/02/28/setup-blog/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">用Pelican+GithubPage搭建个人静态博客</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      <a href="/" class="logo">STep by STep</a>
+      &copy; 2015 Sine Yuan<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+<script>
+  var disqus_shortname = 'sineyuansblog';
+  
+  var disqus_url = 'http://sineyuan.github.io/2015/03/01/pelican-configure/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="/js/jquery.min.js" type="text/javascript"></script>
+<script src="/js/jquery.scrollLoading.js" type="text/javascript"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+  </div>
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+</body>
+</html>
