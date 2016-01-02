@@ -78,7 +78,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -88,6 +88,10 @@
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2016/01/02/android-studio-tess-two/">在Android Studio中使用tess-Two</a>
+          </li>
         
           <li>
             <a href="/2015/09/22/migrate-to-hexo/">博客迁移到Hexo</a>
@@ -103,10 +107,6 @@
         
           <li>
             <a href="/2015/03/01/pelican-configure/">Pelican的配置与使用</a>
-          </li>
-        
-          <li>
-            <a href="/2015/02/28/setup-blog/">用Pelican+GithubPage搭建个人静态博客</a>
           </li>
         
       </ul>
@@ -137,6 +137,133 @@
         
         <section id="main">
   
+    <article id="post-android-studio-tess-two" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/01/02/android-studio-tess-two/" class="article-date">
+  <time datetime="2016-01-02T09:49:15.000Z" itemprop="datePublished">2016-01-02</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/01/02/android-studio-tess-two/">在Android Studio中使用tess-Two</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Tesseract_&amp;_tess-two">Tesseract &amp; tess-two</h2><p><a href="http://code.google.com/p/tesseract-ocr/" target="_blank" rel="external">Tesseract</a>是一个开源的OCR(optical character Recognition)库，最初由惠普公司开发，然后开源之后由google维护。使用Tesseract可以从图片中识别出文字。Tesseract支持多种文字，还可以针对目标训练自己的识别模型，可以说大大方便了开发者。tess-two是Tesseract在Android平台上的移植。更多信息参阅<a href="https://github.com/rmtheis/tess-two" target="_blank" rel="external">tess-two主页</a></p>
+<h2 id="tess-two在Android_Studio的配置">tess-two在Android Studio的配置</h2><h4 id="1-_下载安装Android_NDK">1. 下载安装Android NDK</h4><h4 id="2-_下载解压tess-two或者直接git_clone">2. 下载解压<a href="https://github.com/rmtheis/tess-two" target="_blank" rel="external">tess-two</a>或者直接git clone</h4><h4 id="3-_使用NDK编译解压出来的_tess-two_下的_tess-two_文件夹">3. 使用NDK编译解压出来的 tess-two 下的 tess-two 文件夹</h4><pre><code><span class="keyword">cd</span> tess-<span class="keyword">two</span>/tess-<span class="keyword">two</span>
+ndk-build
+</code></pre><h4 id="4-_配置Android_Studio">4. 配置Android Studio</h4><p>在你的项目目录下新建一个libraries的文件夹，将NDK编译好的tess-two/tess-two目录复制到libraries下。<br>在libraries/tess-two目录下新建一个 build.gradle 的文件。将下面的内容复制进去</p>
+<pre><code>apply plugin: <span class="string">'android-library'</span>
+
+<span class="keyword">buildscript</span> {
+    <span class="keyword">repositories</span> {
+        mavenCentral()
+    }
+    <span class="keyword">dependencies</span> {
+        <span class="keyword">classpath</span> <span class="string">'com.android.tools.build:gradle:1.5.0'</span>   <span class="comment">// 根据你的gradle版本进行调整</span>
+    }
+}
+
+android {
+    compileSdkVersion <span class="number">23</span>             <span class="comment">// 根据你的项目进行调整</span>
+    buildToolsVersion <span class="string">"23.0.2"</span>       <span class="comment">// 根据你的项目进行调整</span>
+
+    defaultConfig {
+        minSdkVersion <span class="number">15</span>             <span class="comment">// 根据你的项目进行调整</span>
+        targetSdkVersion <span class="number">23</span>          <span class="comment">// 根据你的项目进行调整</span>
+    }
+
+    <span class="keyword">sourceSets</span>.main {
+        manifest.srcFile <span class="string">'AndroidManifest.xml'</span>
+        java.srcDirs = [<span class="string">'src'</span>]
+        resources.srcDirs = [<span class="string">'src'</span>]
+        res.srcDirs = [<span class="string">'res'</span>]
+        jniLibs.srcDirs = [<span class="string">'libs'</span>]
+    }
+}
+</code></pre><p>然后在项目目录下的 setting.gradle 文件下加入一行</p>
+<pre><code><span class="keyword">include</span> <span class="string">':libraries:tess-two'</span>
+</code></pre><p>在项目目录下的app/build.gradle 文件中的 dependencies 部分加入一行 <code>compile project(&#39;:libraries:tess-two&#39;)</code></p>
+<pre><code><span class="keyword">dependencies</span> {
+    <span class="keyword">compile</span> <span class="keyword">fileTree</span>(dir: <span class="string">'libs'</span>, <span class="keyword">include</span>: [<span class="string">'*.jar'</span>])
+    testCompile <span class="string">'junit:junit:4.12'</span>
+    <span class="keyword">compile</span> <span class="string">'com.android.support:appcompat-v7:23.1.0'</span>
+    ....
+
+    <span class="keyword">compile</span> <span class="keyword">project</span>(<span class="string">':libraries:tess-two'</span>)
+}
+</code></pre><h4 id="使用Tess-two">使用Tess-two</h4><p>tess-two 的识别需要提供一个tessdata的文件夹，可以在<a href="http://code.google.com/p/tesseract-ocr/" target="_blank" rel="external">http://code.google.com/p/tesseract-ocr/</a>中找到。  </p>
+<p>这里提供一个简单的 demo </p>
+<pre><code><span class="keyword">import</span> com.googlecode.tesseract.android.<span class="type">TessBaseAPI</span>;
+
+
+public <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">AppCompatActivity</span> {</span>
+
+    <span class="keyword">private</span> static <span class="keyword">final</span> <span class="type">String</span> <span class="type">SD_PATH</span>= <span class="type">Environment</span>.getExternalStorageDirectory().getPath();
+
+    <span class="keyword">private</span> <span class="type">Button</span> button;
+    <span class="keyword">private</span> <span class="type">TextView</span> textView;
+    <span class="keyword">private</span> <span class="type">EditText</span> editText;
+
+    <span class="annotation">@Override</span>
+    <span class="keyword">protected</span> void onCreate(<span class="type">Bundle</span> savedInstanceState) {
+        <span class="keyword">super</span>.onCreate(savedInstanceState);
+        setContentView(<span class="type">R</span>.layout.activity_main);
+
+        button = (<span class="type">Button</span>) findViewById(<span class="type">R</span>.id.button);
+        textView = (<span class="type">TextView</span>) findViewById(<span class="type">R</span>.id.textView);
+
+        button.setOnClickListener(<span class="keyword">new</span> <span class="type">View</span>.<span class="type">OnClickListener</span>() {
+            <span class="annotation">@Override</span>
+            public void onClick(<span class="type">View</span> v) {
+
+                <span class="type">TessBaseAPI</span> baseApi = <span class="keyword">new</span> <span class="type">TessBaseAPI</span>();
+                <span class="comment">// 指定语言集，sd卡根目录下放置Tesseract的tessdata文件夹   </span>
+                baseApi.init(<span class="type">SD_PATH</span>, <span class="string">"eng"</span>);
+                <span class="comment">// 设置psm模式</span>
+                baseApi.setPageSegMode(<span class="type">TessBaseAPI</span>.<span class="type">PageSegMode</span>.<span class="type">PSM_SINGLE_LINE</span>);
+
+                editText = (<span class="type">EditText</span>) findViewById(<span class="type">R</span>.id.editText);
+                <span class="type">String</span> img = editText.getText().toString();
+                <span class="comment">// 设置图片</span>
+                baseApi.setImage(<span class="keyword">new</span> <span class="type">File</span>(<span class="type">SD_PATH</span> + img));
+                <span class="comment">// 获取结果</span>
+                <span class="keyword">final</span> <span class="type">String</span> result = baseApi.getUTF8Text();
+                textView.setText(result);
+                <span class="comment">// 释放内存</span>
+                baseApi.clear();
+                baseApi.end();
+
+            }
+        });
+    }
+}
+</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://sineyuan.github.io/2016/01/02/android-studio-tess-two/" data-id="ciiwxl6tu0005i31zk2mshagh" class="article-share-link">Share</a>
+      
+        <a href="http://sineyuan.github.io/2016/01/02/android-studio-tess-two/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-migrate-to-hexo" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2015/09/22/migrate-to-hexo/" class="article-date">
@@ -164,7 +291,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/09/22/migrate-to-hexo/" data-id="ciibgrd0k0003oj1zy240noy6" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/09/22/migrate-to-hexo/" data-id="ciiwxl6tr0003i31zboyvjz3g" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/09/22/migrate-to-hexo/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -267,7 +394,7 @@ chmod a+x apkbuilder
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/03/05/android-package-cmd/" data-id="ciibgrd020000oj1zl8r6b93d" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/03/05/android-package-cmd/" data-id="ciiwxl6su0000i31zihh4zfjd" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/03/05/android-package-cmd/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -326,7 +453,7 @@ chmod a+x apkbuilder
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/03/02/latex-thesis/" data-id="ciibgrd0l0004oj1zabzvdy8b" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/03/02/latex-thesis/" data-id="ciiwxl6ts0004i31z4q4lp7ge" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/03/02/latex-thesis/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -393,7 +520,7 @@ pelican-themes -<span class="tag">i</span> bootstrap2
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/03/01/pelican-configure/" data-id="ciibgrd0i0002oj1zyblpp9kc" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/03/01/pelican-configure/" data-id="ciiwxl6tp0002i31zphbal3q8" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/03/01/pelican-configure/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -492,7 +619,7 @@ git push  origin master
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/02/28/setup-blog/" data-id="ciibgrd0g0001oj1zmylcnp54" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/02/28/setup-blog/" data-id="ciiwxl6th0001i31ze9iq7gde" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/02/28/setup-blog/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -512,7 +639,7 @@ git push  origin master
   <div class="outer">
     <div id="footer-info" class="inner">
       <a href="/" class="logo">STep by STep</a>
-      &copy; 2015 Sine Yuan<br>
+      &copy; 2016 Sine Yuan<br>
       Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>
