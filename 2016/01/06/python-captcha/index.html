@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>使用Python做验证码识别 | STep by STep</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="平常我们上网经常遇到的验证码英文名为CAPTCHA， 这其实是一个非常炫酷的名字的缩写，全称为全自动区分计算机和人类的图灵测试（英语：Completely Automated Public Turing test to tell Computers and Humans Apart) 。看起来是不是很高大上啊，图灵测试都出来了。不过确实，对于识别验证码这种对人来说很容易的任务（普通验证码，非123">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用Python做验证码识别">
+<meta property="og:url" content="http://sineyuan.github.io/2016/01/06/python-captcha/index.html">
+<meta property="og:site_name" content="STep by STep">
+<meta property="og:description" content="平常我们上网经常遇到的验证码英文名为CAPTCHA， 这其实是一个非常炫酷的名字的缩写，全称为全自动区分计算机和人类的图灵测试（英语：Completely Automated Public Turing test to tell Computers and Humans Apart) 。看起来是不是很高大上啊，图灵测试都出来了。不过确实，对于识别验证码这种对人来说很容易的任务（普通验证码，非123">
+<meta property="og:image" content="http://7vzu7p.com1.z0.glb.clouddn.com/shot.png">
+<meta property="og:image" content="http://7vzu7p.com1.z0.glb.clouddn.com/floodfill4.gif">
+<meta property="og:image" content="http://7vzu7p.com1.z0.glb.clouddn.com/floodfill8.gif">
+<meta property="og:image" content="http://7vzu7p.com1.z0.glb.clouddn.com/rrr.png">
+<meta property="og:image" content="http://7vzu7p.com1.z0.glb.clouddn.com/linkchar.png">
+<meta property="og:image" content="http://7vzu7p.com1.z0.glb.clouddn.com/trible91.png">
+<meta property="og:updated_time" content="2016-01-07T04:55:30.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用Python做验证码识别">
+<meta name="twitter:description" content="平常我们上网经常遇到的验证码英文名为CAPTCHA， 这其实是一个非常炫酷的名字的缩写，全称为全自动区分计算机和人类的图灵测试（英语：Completely Automated Public Turing test to tell Computers and Humans Apart) 。看起来是不是很高大上啊，图灵测试都出来了。不过确实，对于识别验证码这种对人来说很容易的任务（普通验证码，非123">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <!-- <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,600' rel='stylesheet' type='text/css'> -->
+  <!-- <link href="//fonts.googleapis.com/css?family=Source+Code+Pro:400,700" rel="stylesheet" type="text/css"> -->
+  <link href="//fonts.useso.com/css?family=Source+Code+Pro:400,700" rel="stylesheet" type="text/css">
+  <link href='//fonts.useso.com/css?family=Open+Sans:300,600' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+  
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="header-outer" class="outer">
+    <a href="/" class="logo">STep by STep</a>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about/index.html">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        <div id="search-form-wrap">
+          <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://sineyuan.github.io"></form>
+        </div>
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+        
+        
+          <a id="nav-github-link" class="nav-icon" href="https://github.com/SineYuan" title="Fork me on GitHub"></a>
+        
+      </nav>
+    </div>
+  </div>
+</header>
+      <nav id="mobile-nav" class="off">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about/index.html" class="mobile-nav-link">About</a>
+  
+  <div id="search-form-wrap-mobile">
+    <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://sineyuan.github.io"></form>
+  </div>
+</nav>
+      <div class="outer">
+        
+          <aside id="sidebar">
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2016/01/06/python-captcha/">使用Python做验证码识别</a>
+          </li>
+        
+          <li>
+            <a href="/2016/01/02/android-studio-tess-two/">在Android Studio中使用tess-Two</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/22/migrate-to-hexo/">博客迁移到Hexo</a>
+          </li>
+        
+          <li>
+            <a href="/2015/03/05/android-package-cmd/">命令行编译打包android应用</a>
+          </li>
+        
+          <li>
+            <a href="/2015/03/02/latex-thesis/">使用LaTex写毕业论文</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+    
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">links</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="http://hexo.io">Hexo</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+        <section id="main"><article id="post-python-captcha" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/01/06/python-captcha/" class="article-date">
+  <time datetime="2016-01-06T13:18:32.000Z" itemprop="datePublished">2016-01-06</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      使用Python做验证码识别
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>平常我们上网经常遇到的验证码英文名为CAPTCHA， 这其实是一个非常炫酷的名字的缩写，全称为全自动区分计算机和人类的图灵测试（英语：Completely Automated Public Turing test to tell Computers and Humans Apart) 。看起来是不是很高大上啊，图灵测试都出来了。不过确实，对于识别验证码这种对人来说很容易的任务（普通验证码，非12306的）对于计算机来说可不简单。</p>
+<h2 id="工具">工具</h2><p>有用的工具：</p>
+<ul>
+<li><a href="http://www.pythonware.com/products/pil/" target="_blank" rel="external">PIL</a>(Python Image Library)——图片处理库</li>
+<li><a href="http://www.numpy.org/" target="_blank" rel="external">numpy</a>——矩阵运算</li>
+<li><a href="https://github.com/tesseract-ocr/tesseract" target="_blank" rel="external">tesseract</a>——开源的ORC库</li>
+<li><a href="http://scikit-learn.org/stable/index.html" target="_blank" rel="external">scikit-learn</a>——机器学习方面的集成包</li>
+</ul>
+<h2 id="分析验证码">分析验证码</h2><p>验证码也是有计算机生成的，所以不同的验证码有不同的处理方法。所以验证码识别的第一步是观察目标验证码的规律。这次面对的验证码张这样子</p>
+<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/shot.png" alt=" "></p>
+<p>一般来说第一步首先是要将验证码图片转换为二值图去除干扰信息，便于进一步处理。<br>观察分析验证码的字体都是同样的颜色，背景有横的或斜的条纹。直接二值化效果并不好。但是字符之间是没有粘连的，所以我们可以利用这一点提取出字符。</p>
+<h2 id="预处理">预处理</h2><h3 id="寻找字符像素">寻找字符像素</h3><p>首先第一步是提取出字符的颜色也就是RGB值，观察到字符的颜色相同，占整个验证码图片的比例基本上是差不多的。所以我们可以通过分析像素的直方图找出字符的像素值出来。不过我偷懒没用这样的方法，因为图片开头都是横向的条纹，所以我就直接从左往右扫描图片横向中线的像素值，找出像素值突变的地方就可以找到字符的像素值了。</p>
+<h3 id="FloodFill算法提取字符">FloodFill算法提取字符</h3><p>Flood fill算法是从一个区域中提取若干个连通的点与其他相邻区域区分开（或分别染成不同颜色）的经典算法。处理这种没有粘连字符或者粘连但是字符每个颜色不一样的验证码效果拔群。多说无益，看图就明白了</p>
+<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/floodfill4.gif" alt=" "><br><img src="http://7vzu7p.com1.z0.glb.clouddn.com/floodfill8.gif" alt=" "></p>
+<p>FloodFill最简单的实现是用递归</p>
+<pre><code><span class="function"><span class="keyword">def</span> <span class="title">flood_fill</span><span class="params">(img, x0, y0, blank_color, color_to_fill, cmp_func)</span>:</span> 
+    pix = img.load()
+    pix[x0, y0] = color_to_fill
+    offsets = [(<span class="number">1</span>, <span class="number">0</span>), (<span class="number">0</span>, <span class="number">1</span>), (-<span class="number">1</span>, <span class="number">0</span>), (<span class="number">0</span>, -<span class="number">1</span>)]
+    <span class="keyword">for</span> xoffset, yoffset <span class="keyword">in</span> offsets:
+        x, y = x0 + xoffset, y0 + yoffset
+        <span class="keyword">try</span>:
+            <span class="keyword">if</span> cmp_func(pix[x, y], blank_color):
+                flood_fill(img, x, y, blank_color)
+        <span class="keyword">except</span> IndexError:
+            <span class="keyword">pass</span>
+</code></pre><p>不过python不支持尾递归优化，所以运行时回出现异常提示到达最大递归限制。所以改用基于队列的广度优先搜索<br>实现</p>
+<pre><code><span class="function"><span class="keyword">def</span> <span class="title">flood_fill2</span><span class="params">(img, x0, y0, blank_color, color_to_fill, cmp_func)</span>:</span>
+    pix = img.load()
+    visited = set()
+    q = queue.Queue()
+    q.put((x0, y0))
+    visited.add((x0, y0))
+    offsets = [(<span class="number">1</span>, <span class="number">0</span>), (<span class="number">0</span>, <span class="number">1</span>), (-<span class="number">1</span>, <span class="number">0</span>), (<span class="number">0</span>, -<span class="number">1</span>)]
+    <span class="keyword">while</span> <span class="keyword">not</span> q.empty():
+        x, y = q.get()
+        pix[x, y] = color_to_fill
+        <span class="keyword">for</span> xoffset, yoffset <span class="keyword">in</span> offsets:
+            x1, y1 = x + xoffset, y + yoffset
+            <span class="keyword">if</span> (x1, y1) <span class="keyword">in</span> (visited):
+                <span class="keyword">continue</span>  <span class="comment"># 已经访问过了</span>
+            visited.add((x1, y1))
+            <span class="keyword">try</span>:
+                <span class="keyword">if</span> cmp_func(pix[x1, y1], blank_color):
+                       q.put((x1, y1))
+            <span class="keyword">except</span> IndexError:
+                <span class="keyword">pass</span>
+    <span class="keyword">return</span> visited
+</code></pre><h3 id="字符分割">字符分割</h3><p>字符串的分割也是非常重要的一步，对于复杂的验证码，目前还没有非常有效的字符串分割方法。 对于不粘连并且字符之间没有重叠的字符串直接在上下左右四个方向扫描整行或整列是否空白来分割字符</p>
+<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/rrr.png" alt=" "></p>
+<p>对于字符间有重叠的，如下图的2和F。</p>
+<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/linkchar.png" alt=""></p>
+<p>一种方法是使用斜向的切割法，但更好的方法还是统计x坐标上的黑白像素占比，在字符分隔处会有白像素占比达波谷。根据这个波谷的来分割图片。</p>
+<h3 id="标准化(normalize)">标准化(normalize)</h3><p>这一步将切割出来的字符摆正并且统一成一样的大小</p>
+<p>摆正字符的方法是使用旋转卡壳算法。即从 -30度 ~ 30度旋转图片，检测字符间距，取最小间距对应的角度。</p>
+<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/trible91.png" alt=""></p>
+<p>最后在四周填充像素，把所以字符图片统一成一样的尺寸。</p>
+<h3 id="识别">识别</h3><h4 id="Tesseract">Tesseract</h4><p>识别方面可以使用ORC库<a href="https://github.com/tesseract-ocr/tesseract" target="_blank" rel="external">tesseract</a></p>
+<p>在安装tesseract后 python使用<a href="https://pypi.python.org/pypi/pytesseract/0.1" target="_blank" rel="external">pytessract</a>方便的调用tesseractF</p>
+<pre><code><span class="keyword">import</span> pytesseract
+<span class="keyword">from</span> <span class="type">PIL</span> <span class="keyword">import</span> <span class="type">Image</span>
+
+img = <span class="type">Image</span>.open(<span class="string">"captcha.png"</span>)
+
+<span class="literal">result</span> = pytesseract.image_to_string(img, config='-psm <span class="number">7</span>')
+</code></pre><p>不过经测试tesseract的对于标准的印刷体的英文识别效果还是可以的，但若有旋转扭曲等扰动等话识别率就不是很高了。不过tesseract通过训练自己的识别模型来提高识别率。</p>
+<h4 id="机器学习">机器学习</h4><p>另外一个看起来更高大上的方法是应用机器学习的方法来做识别，常用的有SVM和神经网络。</p>
+<p>python下机器学习的库首推<a href="http://scikit-learn.org/stable/index.html" target="_blank" rel="external">scikit-learn</a>。scikit-learn里面集成了各种常用的识别模型，降纬，聚类等算法，还要非常棒的文档，可以说是机器学习方面的百宝箱。</p>
+<p>使用scikit-learn训练验证码识别模型这事。。。还是先挖个坑，下回再填吧</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://sineyuan.github.io/2016/01/06/python-captcha/" data-id="cij3ju6840002y31zbav7d4oy" class="article-share-link">Share</a>
+      
+        <a href="http://sineyuan.github.io/2016/01/06/python-captcha/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2016/01/02/android-studio-tess-two/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">在Android Studio中使用tess-Two</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      <a href="/" class="logo">STep by STep</a>
+      &copy; 2016 Sine Yuan<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+<script>
+  var disqus_shortname = 'sineyuansblog';
+  
+  var disqus_url = 'http://sineyuan.github.io/2016/01/06/python-captcha/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="/js/jquery.min.js" type="text/javascript"></script>
+<script src="/js/jquery.scrollLoading.js" type="text/javascript"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>
