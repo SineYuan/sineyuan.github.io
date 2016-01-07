@@ -17,7 +17,7 @@
 <meta property="og:image" content="http://7vzu7p.com1.z0.glb.clouddn.com/rrr.png">
 <meta property="og:image" content="http://7vzu7p.com1.z0.glb.clouddn.com/linkchar.png">
 <meta property="og:image" content="http://7vzu7p.com1.z0.glb.clouddn.com/trible91.png">
-<meta property="og:updated_time" content="2016-01-07T04:55:30.000Z">
+<meta property="og:updated_time" content="2016-01-07T06:12:12.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="使用Python做验证码识别">
 <meta name="twitter:description" content="平常我们上网经常遇到的验证码英文名为CAPTCHA， 这其实是一个非常炫酷的名字的缩写，全称为全自动区分计算机和人类的图灵测试（英语：Completely Automated Public Turing test to tell Computers and Humans Apart) 。看起来是不是很高大上啊，图灵测试都出来了。不过确实，对于识别验证码这种对人来说很容易的任务（普通验证码，非123">
@@ -216,7 +216,7 @@
 <p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/rrr.png" alt=" "></p>
 <p>对于字符间有重叠的，如下图的2和F。</p>
 <p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/linkchar.png" alt=""></p>
-<p>一种方法是使用斜向的切割法，但更好的方法还是统计x坐标上的黑白像素占比，在字符分隔处会有白像素占比达波谷。根据这个波谷的来分割图片。</p>
+<p>一种方法是使用斜向的切割法，但更好的方法还是统计x坐标上的黑白像素占比，在字符分隔处会有白像素占比的波谷。根据这个波谷的来分割图片。</p>
 <h3 id="标准化(normalize)">标准化(normalize)</h3><p>这一步将切割出来的字符摆正并且统一成一样的大小</p>
 <p>摆正字符的方法是使用旋转卡壳算法。即从 -30度 ~ 30度旋转图片，检测字符间距，取最小间距对应的角度。</p>
 <p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/trible91.png" alt=""></p>
@@ -233,11 +233,13 @@ img = <span class="type">Image</span>.open(<span class="string">"captcha.png"</s
 <h4 id="机器学习">机器学习</h4><p>另外一个看起来更高大上的方法是应用机器学习的方法来做识别，常用的有SVM和神经网络。</p>
 <p>python下机器学习的库首推<a href="http://scikit-learn.org/stable/index.html" target="_blank" rel="external">scikit-learn</a>。scikit-learn里面集成了各种常用的识别模型，降纬，聚类等算法，还要非常棒的文档，可以说是机器学习方面的百宝箱。</p>
 <p>使用scikit-learn训练验证码识别模型这事。。。还是先挖个坑，下回再填吧</p>
+<hr>
+<h3 id="Reference">Reference</h3><p><a href="http://drops.wooyun.org/tips/141" target="_blank" rel="external">http://drops.wooyun.org/tips/141</a><br><a href="http://drops.wooyun.org/tips/6313" target="_blank" rel="external">http://drops.wooyun.org/tips/6313</a><br><a href="http://pillow.readthedocs.org/en/3.0.x/reference/Image.html" target="_blank" rel="external">http://pillow.readthedocs.org/en/3.0.x/reference/Image.html</a></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/06/python-captcha/" data-id="cij3ju6840002y31zbav7d4oy" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/06/python-captcha/" data-id="cij3uvrrk0002331za1hxco9a" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/06/python-captcha/#disqus_thread" class="article-comment-link">Comments</a>
       
