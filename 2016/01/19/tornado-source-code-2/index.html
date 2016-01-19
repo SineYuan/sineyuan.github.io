@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>tornado源码分析笔记(2) | STep by STep</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="IOLoop就是 tornado 的事件循环，是一个全局的单例，通过IOLoop.current()或IOLoop.instance()访问。IOLoop.current()内部调用的也是instance()方法。所以我们来看instance():
+class IOLoop(Configurable):
+
+    ...
+
+    # Global lock for creating global">
+<meta property="og:type" content="article">
+<meta property="og:title" content="tornado源码分析笔记(2)">
+<meta property="og:url" content="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/index.html">
+<meta property="og:site_name" content="STep by STep">
+<meta property="og:description" content="IOLoop就是 tornado 的事件循环，是一个全局的单例，通过IOLoop.current()或IOLoop.instance()访问。IOLoop.current()内部调用的也是instance()方法。所以我们来看instance():
+class IOLoop(Configurable):
+
+    ...
+
+    # Global lock for creating global">
+<meta property="og:updated_time" content="2016-01-19T15:35:46.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="tornado源码分析笔记(2)">
+<meta name="twitter:description" content="IOLoop就是 tornado 的事件循环，是一个全局的单例，通过IOLoop.current()或IOLoop.instance()访问。IOLoop.current()内部调用的也是instance()方法。所以我们来看instance():
+class IOLoop(Configurable):
+
+    ...
+
+    # Global lock for creating global">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <!-- <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,600' rel='stylesheet' type='text/css'> -->
+  <!-- <link href="//fonts.googleapis.com/css?family=Source+Code+Pro:400,700" rel="stylesheet" type="text/css"> -->
+  <link href="//fonts.useso.com/css?family=Source+Code+Pro:400,700" rel="stylesheet" type="text/css">
+  <link href='//fonts.useso.com/css?family=Open+Sans:300,600' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+  
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="header-outer" class="outer">
+    <a href="/" class="logo">STep by STep</a>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about/index.html">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        <div id="search-form-wrap">
+          <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://sineyuan.github.io"></form>
+        </div>
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+        
+        
+          <a id="nav-github-link" class="nav-icon" href="https://github.com/SineYuan" title="Fork me on GitHub"></a>
+        
+      </nav>
+    </div>
+  </div>
+</header>
+      <nav id="mobile-nav" class="off">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about/index.html" class="mobile-nav-link">About</a>
+  
+  <div id="search-form-wrap-mobile">
+    <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://sineyuan.github.io"></form>
+  </div>
+</nav>
+      <div class="outer">
+        
+          <aside id="sidebar">
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2016/01/19/tornado-source-code-2/">tornado源码分析笔记(2)</a>
+          </li>
+        
+          <li>
+            <a href="/2016/01/19/tornado-source-code-1/">tornado源码分析笔记(1)</a>
+          </li>
+        
+          <li>
+            <a href="/2016/01/06/python-captcha/">使用Python做验证码识别</a>
+          </li>
+        
+          <li>
+            <a href="/2016/01/02/android-studio-tess-two/">在Android Studio中使用tess-Two</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/22/migrate-to-hexo/">博客迁移到Hexo</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+    
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">links</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="http://hexo.io">Hexo</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+        <section id="main"><article id="post-tornado-source-code-2" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/01/19/tornado-source-code-2/" class="article-date">
+  <time datetime="2016-01-19T13:01:28.000Z" itemprop="datePublished">2016-01-19</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      tornado源码分析笔记(2)
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><code>IOLoop</code>就是 tornado 的事件循环，是一个全局的单例，通过<code>IOLoop.current()</code>或<code>IOLoop.instance()</code>访问。<code>IOLoop.current()</code>内部调用的也是<code>instance()</code>方法。所以我们来看<code>instance()</code>:</p>
+<pre><code><span class="class"><span class="keyword">class</span> <span class="title">IOLoop</span><span class="params">(Configurable)</span>:</span>
+
+    ...
+
+    <span class="comment"># Global lock for creating global IOLoop instance</span>
+        _instance_lock = threading.Lock()
+
+        _current = threading.local()
+
+<span class="decorator">        @staticmethod</span>
+        <span class="function"><span class="keyword">def</span> <span class="title">instance</span><span class="params">()</span>:</span>
+            <span class="keyword">if</span> <span class="keyword">not</span> hasattr(IOLoop, <span class="string">"_instance"</span>):
+                <span class="keyword">with</span> IOLoop._instance_lock:
+                    <span class="keyword">if</span> <span class="keyword">not</span> hasattr(IOLoop, <span class="string">"_instance"</span>):
+                        <span class="comment"># New instance after double check</span>
+                        IOLoop._instance = IOLoop()
+            <span class="keyword">return</span> IOLoop._instance
+</code></pre><p><code>IOLoop</code>没有<code>__init__()</code>函数，所以我们要去看它的父类<code>Configurable</code>:</p>
+<pre><code><span class="class"><span class="keyword">class</span> <span class="title">Configurable</span><span class="params">(object)</span>:</span>
+
+    __impl_class = <span class="keyword">None</span>
+    __impl_kwargs = <span class="keyword">None</span>
+
+    <span class="function"><span class="keyword">def</span> <span class="title">__new__</span><span class="params">(cls, *args, **kwargs)</span>:</span>
+        base = cls.configurable_base()
+        init_kwargs = {}
+        <span class="keyword">if</span> cls <span class="keyword">is</span> base:
+            impl = cls.configured_class()
+            <span class="keyword">if</span> base.__impl_kwargs:
+                init_kwargs.update(base.__impl_kwargs)
+        <span class="keyword">else</span>:
+            impl = cls
+        init_kwargs.update(kwargs)
+        instance = super(Configurable, cls).__new__(impl)
+
+        instance.initialize(*args, **init_kwargs)
+        <span class="keyword">return</span> instance            
+</code></pre><p><code>IOLoop.confirable_base()</code>返回的就是<code>IOLoop</code>自身，所以进入<code>configured_class()</code></p>
+<pre><code><span class="decorator">@classmethod</span>
+<span class="function"><span class="keyword">def</span> <span class="title">configured_class</span><span class="params">(cls)</span>:</span>
+    <span class="string">"""Returns the currently configured class."""</span>
+    base = cls.configurable_base()
+    <span class="keyword">if</span> cls.__impl_class <span class="keyword">is</span> <span class="keyword">None</span>:
+        base.__impl_class = cls.configurable_default()
+    <span class="keyword">return</span> base.__impl_class
+</code></pre><p><code>IOLoop.configured_class()</code>返回的也是<code>IOLoop</code>这个类。</p>
+<pre><code><span class="decorator">@classmethod</span>
+<span class="function"><span class="keyword">def</span> <span class="title">configurable_default</span><span class="params">(cls)</span>:</span>
+    <span class="keyword">if</span> hasattr(select, <span class="string">"epoll"</span>):
+        <span class="keyword">from</span> tornado.platform.epoll <span class="keyword">import</span> EPollIOLoop
+        <span class="keyword">return</span> EPollIOLoop
+    <span class="keyword">if</span> hasattr(select, <span class="string">"kqueue"</span>):
+        <span class="comment"># Python 2.6+ on BSD or Mac</span>
+        <span class="keyword">from</span> tornado.platform.kqueue <span class="keyword">import</span> KQueueIOLoop
+        <span class="keyword">return</span> KQueueIOLoop
+    <span class="keyword">from</span> tornado.platform.select <span class="keyword">import</span> SelectIOLoop
+    <span class="keyword">return</span> SelectIOLoop
+</code></pre><p>在这里我们看到通过判断<code>select</code>模块有无 “epoll”，”kqueue” 属性在不同平台上实例化不同的<code>IOLoop</code>实例。<code>EPollIOLoop</code>、<code>KQueueIOLoop</code>和<code>SelectIOLoop</code>都继承于<code>PollIOLoop</code>并封装了统一的接口。在<code>PollIOLoop</code>中可以看到：</p>
+<pre><code><span class="function"><span class="keyword">def</span> <span class="title">add_handler</span><span class="params">(self, fd, handler, events)</span>:</span>
+    fd, obj = self.split_fd(fd)
+    self._handlers[fd] = (obj, stack_context.wrap(handler))
+    self._impl.register(fd, events | self.ERROR)
+
+<span class="function"><span class="keyword">def</span> <span class="title">update_handler</span><span class="params">(self, fd, events)</span>:</span>
+    fd, obj = self.split_fd(fd)
+    self._impl.modify(fd, events | self.ERROR)
+
+<span class="function"><span class="keyword">def</span> <span class="title">remove_handler</span><span class="params">(self, fd)</span>:</span>
+    fd, obj = self.split_fd(fd)
+    self._handlers.pop(fd, <span class="keyword">None</span>)
+    self._events.pop(fd, <span class="keyword">None</span>)
+    <span class="keyword">try</span>:
+        self._impl.unregister(fd)
+    <span class="keyword">except</span> Exception:
+        gen_log.debug(<span class="string">"Error deleting fd from IOLoop"</span>, exc_info=<span class="keyword">True</span>)
+</code></pre><p>如果要实现自己的 tornado 异步函数可以调用上面三个方法 在I<code>OLoop</code>中注册 fd 和 回调即可。<br>回到<code>__new__</code>函数，接下来就是创建实例<code>instance</code>然后初始化。<br>接下来我们到了重头戏——<code>start()</code></p>
+<p><code>start</code>方法的实现在<code>PollIOLoop</code>，有近200行，不过可以分为几个部分</p>
+<pre><code><span class="function"><span class="keyword">def</span> <span class="title">start</span><span class="params">(<span class="keyword">self</span>)</span>:</span>
+    <span class="comment"># 初始化</span>
+    <span class="keyword">if</span> <span class="keyword">self</span>.<span class="symbol">_running:</span>
+        raise <span class="constant">RuntimeError</span>(<span class="string">"IOLoop is already running"</span>)
+    <span class="keyword">self</span>._setup_logging()
+    <span class="keyword">if</span> <span class="keyword">self</span>.<span class="symbol">_stopped:</span>
+        <span class="keyword">self</span>._stopped = <span class="constant">False</span>
+        <span class="keyword">return</span>
+    old_current = getattr(<span class="constant">IOLoop</span>._current, <span class="string">"instance"</span>, <span class="constant">None</span>)
+    <span class="constant">IOLoop</span>._current.instance = <span class="keyword">self</span>
+    <span class="keyword">self</span>._thread_ident = thread.get_ident()
+    <span class="keyword">self</span>._running = <span class="constant">True</span>
+
+    ...
+
+    <span class="symbol">try:</span>
+        <span class="comment"># 下面就是事件循环</span>
+        <span class="keyword">while</span> <span class="constant">True</span><span class="symbol">:</span>
+            <span class="comment"># Prevent IO event starvation by delaying new callbacks</span>
+            <span class="comment"># to the next iteration of the event loop.</span>
+            with <span class="keyword">self</span>.<span class="symbol">_callback_lock:</span>
+                callbacks = <span class="keyword">self</span>._callbacks
+                <span class="keyword">self</span>._callbacks = []
+
+            <span class="comment"># Add any timeouts that have come due to the callback</span>
+            due_timeouts = []
+            <span class="keyword">if</span> <span class="keyword">self</span>.<span class="symbol">_timeouts:</span>
+                now = <span class="keyword">self</span>.time()
+                <span class="keyword">while</span> <span class="keyword">self</span>.<span class="symbol">_timeouts:</span>
+                    <span class="keyword">if</span> <span class="keyword">self</span>._timeouts[<span class="number">0</span>].callback is <span class="constant">None</span><span class="symbol">:</span>
+                        <span class="comment"># The timeout was cancelled.  Note that the</span>
+                        <span class="comment"># cancellation check is repeated below for timeouts</span>
+                        <span class="comment"># that are cancelled by another timeout or callback.</span>
+                        heapq.heappop(<span class="keyword">self</span>._timeouts)
+                        <span class="keyword">self</span>._cancellations -= <span class="number">1</span>
+                    elif <span class="keyword">self</span>._timeouts[<span class="number">0</span>].deadline &lt;= <span class="symbol">now:</span>
+                        due_timeouts.append(heapq.heappop(<span class="keyword">self</span>._timeouts))
+                    <span class="symbol">else:</span>
+                        <span class="keyword">break</span>
+                <span class="keyword">if</span> (<span class="keyword">self</span>._cancellations &gt; <span class="number">512</span>
+                        <span class="keyword">and</span> <span class="keyword">self</span>._cancellations &gt; (len(<span class="keyword">self</span>._timeouts) <span class="prompt">&gt;&gt; </span><span class="number">1</span>))<span class="symbol">:</span>
+                    <span class="comment"># Clean up the timeout queue when it gets large and it's</span>
+                    <span class="comment"># more than half cancellations.</span>
+                    <span class="keyword">self</span>._cancellations = <span class="number">0</span>
+                    <span class="keyword">self</span>._timeouts = [x <span class="keyword">for</span> x <span class="keyword">in</span> <span class="keyword">self</span>._timeouts
+                                      <span class="keyword">if</span> x.callback is <span class="keyword">not</span> <span class="constant">None</span>]
+                    heapq.heapify(<span class="keyword">self</span>._timeouts)
+
+            <span class="comment"># 使用self._run_callback来执行回调</span>
+            <span class="keyword">for</span> callback <span class="keyword">in</span> <span class="symbol">callbacks:</span>
+                <span class="keyword">self</span>._run_callback(callback)
+            <span class="comment"># 执行所有到期的 timeout</span>
+            <span class="keyword">for</span> timeout <span class="keyword">in</span> <span class="symbol">due_timeouts:</span>
+                <span class="keyword">if</span> timeout.callback is <span class="keyword">not</span> <span class="constant">None</span><span class="symbol">:</span>
+                    <span class="keyword">self</span>._run_callback(timeout.callback)
+            <span class="comment"># Closures may be holding on to a lot of memory, so allow</span>
+            <span class="comment"># them to be freed before we go into our poll wait.</span>
+            callbacks = callback = due_timeouts = timeout = <span class="constant">None</span>
+
+        ... 
+</code></pre><p>在循环的开始 先执行<code>self._callbacks</code>列表里面的回调函数还有 到达<code>deadline</code>的<code>timeout</code>。<code>timeout</code>类保存了一个<code>self.deadline</code>和<code>self.callback</code>并重载了<code>__lt__</code>和<code>__le__</code>方法，所以<code>IOLoop._timeouts</code>能使用优先队列<code>heap</code>来对它们排序，从而找出到期的<code>timeout</code>并执行它们的回调函数。<br>回到事件循环，执行完所有<code>callbacks</code>和<code>due_timeouts</code>后，<code>poll</code>终于出场了：</p>
+<pre><code>...
+<span class="comment"># 接上面</span>
+
+        <span class="keyword">if</span> <span class="keyword">self</span>._callbacks:
+            <span class="comment"># 如果在上面 self._callbacks 存在有callback，</span>
+            <span class="comment"># poll 的等待时间设为0</span>
+            poll_timeout = <span class="number">0.0</span>
+            <span class="comment"># 如果在上面 self._timeouts 存在有timeout，</span>
+            <span class="comment"># poll等待到最近timeout.deadline </span>
+        elif <span class="keyword">self</span>._timeouts:
+            poll_timeout = <span class="keyword">self</span>._timeouts[<span class="number">0</span>].deadline - <span class="keyword">self</span>.time()
+            poll_timeout = max(<span class="number">0</span>, min(poll_timeout, _POLL_TIMEOUT))
+        <span class="keyword">else</span>:
+            <span class="comment"># No timeouts and no callbacks, so use the default.</span>
+            poll_timeout = _POLL_TIMEOUT
+
+        <span class="keyword">if</span> not <span class="keyword">self</span>._running:
+            <span class="keyword">break</span>
+
+        <span class="keyword">if</span> <span class="keyword">self</span>._blocking_signal_threshold is not None:
+            <span class="comment"># clear alarm so it doesn't fire while poll is waiting for</span>
+            <span class="comment"># events.</span>
+            signal.setitimer(signal.ITIMER_REAL, <span class="number">0</span>, <span class="number">0</span>)
+
+        <span class="keyword">try</span>:
+            <span class="comment"># 终于 poll 了</span>
+            event_pairs = <span class="keyword">self</span>._impl.poll(poll_timeout)
+        except <span class="keyword">Exception</span> <span class="keyword">as</span> e:
+            <span class="keyword">if</span> errno_from_exception(e) == errno.EINTR:
+                <span class="keyword">continue</span>
+            <span class="keyword">else</span>:
+                raise
+
+        <span class="keyword">if</span> <span class="keyword">self</span>._blocking_signal_threshold is not None:
+            signal.setitimer(signal.ITIMER_REAL,
+                             <span class="keyword">self</span>._blocking_signal_threshold, <span class="number">0</span>)
+
+        <span class="keyword">self</span>._events.update(event_pairs)
+        <span class="keyword">while</span> <span class="keyword">self</span>._events:
+            fd, events = <span class="keyword">self</span>._events.popitem()
+            <span class="keyword">try</span>:
+                <span class="comment"># 获取注册 fd 的回调并执行</span>
+                fd_obj, handler_func = <span class="keyword">self</span>._handlers[fd]
+                handler_func(fd_obj, events)
+            except (OSError, IOError) <span class="keyword">as</span> e:
+                <span class="keyword">if</span> errno_from_exception(e) == errno.EPIPE:
+                    <span class="comment"># Happens when the client closes the connection</span>
+                    pass
+                <span class="keyword">else</span>:
+                    <span class="keyword">self</span>.handle_callback_exception(<span class="keyword">self</span>._handlers.get(fd))
+            except <span class="keyword">Exception</span>:
+                <span class="keyword">self</span>.handle_callback_exception(<span class="keyword">self</span>._handlers.get(fd))
+        fd_obj = handler_func = None
+
+<span class="keyword">finally</span>:
+    <span class="comment"># reset the stopped flag so another start/stop pair can be issued</span>
+    <span class="keyword">self</span>._stopped = <span class="keyword">False</span>
+    <span class="keyword">if</span> <span class="keyword">self</span>._blocking_signal_threshold is not None:
+        signal.setitimer(signal.ITIMER_REAL, <span class="number">0</span>, <span class="number">0</span>)
+    IOLoop._current.instance = old_current
+    <span class="keyword">if</span> old_wakeup_fd is not None:
+        signal.set_wakeup_fd(old_wakeup_fd)
+</code></pre><p>总结一下，tornado 的<code>IOLoop</code>是 基于<code>poll</code>的事件驱动模型<code>IOLoop</code>是单线程的，避免了多进程/多线程模型上下文切换的损耗，在 IO 密集的情况下有很好的性能。但如果在<code>IOLoop</code>循环中 callback 的执行时间太长会阻塞掉整个 <code>IOLooop</code>，造成性能的急剧下降，所以在实践中要十分的注意。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/" data-id="cijleyex60001qi1ztqnmxn3c" class="article-share-link">Share</a>
+      
+        <a href="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2016/01/19/tornado-source-code-1/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">tornado源码分析笔记(1)</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      <a href="/" class="logo">STep by STep</a>
+      &copy; 2016 Sine Yuan<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+<script>
+  var disqus_shortname = 'sineyuansblog';
+  
+  var disqus_url = 'http://sineyuan.github.io/2016/01/19/tornado-source-code-2/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="/js/jquery.min.js" type="text/javascript"></script>
+<script src="/js/jquery.scrollLoading.js" type="text/javascript"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>
