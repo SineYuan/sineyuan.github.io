@@ -78,7 +78,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -88,6 +88,10 @@
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2016/05/29/deploy-k8s-on-coreos/">CoreOS部署Kubernetes</a>
+          </li>
         
           <li>
             <a href="/2016/05/29/coreos-osx-without-vagrant/">OSX上摆脱vagrant搭建CoreOS集群</a>
@@ -103,10 +107,6 @@
         
           <li>
             <a href="/2016/01/19/tornado-source-code-1/">tornado源码分析笔记(1)</a>
-          </li>
-        
-          <li>
-            <a href="/2016/01/06/python-captcha/">使用Python做验证码识别</a>
           </li>
         
       </ul>
@@ -136,6 +136,89 @@
 </aside>
         
         <section id="main">
+  
+    <article id="post-deploy-k8s-on-coreos" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/05/29/deploy-k8s-on-coreos/" class="article-date">
+  <time datetime="2016-05-29T14:07:38.000Z" itemprop="datePublished">2016-05-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/05/29/deploy-k8s-on-coreos/">CoreOS部署Kubernetes</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="准备工作">准备工作</h2><h3 id="下载Kubernetes">下载Kubernetes</h3><p>在<a href="https://github.com/kubernetes/kubernetes/releases" target="_blank" rel="external">github</a>下载最新的Kuberbetes二进制包，这里我下载的是v1.2.4的版本。</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">tar zxvf kubernetes<span class="class">.tar</span><span class="class">.gz</span></span><br><span class="line">cd kubernetes</span><br><span class="line"><span class="comment">// 解压amd64的版本</span></span><br><span class="line">tar zxvf kubernetes/server/kubernetes-server-linux-amd64<span class="class">.tar</span><span class="class">.gz</span></span><br><span class="line">cd kubernetes/server/kubernetes/server/bin</span><br><span class="line"></span><br><span class="line"><span class="comment">// 将下列文件复制到各个节点上</span></span><br><span class="line">cp kube-apiserver kube-proxy kubelet kube-scheduler kube-controller-manager /opt/bin</span><br></pre></td></tr></table></figure>
+<p>将kube-apiserver kube-proxy kubelet kube-scheduler kube-controller-manager复制到各个节点上，我这里放到各个节点到<code>/opt/bin</code>文件夹里</p>
+<h3 id="启动etcd">启动etcd</h3><p>可以参考<a href="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/">前文</a>。确保etcdctl命令可用。在这里我用etcd2代替etcd</p>
+<h2 id="配置网络">配置网络</h2><p>由于每个节点docker容器的ip可能是相同的，为了使不同节点上的docker容器能够互相连接，所以需要有一种方法来统一分配每个节点的docker容器ip，防止冲突，并提供不同节点容器的连接能力，也就是SDN(software defined network) kubernetes没有提供这个功能，不过有许多的kubernetes社区有许多解决方案。如<code>flannel</code>,<code>calico</code>, <code>OVS</code> 等</p>
+<p>这里我选用CoreOS的flannel</p>
+<p>flannel使用etcd来保存子网ip等分配，新加入节点的flanned通过访问etcd来获取一个可用的子网网段，并负责容器间的代理转发。</p>
+<p>在CoreOS中自带flannel.service，但实际上CoreOS为了节省空间，这个service实际上是运行了一个flannel的docker容器，第一次启动时需要从网络下载flannel的镜像。由于众所周知的原因，我们还是下载编译好的二进制包吧。</p>
+<p>在<a href="https://github.com/coreos/flannel" target="_blank" rel="external">https://github.com/coreos/flannel</a>下载最新的release，解压出flanneld，同样放入<code>/opt/bin</code>里</p>
+<p>在所有节点<code>/etc/systemd/system/*.service</code>里添加<code>flannel.service</code>文件</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">[Unit]</span></span><br><span class="line"><span class="setting">Description=<span class="value">Flannel network fabric for CoreOS</span></span></span><br><span class="line"><span class="setting">Requires=<span class="value">etcd2.service</span></span></span><br><span class="line"><span class="setting">After=<span class="value">etcd2.service</span></span></span><br><span class="line"><span class="title"></span><br><span class="line">[Service]</span></span><br><span class="line"><span class="setting">EnvironmentFile=<span class="value">/etc/environment</span></span></span><br><span class="line"><span class="setting">ExecStartPre=<span class="value">-/bin/bash -c <span class="string">"until /usr/bin/etcdctl set /coreos.com/network/config '&#123;\"Network\": \"10.100.0.0/16\"&#125;'; do echo \"waiting for etcd to become available...\"; sleep 5; done"</span></span></span></span><br><span class="line"><span class="setting">ExecStart=<span class="value">/opt/bin/flanneld -iface=<span class="variable">$private_ipv4</span></span></span></span><br><span class="line"><span class="setting">ExecStartPost=<span class="value">-/bin/bash -c <span class="string">"until [ -e /run/flannel/subnet.env ]; do echo \"waiting for write.\"; sleep 3; done"</span></span></span></span><br><span class="line"><span class="setting">Restart=<span class="value"><span class="keyword">on</span>-failure</span></span></span><br><span class="line"><span class="setting">RestartSec=<span class="value"><span class="number">5</span></span></span></span><br><span class="line"><span class="title"></span><br><span class="line">[Install]</span></span><br><span class="line"><span class="setting">WantedBy=<span class="value">multi-user.target</span></span></span><br></pre></td></tr></table></figure>
+<p>flanneld成功获取到子网网段后会以环境变量的形式保存在<code>/run/flannel/subnet.env</code>文件里。我们再修改<code>docker.service</code></p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">[Unit]</span></span><br><span class="line"><span class="setting">Description=<span class="value">Docker Application Container Engine</span></span></span><br><span class="line"><span class="setting">Documentation=<span class="value">http://docs.docker.com</span></span></span><br><span class="line"><span class="setting">After=<span class="value">docker.socket early-docker.target network.target flannel.service</span></span></span><br><span class="line"><span class="setting">Requires=<span class="value">docker.socket early-docker.target flannel.service</span></span></span><br><span class="line"><span class="title"></span><br><span class="line">[Service]</span></span><br><span class="line"><span class="setting">Environment=<span class="value"><span class="string">"DOCKER_CGROUPS=--exec-opt native.cgroupdriver=systemd"</span></span></span></span><br><span class="line"><span class="setting">EnvironmentFile=<span class="value">/run/flannel/subnet.env</span></span></span><br><span class="line"><span class="setting">MountFlags=<span class="value">slave</span></span></span><br><span class="line"><span class="setting">LimitNOFILE=<span class="value"><span class="number">1048576</span></span></span></span><br><span class="line"><span class="setting">LimitNPROC=<span class="value"><span class="number">1048576</span></span></span></span><br><span class="line"><span class="setting">ExecStartPre=<span class="value">-/usr/bin/ip link set dev docker0 down</span></span></span><br><span class="line"><span class="setting">ExecStartPre=<span class="value">-/usr/sbin/brctl delbr docker0</span></span></span><br><span class="line"><span class="setting">ExecStart=<span class="value">/usr/lib/coreos/dockerd daemon --host=fd:// <span class="variable">$DOCKER_OPTS</span> <span class="variable">$DOCKER_CGROU</span> --bip=<span class="variable">$&#123;FLANNEL_SUBNET&#125;</span> --mtu=<span class="variable">$&#123;FLANNEL_MTU&#125;</span> <span class="variable">$DOCKER_OPTS</span></span></span></span><br><span class="line"><span class="title"></span><br><span class="line">[Install]</span></span><br><span class="line"><span class="setting">WantedBy=<span class="value">multi-user.target</span></span></span><br></pre></td></tr></table></figure>
+<p>使用subnet.env中的参数启动docker service, 保证不同节点的docker容器网段不同。</p>
+<h3 id="配置kubernetes组件">配置kubernetes组件</h3><p>etcd和网络配置好了以后后面的就没什么的了。<br>在<code>/etc/systemd/system/*.service</code>下创建systemd服务文件方便我们管理这些服务</p>
+<p>在master节点创建</p>
+<p><code>kube-apiserver.service</code></p>
+<figure class="highlight haml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">[Unit]</span><br><span class="line">Description=Kubernetes API Server</span><br><span class="line">Documentation=https://github.com/GoogleCloudPlatform/kubernetes</span><br><span class="line">Requires=etcd2.service</span><br><span class="line">After=etcd2.service</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line">ExecStart=/opt/bin/kube-apiserver \</span><br><span class="line">        -<span class="ruby">-allow-privileged=<span class="keyword">true</span> \</span><br><span class="line"></span>        -<span class="ruby">-etcd-servers=<span class="symbol">http:</span>/<span class="regexp">/$private_ipv4:2379 \</span><br><span class="line"></span></span>        -<span class="ruby"><span class="regexp">-admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ResourceQuota \</span><br><span class="line"></span></span>        -<span class="ruby"><span class="regexp">-insecure-bind-address=0.0.0.0 \</span><br><span class="line"></span></span>        -<span class="ruby"><span class="regexp">-advertise-address=$private_ipv4 \</span><br><span class="line"></span></span>        -<span class="ruby"><span class="regexp">-service-cluster-ip-range=10.100.0.0/</span><span class="number">16</span> \</span><br><span class="line"></span>        -<span class="ruby">-runtime-config=extensions/v1beta1/daemonsets=<span class="keyword">true</span>,extensions/v1beta1/deployments=<span class="keyword">true</span>,extensions/v1beta1/ingress=<span class="keyword">true</span> \</span><br><span class="line"></span>        -<span class="ruby">-logtostderr=<span class="keyword">true</span></span><br><span class="line"></span>Restart=always</span><br><span class="line">RestartSec=10</span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br></pre></td></tr></table></figure>
+<p><code>kube-controller-manager.service</code></p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">[Unit]</span><br><span class="line"><span class="constant">Description</span>=Kubernetes Controller Manager</span><br><span class="line"><span class="constant">Documentation</span>=https:<span class="comment">//github.com/GoogleCloudPlatform/kubernetes</span></span><br><span class="line"><span class="constant">Requires</span>=kube-apiserver.service</span><br><span class="line"><span class="constant">After</span>=kube-apiserver.service</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line"><span class="constant">ExecStart</span>=/opt/bin/kube-controller-manager \</span><br><span class="line">        --master=$private_ipv4:<span class="number">8080</span> \</span><br><span class="line">        --logtostderr=<span class="literal">true</span></span><br><span class="line"><span class="constant">Restart</span>=always</span><br><span class="line"><span class="constant">RestartSec</span>=<span class="number">10</span></span><br><span class="line">[Install]</span><br><span class="line"><span class="constant">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
+<p><code>kube-scheduler.service</code></p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">[Unit]</span></span><br><span class="line"><span class="setting">Description=<span class="value">Kubernetes Scheduler</span></span></span><br><span class="line"><span class="setting">Documentation=<span class="value">https://github.com/GoogleCloudPlatform/kubernetes</span></span></span><br><span class="line"><span class="setting">Requires=<span class="value">kube-apiserver.service</span></span></span><br><span class="line"><span class="setting">After=<span class="value">kube-apiserver.service</span></span></span><br><span class="line"><span class="title"></span><br><span class="line">[Service]</span></span><br><span class="line"><span class="setting">ExecStart=<span class="value">/opt/bin/kube-scheduler --master=<span class="variable">$private_ipv4</span>:<span class="number">8080</span> --logtostderr=<span class="keyword">true</span></span></span></span><br><span class="line"><span class="setting">Restart=<span class="value">always</span></span></span><br><span class="line"><span class="setting">RestartSec=<span class="value"><span class="number">10</span></span></span></span><br><span class="line"><span class="title">[Install]</span></span><br><span class="line"><span class="setting">WantedBy=<span class="value">multi-user.target</span></span></span><br></pre></td></tr></table></figure>
+<p>在node节点创建</p>
+<p><code>kubelet.service</code></p>
+<figure class="highlight haml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">[Unit]</span><br><span class="line"> Description=Kubernetes Kubelet</span><br><span class="line"> Documentation=https://github.com/kubernetes/kubernetes</span><br><span class="line"> After=docker.service</span><br><span class="line"> Requires=docker.service</span><br><span class="line"></span><br><span class="line"> [Service]</span><br><span class="line"> ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests</span><br><span class="line"> ExecStart=/opt/bin/kubelet \</span><br><span class="line">        -<span class="ruby">-address=<span class="number">0</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">0</span> \</span><br><span class="line"></span>        -<span class="ruby">-allow-privileged=<span class="keyword">true</span> \</span><br><span class="line"></span>        -<span class="ruby">-cluster-dns=<span class="number">10.100</span>.<span class="number">0</span>.<span class="number">10</span> \</span><br><span class="line"></span>        -<span class="ruby">-cluster-domain=cluster.local \</span><br><span class="line"></span>        -<span class="ruby">-config=<span class="regexp">/etc/kubernetes</span><span class="regexp">/manifests \</span><br><span class="line"></span></span>        -<span class="ruby"><span class="regexp">-hostname-override=$private_ipv4 \</span><br><span class="line"></span></span>        -<span class="ruby"><span class="regexp">-api-servers=http:/</span><span class="regexp">/&lt;API_SERVER_IP&gt;:8080 \</span><br><span class="line"></span></span>        -<span class="ruby"><span class="regexp">-pod-infra-container-image="kubernetes/pause</span><span class="string">" \</span><br><span class="line"></span></span>        -<span class="ruby"><span class="string">-network-plugin-dir=/etc/cni/net.d \</span><br><span class="line"></span></span>        -<span class="ruby"><span class="string">-network-plugin=cni \</span><br><span class="line"></span></span>        -<span class="ruby"><span class="string">-logtostderr=true</span><br><span class="line"></span></span> Restart=always</span><br><span class="line"> RestartSec=10</span><br><span class="line"></span><br><span class="line"> [Install]</span><br><span class="line"> WantedBy=multi-user.target</span><br></pre></td></tr></table></figure>
+<p><code>kube-proxy.service</code></p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="constant">Unit]</span><br><span class="line">Description</span>=Kubernetes Proxy</span><br><span class="line"><span class="constant">Documentation</span>=https:<span class="comment">//github.com/GoogleCloudPlatform/kubernetes</span></span><br><span class="line"><span class="constant">Requires</span>=kubelet.service</span><br><span class="line"><span class="constant">After</span>=kubelet.service</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line"><span class="constant">ExecStart</span>=/opt/bin/kube-proxy \</span><br><span class="line">        --master=http:<span class="comment">//&lt;API_SERVER_IP&gt;:8080 \</span></span><br><span class="line">        --proxy-mode=iptables \</span><br><span class="line">        --logtostderr=<span class="literal">true</span></span><br><span class="line"><span class="constant">Restart</span>=always</span><br><span class="line"><span class="constant">RestartSec</span>=<span class="number">10</span></span><br><span class="line">[Install]</span><br><span class="line"><span class="constant">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
+<p><api_server_ip>部分替换成master的ip</api_server_ip></p>
+<h3 id="小试牛刀">小试牛刀</h3><p>启动上面的所以service kubernetes集群应该就搭建起来了。我们来测试一下</p>
+<p>新建一个<code>nginx.yaml</code></p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">apiVersion</span>: extensions/v1beta1</span><br><span class="line"><span class="attribute">kind</span>: Deployment</span><br><span class="line"><span class="attribute">metadata</span>:</span><br><span class="line">  <span class="attribute">name</span>: my-nginx</span><br><span class="line"><span class="attribute">spec</span>:</span><br><span class="line">  <span class="attribute">replicas</span>: <span class="number">2</span></span><br><span class="line">  <span class="attribute">template</span>:</span><br><span class="line">    <span class="attribute">metadata</span>:</span><br><span class="line">      <span class="attribute">labels</span>:</span><br><span class="line">        <span class="attribute">run</span>: my-nginx</span><br><span class="line">    <span class="attribute">spec</span>:</span><br><span class="line">      <span class="attribute">containers</span>:</span><br><span class="line">      - <span class="attribute">name</span>: my-nginx</span><br><span class="line">        <span class="attribute">image</span>: <span class="attribute">nginx</span>:alpine</span><br><span class="line">        <span class="attribute">ports</span>:</span><br><span class="line">        - <span class="attribute">containerPort</span>: <span class="number">80</span></span><br></pre></td></tr></table></figure>
+<p>执行</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&gt; create -f ./nginx.yaml</span><br><span class="line"><span class="comment">// 查看pod运行状况</span></span><br><span class="line">&gt; kubectl get pods -l run=my-nginx -o wide</span><br><span class="line">NAME                        READY     STATUS    RESTARTS   AGE       NODE</span><br><span class="line">my-nginx-<span class="number">2643493705</span>-<span class="number">274</span>ab   <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">1</span>m        <span class="number">192.168</span><span class="number">.64</span><span class="number">.9</span></span><br><span class="line">my-nginx-<span class="number">2643493705</span>-<span class="number">8</span>wr06   <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">1</span>m        <span class="number">192.168</span><span class="number">.64</span><span class="number">.109</span></span><br></pre></td></tr></table></figure>
+<p>我们可以看到启动了两个nginx的pod</p>
+<p>查看每个pod的ip</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; kubectl get pods -l run=my-nginx -o yaml | grep podIP</span><br><span class="line">    podIP: <span class="number">10.100</span><span class="number">.73</span><span class="number">.2</span></span><br><span class="line">    podIP: <span class="number">10.100</span><span class="number">.63</span><span class="number">.2</span></span><br></pre></td></tr></table></figure>
+<p>我们在内任一台机上执行</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; curl <span class="string">http:</span><span class="comment">//10.100.73.2</span></span><br></pre></td></tr></table></figure>
+<p>应该会看到nginx的欢迎页面打印出来。</p>
+<hr>
+<p>参考资料</p>
+<p>[1]<a href="http://qiankunli.github.io/2015/01/29/Kubernetes_installation.html" target="_blank" rel="external">http://qiankunli.github.io/2015/01/29/Kubernetes_installation.html</a></p>
+<p>[2]<a href="https://github.com/shenshouer/calico-kubernetes" target="_blank" rel="external">https://github.com/shenshouer/calico-kubernetes</a> </p>
+<p>[3]<a href="http://qinghua.github.io/kubernetes-in-mesos-8/" target="_blank" rel="external">http://qinghua.github.io/kubernetes-in-mesos-8/</a> </p>
+<p>[4]<a href="http://kubernetes.io/docs/user-guide/connecting-applications/" target="_blank" rel="external">http://kubernetes.io/docs/user-guide/connecting-applications/</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://sineyuan.github.io/2016/05/29/deploy-k8s-on-coreos/" data-id="ciq10gnz90009nz13za8eozih" class="article-share-link">Share</a>
+      
+        <a href="http://sineyuan.github.io/2016/05/29/deploy-k8s-on-coreos/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
   
     <article id="post-coreos-osx-without-vagrant" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
@@ -193,7 +276,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/" data-id="cios1fjvf0009jh13d5ul390y" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/" data-id="ciq10gnza000anz132g724a0v" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -255,7 +338,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/25/tornado-source-code-3/" data-id="cios1fjuy0001jh13g8e237kl" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/25/tornado-source-code-3/" data-id="ciq10gnyr0001nz13ne875sgk" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/25/tornado-source-code-3/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -495,7 +578,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/" data-id="cios1fjv50002jh13wgoxtt03" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/" data-id="ciq10gnyx0002nz13so5w31el" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -682,7 +765,7 @@ def <span class="function"><span class="title">main</span><span class="params">(
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-1/" data-id="cios1fjv70003jh13rjvaxzot" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-1/" data-id="ciq10gnyz0003nz13b66zp9em" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/19/tornado-source-code-1/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -791,7 +874,7 @@ img = <span class="type">Image</span>.open(<span class="string">"captcha.png"</s
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/06/python-captcha/" data-id="cios1fjv90005jh13ehb2iya4" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/06/python-captcha/" data-id="ciq10gnz10005nz13ptyw7ouv" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/06/python-captcha/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -921,7 +1004,7 @@ public <span class="class"><span class="keyword">class</span> <span class="title
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/02/android-studio-tess-two/" data-id="cios1fjvh000ajh13ymg2l157" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/02/android-studio-tess-two/" data-id="ciq10gnzc000bnz13hge5z044" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/02/android-studio-tess-two/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -960,7 +1043,7 @@ public <span class="class"><span class="keyword">class</span> <span class="title
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/09/22/migrate-to-hexo/" data-id="cios1fjvd0007jh13md0xfh65" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/09/22/migrate-to-hexo/" data-id="ciq10gnz50007nz13b6hs607v" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/09/22/migrate-to-hexo/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -1063,7 +1146,7 @@ chmod a+x apkbuilder
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/03/05/android-package-cmd/" data-id="cios1fjui0000jh13b2lfhyit" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/03/05/android-package-cmd/" data-id="ciq10gnxx0000nz13wynxzqeu" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/03/05/android-package-cmd/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -1121,76 +1204,9 @@ chmod a+x apkbuilder
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/03/02/latex-thesis/" data-id="cios1fjve0008jh13adfh4sgt" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/03/02/latex-thesis/" data-id="ciq10gnz70008nz13ttfms7dg" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/03/02/latex-thesis/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-pelican-configure" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2015/03/01/pelican-configure/" class="article-date">
-  <time datetime="2015-02-28T16:00:00.000Z" itemprop="datePublished">2015-03-01</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/03/01/pelican-configure/">Pelican的配置与使用</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><a href="http://sineyuan.github.io/blog_setup.html">上一篇教程</a>讲了如何使用GithubPage和Pelican来搭建个人静态博客，这篇是上一篇的继续，主要说明一下Pelican的配置和在写博客过程中遇到的问题及其解决方法。闲话不说，我们继续。</p>
-<h2 id="Pelican插件的使用">Pelican插件的使用</h2><p>大部分的时候Pelican提供的功能是不能够满足我们的需求的，比如Google的Analytical，sitemap，评论系统，导航页面等。这时就需要安装相应的插件来提供这些功能了。其实Pelican插件的安装使用非常简单，Pelican的全部插件都在<a href="https://github.com/getpelican/pelican-plugins" target="_blank" rel="external">pelican-plugins</a>这个项目上，先从github上clone这个项目</p>
-<pre><code>cd blog  
-git <span class="keyword">clone</span> <span class="title">git</span>://github.com/getpelican/pelican-plugins.git
-</code></pre><p>然后需要什么差件，就在主目录下的配置文件pelicanconf.py中声明并设置就可以了，例如在要使用设置Sitemap插件，就在pelicanconf.py中设置如下</p>
-<p><pre><code>PLUGIN_PATH=u”pelican-plugins”              #指定插件源文件的存放目录<br>PLUGINS = [‘summary’,’sitemap’,’neighbors’] #[]里面的是启用的插<br># 配置sitemap 插件<br>SITEMAP = {<br>    “format”: “xml”,<br>    “priorities”: {<br>        “articles”: 0.7,<br>        “indexes”: 0.5,<br>        “pages”: 0.3,<br>    },<br>    “changefreqs”: {<br>        “articles”: “monthly”,<br>        “indexes”: “daily”,<br>        “pages”: “monthly”,<br>    }</code></pre></p>
-<p>}<br>}<br>在<a href="https://github.com/getpelican/pelican-plugins" target="_blank" rel="external">pelican-plugins</a>项目主页上有这些插件的功能简介</p>
-<h2 id="Pelican主题">Pelican主题</h2><p>同样，Pelican的主题也有一个主页：<a href="https://github.com/getpelican/pelican-themes" target="_blank" rel="external">pelican-themes</a>，同样先clone下来</p>
-<pre><code>git <span class="keyword">clone</span> <span class="title">https</span>://github.com/getpelican/pelican-themes.git
-</code></pre><p>之后cd进pelican-themes中，想装什么主题就用pelican-themes -i语句安装</p>
-<pre><code>cd pelican-themes  
-pelican-themes -<span class="tag">i</span> bootstrap2
-</code></pre><p>最后在pelicanconf.py中添加下面的语句设置安装过的主题，最后make一下就可以了</p>
-<pre><code><span class="setting">THEME = <span class="value"><span class="string">'bootstrap2'</span></span></span>
-</code></pre><p>能够成功的前提是在主题的文件夹中源文件确实存在，有些主题文件夹是空的，这时只需要去到相应的项目主页clone下来就可以了。<br>在<a href="http://pelicanthemes.com/" target="_blank" rel="external">http://pelicanthemes.com/</a>这个网页上可以预览到所有的主题，喜欢的就clone下来吧。</p>
-<h2 id="第三方评论系统">第三方评论系统</h2><p>因为GithubPage是静态博客，所以不支持评论系统，不过我们可以通过Disqus解决这个问题。Disqus是一家第三方社会化评论系统，主要为网站主提供评论托管服。首先要到<a href="https://disqus.com/" target="_blank" rel="external">Disqus</a>上注册一个帐号，注册完后点击右上角的齿轮，在弹出的选项中点击add Disqus to Site,在弹出的页面中注册你的博客名。完成注册后，回到小齿轮那就会多了个admin选项，点进去，在跳出的页面中我们就可以管理你博客的评论了。在Settings=&gt;Site Identity中可以看到shortname，请记下来。</p>
-<p></p><p style="text-align:center"><img src="http://7vzu7p.com1.z0.glb.clouddn.com/disqus_setting.png"></p><br>然后在pelicanconf.py文件中添加<p></p>
-<pre><code><span class="setting">DISQUS_SITENAME = <span class="value"><span class="string">"shortname"</span></span></span>
-</code></pre><p>然后重新make一遍，上传就会出现评论了。</p>
-<h2 id="文章中的图片">文章中的图片</h2><p>在markdown中想要插入图片很简单</p>
-<pre><code>!<span class="attr_selector">[alt tag]</span>\(<span class="attribute">http</span>:<span class="comment">//url/to/img.png)</span>
-</code></pre><p>但问题是如何指定我想要的图片的url<br>一种方法是上传图片到github中，再将url指向github中的图片。<br>比如说在output文件夹中新建一个img文件夹，将图片放进去，在文章中引用的url路径为：</p>
-<pre><code><span class="symbol">https:</span>/<span class="regexp">/raw.github.com/username</span><span class="regexp">/projectname/branch</span><span class="regexp">/path/to</span><span class="regexp">/img.png     </span>
-</code></pre><p>不过github的空间有限，只有300M，所以另一种方法推荐使用专业的图床</p>
-<h2 id="数学公式">数学公式</h2><p>有时候博文中需要一些数学公式，这时只要在添加插件render_math,之后就可以用latex书写公式了</p>
-<pre><code><span class="setting">PLUGINS = <span class="value">[<span class="string">"render_math"</span>]</span></span>
-</code></pre><p>在文章中插入latex：  </p>
-<pre><code>$<span class="variable">$e</span>^{i\pi} + <span class="number">1</span> = <span class="number">0</span>$$
-</code></pre><p>欧拉公式<br>$$e^{i\pi} + 1 = 0$$</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/03/01/pelican-configure/" data-id="cios1fjvb0006jh13vx301711" class="article-share-link">Share</a>
-      
-        <a href="http://sineyuan.github.io/2015/03/01/pelican-configure/#disqus_thread" class="article-comment-link">Comments</a>
       
       
     </footer>
