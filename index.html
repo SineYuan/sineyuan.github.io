@@ -78,7 +78,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">August 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -90,7 +90,11 @@
       <ul>
         
           <li>
-            <a href="/2016/05/29/deploy-k8s-on-coreos/">CoreOS部署Kubernetes</a>
+            <a href="/2016/08/28/go-error-handle/">Golang错误处理</a>
+          </li>
+        
+          <li>
+            <a href="/2016/05/29/deploy-k8s-on-coreos/">CoreOS部署kubernetes</a>
           </li>
         
           <li>
@@ -103,10 +107,6 @@
         
           <li>
             <a href="/2016/01/19/tornado-source-code-2/">tornado源码分析笔记(2)</a>
-          </li>
-        
-          <li>
-            <a href="/2016/01/19/tornado-source-code-1/">tornado源码分析笔记(1)</a>
           </li>
         
       </ul>
@@ -137,6 +137,84 @@
         
         <section id="main">
   
+    <article id="post-go-error-handle" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/08/28/go-error-handle/" class="article-date">
+  <time datetime="2016-08-27T17:25:03.000Z" itemprop="datePublished">2016-08-28</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/08/28/go-error-handle/">Golang错误处理</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本文是GopherCon 2016的演讲<a href="https://www.youtube.com/watch?v=lsBF58Q-DnY" target="_blank" rel="external">Dont Just Check Errors Handle Them Gracefully</a>的笔记，详情可点击链接观看(请带梯子上油管)</p>
+<h2 id="常见错误处理策略">常见错误处理策略</h2><h3 id="Sentiel_errors">Sentiel errors</h3><figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> err == ErrSomething &#123; <span class="attribute">...</span> &#125;</span><br></pre></td></tr></table></figure>
+<p>这是最常见的处理方法，通过判断错误类型来做相应的处理。常见的有</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">io<span class="class">.EOF</span></span><br><span class="line">syscall<span class="class">.ENOENT</span></span><br><span class="line">go/build<span class="class">.NoGoError</span></span><br><span class="line">path/filepath.SkipDir</span><br></pre></td></tr></table></figure>
+<p>但这种处理方法是最不灵活的一种方法，因为我们必须知道确定的错误类型。如果我们需要使用自定义的一些错误类型，当我们的代码作为一个package导出时，错误变成了api的一部分，这样就有了强耦合，以后要是修改错误会很麻烦。</p>
+<p>另外，当我们使用<code>fmt.Errorf</code>的时候，我们需要通过判断错误string的内容来区分错误，如：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">func</span> <span class="tag">readfile</span>(<span class="tag">path</span> <span class="tag">string</span>) <span class="tag">error</span> <span class="rules">&#123;</span><br><span class="line">		<span class="rule"><span class="attribute">err </span>:<span class="value">= <span class="function">openfile</span>(path)</span><br><span class="line">		if err != nil &#123;</span><br><span class="line">				return fmt.<span class="function">Errorf</span>(<span class="string">"cannot open file: %v"</span>, err)</span><br><span class="line">		</span></span></span>&#125;</span><br><span class="line">		...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="tag">func</span> <span class="tag">main</span>() <span class="rules">&#123;</span><br><span class="line">		<span class="rule"><span class="attribute">err </span>:<span class="value">= <span class="function">readfile</span>(<span class="string">".bash"</span>)</span><br><span class="line">		if strings.<span class="function">Contains</span>(err.<span class="function">Error</span>(), <span class="string">"not found"</span>) &#123;</span><br><span class="line">				// handle error</span><br><span class="line">		</span></span></span>&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这是种非常糟糕的做法，当错误信息改变时，对应的错误处理也要相应改变， 另外还要性能的问题。</p>
+<p>除非是标准库里面的函数，否则避免使用Sentiel errors</p>
+<h3 id="Error_Types">Error Types</h3><figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="keyword">err</span>, ok := <span class="keyword">err</span>.(SomeType); ok &#123; ... &#125;</span><br></pre></td></tr></table></figure>
+<p>配合Type assertion使用</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">err :</span>= somethint()</span><br><span class="line"><span class="keyword">switch</span> <span class="string">err :</span>= err.(type) &#123;</span><br><span class="line"><span class="keyword">case</span> <span class="string">nil:</span></span><br><span class="line">		<span class="comment">// call succeed</span></span><br><span class="line"><span class="keyword">case</span> *os.<span class="string">PathError:</span></span><br><span class="line">		<span class="comment">// handle PathError</span></span><br><span class="line"><span class="string">default:</span></span><br><span class="line">		<span class="comment">// handle Unknow error			</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个其实没什么好讲的，同样的，Error Types也会造成包之间的强耦合，除非是在包内部使用，否则不推荐使用</p>
+<h3 id="Opaque_errors">Opaque errors</h3><p>Opaque是不透明的意思，这个是讲者自己的叫法，具体的思想就是:</p>
+<blockquote>
+<p>Assert errors for behaviour, not type<br>通过行为来判断错误而不是类型</p>
+</blockquote>
+<p>说起行为，很自然的就联想到了interface，对的，不使用type，使用interface来处理。</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> temporary interface &#123;</span><br><span class="line">		Tepporary() bool</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func IsTemporary(<span class="keyword">err</span> <span class="keyword">error</span>) bool &#123;</span><br><span class="line">		<span class="keyword">te</span>, ok := <span class="keyword">err</span>.(temporary)</span><br><span class="line">		<span class="keyword">return</span> ok &amp;&amp; <span class="keyword">te</span>.Temporary()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这种方法的耦合度更低一些，不过无法完全避免依赖度，毕竟interface也是api的一部分。</p>
+<h2 id="Don’t_just_check_errors,_handle_then_greacefully">Don’t just check errors, handle then greacefully</h2><figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="keyword">err</span> != nil &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">err</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这应该最常见的错误处理，不过想想当一个错误经过层层的return，当到达最外面的log记录了下来。但当你debug查找日志时只看到一句</p>
+<blockquote>
+<p>No such file or directory</p>
+</blockquote>
+<p>心里会不会万匹草泥马奔腾(╯‵□′)╯︵┴─┴  </p>
+<p>是的，这种方法坏处就是破坏了错误发生的上线文环境，debug起来就很困难。</p>
+<p>当然我们使用<code>fmt.Errorf</code>为错误加上一些信息</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">AuthenticatRequest</span><span class="params">(r *Request)</span></span> error &#123;</span><br><span class="line">		err := authenticate(r.<span class="type">User</span>)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">				<span class="keyword">return</span> fmt.<span class="type">Errorf</span>(<span class="string">"authenticat failed: %v"</span>, err)</span><br><span class="line">		</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>为了更优雅一点，讲者提供了一个包<code>github.com/pkg/errors</code>做这个事情。</p>
+<p>这个包的api也很简单</p>
+<h4 id="errors-New">errors.New</h4><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">err := errors.<span class="function"><span class="title">New</span><span class="params">(<span class="string">"kerboom"</span>)</span></span></span><br><span class="line">fmt.<span class="function"><span class="title">Printf</span><span class="params">(<span class="string">"%v\n"</span>, err)</span></span></span><br></pre></td></tr></table></figure>
+<p>使用<code>errors.New</code>新建的err打印时会展示出调用堆栈</p>
+<h4 id="errors-Wrap">errors.Wrap</h4><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">err := errors.Warp(</span><br><span class="line">			syscall<span class="class">.EBADF</span>, <span class="string">"couldn't write to stream"</span>)</span><br><span class="line">fmt.<span class="function"><span class="title">Printf</span><span class="params">(<span class="string">"%v\n"</span>, err)</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 输出			</span></span><br><span class="line">／／ couldn<span class="string">'t write to stream: bad file descriptor</span></span><br></pre></td></tr></table></figure>
+<h4 id="errors-Cause">errors.Cause</h4><p>有Wrap方法那也会有UnWrap的方法，这就是<code>errors.Cause</code></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">errors.<span class="function"><span class="title">Cause</span><span class="params">(err)</span></span>  <span class="comment">// 返回Wrap之前的error</span></span><br></pre></td></tr></table></figure>
+<p>前面的例子需要改成这样</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> temporary interface &#123;</span><br><span class="line">		Tepporary() bool</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func IsTemporary(<span class="keyword">err</span> <span class="keyword">error</span>) bool &#123;</span><br><span class="line">		<span class="keyword">te</span>, ok := <span class="keyword">err</span>.Cause(<span class="keyword">err</span>).(temporary)</span><br><span class="line">		<span class="keyword">return</span> ok &amp;&amp; <span class="keyword">te</span>.Temporary()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>github.com/pkg/errors</code>代码也就几百行，还是很不错的，值得推荐。</p>
+<p>以上</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://sineyuan.github.io/2016/08/28/go-error-handle/" data-id="ciskhrwqr0009z413onujao6h" class="article-share-link">Share</a>
+      
+        <a href="http://sineyuan.github.io/2016/08/28/go-error-handle/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-deploy-k8s-on-coreos" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2016/05/29/deploy-k8s-on-coreos/" class="article-date">
@@ -151,7 +229,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2016/05/29/deploy-k8s-on-coreos/">CoreOS部署Kubernetes</a>
+      <a class="article-title" href="/2016/05/29/deploy-k8s-on-coreos/">CoreOS部署kubernetes</a>
     </h1>
   
 
@@ -159,7 +237,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="准备工作">准备工作</h2><h3 id="下载Kubernetes">下载Kubernetes</h3><p>在<a href="https://github.com/kubernetes/kubernetes/releases" target="_blank" rel="external">github</a>下载最新的Kuberbetes二进制包，这里我下载的是v1.2.4的版本。</p>
+        <h2 id="准备工作">准备工作</h2><h3 id="下载Kubernetes">下载Kubernetes</h3><p>在<a href="https://github.com/kubernetes/kubernetes/releases" target="_blank" rel="external">github</a>下载最新的kuberbetes二进制包，这里我下载的是v1.2.4的版本。</p>
 <figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">tar zxvf kubernetes<span class="class">.tar</span><span class="class">.gz</span></span><br><span class="line">cd kubernetes</span><br><span class="line"><span class="comment">// 解压amd64的版本</span></span><br><span class="line">tar zxvf kubernetes/server/kubernetes-server-linux-amd64<span class="class">.tar</span><span class="class">.gz</span></span><br><span class="line">cd kubernetes/server/kubernetes/server/bin</span><br><span class="line"></span><br><span class="line"><span class="comment">// 将下列文件复制到各个节点上</span></span><br><span class="line">cp kube-apiserver kube-proxy kubelet kube-scheduler kube-controller-manager /opt/bin</span><br></pre></td></tr></table></figure>
 <p>将kube-apiserver kube-proxy kubelet kube-scheduler kube-controller-manager复制到各个节点上，我这里放到各个节点到<code>/opt/bin</code>文件夹里</p>
 <h3 id="启动etcd">启动etcd</h3><p>可以参考<a href="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/">前文</a>。确保etcdctl命令可用。在这里我用etcd2代替etcd</p>
@@ -208,7 +286,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/05/29/deploy-k8s-on-coreos/" data-id="ciq10gnz90009nz13za8eozih" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/05/29/deploy-k8s-on-coreos/" data-id="ciskhrwqt000az4139nyufbjm" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/05/29/deploy-k8s-on-coreos/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -276,7 +354,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/" data-id="ciq10gnza000anz132g724a0v" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/" data-id="ciskhrwqu000bz4134ox55azy" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -338,7 +416,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/25/tornado-source-code-3/" data-id="ciq10gnyr0001nz13ne875sgk" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/25/tornado-source-code-3/" data-id="ciskhrwqf0001z413wj8971i4" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/25/tornado-source-code-3/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -578,7 +656,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/" data-id="ciq10gnyx0002nz13so5w31el" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/" data-id="ciskhrwqh0002z413v8gz1n3m" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -765,7 +843,7 @@ def <span class="function"><span class="title">main</span><span class="params">(
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-1/" data-id="ciq10gnyz0003nz13b66zp9em" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-1/" data-id="ciskhrwqi0003z4138f28mhhm" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/19/tornado-source-code-1/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -874,7 +952,7 @@ img = <span class="type">Image</span>.open(<span class="string">"captcha.png"</s
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/06/python-captcha/" data-id="ciq10gnz10005nz13ptyw7ouv" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/06/python-captcha/" data-id="ciskhrwql0005z413zxw5hs6n" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/06/python-captcha/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -1004,7 +1082,7 @@ public <span class="class"><span class="keyword">class</span> <span class="title
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/02/android-studio-tess-two/" data-id="ciq10gnzc000bnz13hge5z044" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/02/android-studio-tess-two/" data-id="ciskhrwqw000cz413doojhsan" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/02/android-studio-tess-two/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -1043,7 +1121,7 @@ public <span class="class"><span class="keyword">class</span> <span class="title
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/09/22/migrate-to-hexo/" data-id="ciq10gnz50007nz13b6hs607v" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/09/22/migrate-to-hexo/" data-id="ciskhrwqn0007z413w9zsbg0t" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/09/22/migrate-to-hexo/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -1146,67 +1224,9 @@ chmod a+x apkbuilder
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/03/05/android-package-cmd/" data-id="ciq10gnxx0000nz13wynxzqeu" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/03/05/android-package-cmd/" data-id="ciskhrwpz0000z413eycwhdef" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/03/05/android-package-cmd/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-latex-thesis" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2015/03/02/latex-thesis/" class="article-date">
-  <time datetime="2015-03-01T16:00:00.000Z" itemprop="datePublished">2015-03-02</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/03/02/latex-thesis/">使用LaTex写毕业论文</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>临近毕业，又是大四狗们忙着写毕业论文的时候了。写论文烦，论文的排版更烦，要对照着论文格式要求，调整位置、大小、字体等细节，还有引用、目录、注脚、参考文献之类的。使用word对论文进行排版有着诸多的不便，那有没有其他更好的方法呢？今天我就来介绍一下使用latex对论文排版的方法。</p>
-<h2 id="什么是LaTex">什么是LaTex</h2><blockquote>
-<p>LaTeX是一种基于TeX的排版系统，由美国电脑学家莱斯利·兰伯特在20世纪80年代初期开发，利用这种格式，即使用户没有排版和程序设计的知识也可以充分发挥由TeX所提供的强大功能，能在几天，甚至几小时内生成很多具有书籍质量的印刷品。对于生成复杂表格和数学公式，这一点表现得尤为突出。因此它非常适用于生成高印刷质量的科技和数学类文档。这个系统同样适用于生成从简单的信件到完整书籍的所有其他种类的文档。</p>
-</blockquote>
-<p>以上是wiki上的解释。总的来说，LaTex是一套排版系统，与word那种所见即所得对排版方式不太，用LaTex排版更像是写程序一样，将想要的排版效果用指令写出来，再通过LaTex编译成文档。简单来说，你只要按照要求撰写tex文件，就能够通过LaTex生成排版好的pdf文件。<br>有些人可能听到写程序就头大了，其实使用命令来排版的好处正是我们可以将各种版式做成模板文件，使用者只要调用模板即可，完全不用去处理字体样大小、位置，目录生成，图片公式序号等诸多细节，使我们专注于内容。更多关于LaTex和word的比较<a href="http://zzg34b.w3.c361.com/homepage/compareWord.htm" target="_blank" rel="external">这篇文章</a>有很详细的论述。现在使用LaTex听起来是不是很诱人？不过好处也不是白给的，就我的实践来说，LaTex还是有不足之处：</p>
-<ol>
-<li>某些项目如表格，图形比word更加复杂</li>
-<li>所见非所得，有错误的话需要重新编译，耗时间</li>
-<li>有一定的门槛，需要一定的学习才能使用</li>
-</ol>
-<p>综上所述，我认为学习使用LaTex还是有个不错的选择，LaTex也是可以用来做简历，PPT等文档的。本文的目的也是希望用一些指导来降低LaTex学习使用上的难度。</p>
-<h2 id="TexLive的安装">TexLive的安装</h2><p>LaTex是不支持中文，目前支持中文比较好的发行版是xelatex，安装TexLive就有了。由于大部分人使用的是windows操作系统，所以这里讲解windows下TexLive的安装。</p>
-<ol>
-<li>首先我们去<a href="http://tug.org/texlive/acquire-netinstall.html" target="_blank" rel="external">http://tug.org/texlive/acquire-netinstall.html</a>下载Texlive安装器 install-tl-windows.exe 。</li>
-<li>运行install-tl-windows.exe进入安装界面，选择要安装方案<br>TexLive全部的安装包有4G，里面有许多其他国家的语言包我们用不着的，所以出现的第一个对话窗选择Custom install。<br><img src="http://7vzu7p.com1.z0.glb.clouddn.com/texlive_install1.PNG" alt="安装界面"><br>点击“进一步定制”右边的“修改”，取消掉一些语言和包<br><img src="http://7vzu7p.com1.z0.glb.clouddn.com/texlive_install2.PNG" alt="此处输入图片的描述"><br>以上是我的选择，总大小在3G，这个方案应该还有再精简的空间，不过我也没精力再去实验了。</li>
-<li>等待下载安装完成即可。</li>
-</ol>
-<h2 id="安装编辑器">安装编辑器</h2><p>工欲善其事，必先利其器。TexLive自带的编辑器TeXworks功能太少，我们换一个更强大的编辑器TexMaker。TexMaker功能强大，对于公式表格等都有很好的支持。<a href="http://7x2vvx.com1.z0.glb.clouddn.com/texmakerwin32usb.zip" target="_blank" rel="external">[点我下载]</a>直接解压运行文件夹里面的texmaker即可使用。</p>
-<h2 id="学习LaTex">学习LaTex</h2><p>使用LaTex没有一点基础是不行的，但我们也无需成为一个LaTex的高手，除非是做科研的，那个时间成本可是很大的，一些基本入门教程，遇到问题勤搜索就可以了。下面是一些不错的基础教程推荐给大家。<br><a href="http://liam0205.me/2014/09/08/latex-introduction/" target="_blank" rel="external">一份其实很短的 LaTeX 入门文档</a><br><a href="http://read.pudn.com/downloads64/doc/224777/lshort412.pdf" target="_blank" rel="external">LATEX 2ε 入门指南</a><br><a href="ftp://cs2.swfu.edu.cn/pub/resources/Books/TeX/xetex-tutorial.pdf" target="_blank" rel="external">XeLaTEX/LATEX 中文排版之胡言乱语</a></p>
-<h2 id="模板">模板</h2><p>自制模板是一件十分复杂麻烦的事情，不过好在很多高校都有LaTex论文模板，这里推荐一个网站<a href="http://www.latexstudio.net/" target="_blank" rel="external">LaTexStudio</a>，上面收集有很多高校的论文模板和教程资源。<br><a href="http://www.latexstudio.net/category/latex-templates/internal-university-tex-template/" target="_blank" rel="external">模板点我直达</a><br>一般下载文件里面都会说明使用方法的，跟着做就是了。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/03/02/latex-thesis/" data-id="ciq10gnz70008nz13ttfms7dg" class="article-share-link">Share</a>
-      
-        <a href="http://sineyuan.github.io/2015/03/02/latex-thesis/#disqus_thread" class="article-comment-link">Comments</a>
       
       
     </footer>

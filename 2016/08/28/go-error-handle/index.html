@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Golang错误处理 | STep by STep</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="本文是GopherCon 2016的演讲Dont Just Check Errors Handle Them Gracefully的笔记，详情可点击链接观看(请带梯子上油管)
+常见错误处理策略Sentiel errors1if err == ErrSomething &amp;#123; ... &amp;#125;
+这是最常见的处理方法，通过判断错误类型来做相应的处理。常见的有
+1234io.EOFsyscal">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Golang错误处理">
+<meta property="og:url" content="http://sineyuan.github.io/2016/08/28/go-error-handle/index.html">
+<meta property="og:site_name" content="STep by STep">
+<meta property="og:description" content="本文是GopherCon 2016的演讲Dont Just Check Errors Handle Them Gracefully的笔记，详情可点击链接观看(请带梯子上油管)
+常见错误处理策略Sentiel errors1if err == ErrSomething &amp;#123; ... &amp;#125;
+这是最常见的处理方法，通过判断错误类型来做相应的处理。常见的有
+1234io.EOFsyscal">
+<meta property="og:updated_time" content="2016-09-01T15:33:29.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Golang错误处理">
+<meta name="twitter:description" content="本文是GopherCon 2016的演讲Dont Just Check Errors Handle Them Gracefully的笔记，详情可点击链接观看(请带梯子上油管)
+常见错误处理策略Sentiel errors1if err == ErrSomething &amp;#123; ... &amp;#125;
+这是最常见的处理方法，通过判断错误类型来做相应的处理。常见的有
+1234io.EOFsyscal">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <!-- <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,600' rel='stylesheet' type='text/css'> -->
+  <!-- <link href="//fonts.googleapis.com/css?family=Source+Code+Pro:400,700" rel="stylesheet" type="text/css"> -->
+  <link href="//fonts.useso.com/css?family=Source+Code+Pro:400,700" rel="stylesheet" type="text/css">
+  <link href='//fonts.useso.com/css?family=Open+Sans:300,600' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+  
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="header-outer" class="outer">
+    <a href="/" class="logo">STep by STep</a>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about/index.html">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        <div id="search-form-wrap">
+          <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://sineyuan.github.io"></form>
+        </div>
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+        
+        
+          <a id="nav-github-link" class="nav-icon" href="https://github.com/SineYuan" title="Fork me on GitHub"></a>
+        
+      </nav>
+    </div>
+  </div>
+</header>
+      <nav id="mobile-nav" class="off">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about/index.html" class="mobile-nav-link">About</a>
+  
+  <div id="search-form-wrap-mobile">
+    <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://sineyuan.github.io"></form>
+  </div>
+</nav>
+      <div class="outer">
+        
+          <aside id="sidebar">
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">August 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2016/08/28/go-error-handle/">Golang错误处理</a>
+          </li>
+        
+          <li>
+            <a href="/2016/05/29/deploy-k8s-on-coreos/">CoreOS部署kubernetes</a>
+          </li>
+        
+          <li>
+            <a href="/2016/05/29/coreos-osx-without-vagrant/">OSX上摆脱vagrant搭建CoreOS集群</a>
+          </li>
+        
+          <li>
+            <a href="/2016/01/25/tornado-source-code-3/">tornado源码分析笔记(3)</a>
+          </li>
+        
+          <li>
+            <a href="/2016/01/19/tornado-source-code-2/">tornado源码分析笔记(2)</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+    
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">links</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="http://hexo.io">Hexo</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+        <section id="main"><article id="post-go-error-handle" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/08/28/go-error-handle/" class="article-date">
+  <time datetime="2016-08-27T17:25:03.000Z" itemprop="datePublished">2016-08-28</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Golang错误处理
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本文是GopherCon 2016的演讲<a href="https://www.youtube.com/watch?v=lsBF58Q-DnY" target="_blank" rel="external">Dont Just Check Errors Handle Them Gracefully</a>的笔记，详情可点击链接观看(请带梯子上油管)</p>
+<h2 id="常见错误处理策略">常见错误处理策略</h2><h3 id="Sentiel_errors">Sentiel errors</h3><figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> err == ErrSomething &#123; <span class="attribute">...</span> &#125;</span><br></pre></td></tr></table></figure>
+<p>这是最常见的处理方法，通过判断错误类型来做相应的处理。常见的有</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">io<span class="class">.EOF</span></span><br><span class="line">syscall<span class="class">.ENOENT</span></span><br><span class="line">go/build<span class="class">.NoGoError</span></span><br><span class="line">path/filepath.SkipDir</span><br></pre></td></tr></table></figure>
+<p>但这种处理方法是最不灵活的一种方法，因为我们必须知道确定的错误类型。如果我们需要使用自定义的一些错误类型，当我们的代码作为一个package导出时，错误变成了api的一部分，这样就有了强耦合，以后要是修改错误会很麻烦。</p>
+<p>另外，当我们使用<code>fmt.Errorf</code>的时候，我们需要通过判断错误string的内容来区分错误，如：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">func</span> <span class="tag">readfile</span>(<span class="tag">path</span> <span class="tag">string</span>) <span class="tag">error</span> <span class="rules">&#123;</span><br><span class="line">		<span class="rule"><span class="attribute">err </span>:<span class="value">= <span class="function">openfile</span>(path)</span><br><span class="line">		if err != nil &#123;</span><br><span class="line">				return fmt.<span class="function">Errorf</span>(<span class="string">"cannot open file: %v"</span>, err)</span><br><span class="line">		</span></span></span>&#125;</span><br><span class="line">		...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="tag">func</span> <span class="tag">main</span>() <span class="rules">&#123;</span><br><span class="line">		<span class="rule"><span class="attribute">err </span>:<span class="value">= <span class="function">readfile</span>(<span class="string">".bash"</span>)</span><br><span class="line">		if strings.<span class="function">Contains</span>(err.<span class="function">Error</span>(), <span class="string">"not found"</span>) &#123;</span><br><span class="line">				// handle error</span><br><span class="line">		</span></span></span>&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这是种非常糟糕的做法，当错误信息改变时，对应的错误处理也要相应改变， 另外还要性能的问题。</p>
+<p>除非是标准库里面的函数，否则避免使用Sentiel errors</p>
+<h3 id="Error_Types">Error Types</h3><figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="keyword">err</span>, ok := <span class="keyword">err</span>.(SomeType); ok &#123; ... &#125;</span><br></pre></td></tr></table></figure>
+<p>配合Type assertion使用</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">err :</span>= somethint()</span><br><span class="line"><span class="keyword">switch</span> <span class="string">err :</span>= err.(type) &#123;</span><br><span class="line"><span class="keyword">case</span> <span class="string">nil:</span></span><br><span class="line">		<span class="comment">// call succeed</span></span><br><span class="line"><span class="keyword">case</span> *os.<span class="string">PathError:</span></span><br><span class="line">		<span class="comment">// handle PathError</span></span><br><span class="line"><span class="string">default:</span></span><br><span class="line">		<span class="comment">// handle Unknow error			</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个其实没什么好讲的，同样的，Error Types也会造成包之间的强耦合，除非是在包内部使用，否则不推荐使用</p>
+<h3 id="Opaque_errors">Opaque errors</h3><p>Opaque是不透明的意思，这个是讲者自己的叫法，具体的思想就是:</p>
+<blockquote>
+<p>Assert errors for behaviour, not type<br>通过行为来判断错误而不是类型</p>
+</blockquote>
+<p>说起行为，很自然的就联想到了interface，对的，不使用type，使用interface来处理。</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> temporary interface &#123;</span><br><span class="line">		Tepporary() bool</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func IsTemporary(<span class="keyword">err</span> <span class="keyword">error</span>) bool &#123;</span><br><span class="line">		<span class="keyword">te</span>, ok := <span class="keyword">err</span>.(temporary)</span><br><span class="line">		<span class="keyword">return</span> ok &amp;&amp; <span class="keyword">te</span>.Temporary()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这种方法的耦合度更低一些，不过无法完全避免依赖度，毕竟interface也是api的一部分。</p>
+<h2 id="Don’t_just_check_errors,_handle_then_greacefully">Don’t just check errors, handle then greacefully</h2><figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="keyword">err</span> != nil &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">err</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这应该最常见的错误处理，不过想想当一个错误经过层层的return，当到达最外面的log记录了下来。但当你debug查找日志时只看到一句</p>
+<blockquote>
+<p>No such file or directory</p>
+</blockquote>
+<p>心里会不会万匹草泥马奔腾(╯‵□′)╯︵┴─┴  </p>
+<p>是的，这种方法坏处就是破坏了错误发生的上线文环境，debug起来就很困难。</p>
+<p>当然我们使用<code>fmt.Errorf</code>为错误加上一些信息</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">AuthenticatRequest</span><span class="params">(r *Request)</span></span> error &#123;</span><br><span class="line">		err := authenticate(r.<span class="type">User</span>)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">				<span class="keyword">return</span> fmt.<span class="type">Errorf</span>(<span class="string">"authenticat failed: %v"</span>, err)</span><br><span class="line">		</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>为了更优雅一点，讲者提供了一个包<code>github.com/pkg/errors</code>做这个事情。</p>
+<p>这个包的api也很简单</p>
+<h4 id="errors-New">errors.New</h4><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">err := errors.<span class="function"><span class="title">New</span><span class="params">(<span class="string">"kerboom"</span>)</span></span></span><br><span class="line">fmt.<span class="function"><span class="title">Printf</span><span class="params">(<span class="string">"%v\n"</span>, err)</span></span></span><br></pre></td></tr></table></figure>
+<p>使用<code>errors.New</code>新建的err打印时会展示出调用堆栈</p>
+<h4 id="errors-Wrap">errors.Wrap</h4><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">err := errors.Warp(</span><br><span class="line">			syscall<span class="class">.EBADF</span>, <span class="string">"couldn't write to stream"</span>)</span><br><span class="line">fmt.<span class="function"><span class="title">Printf</span><span class="params">(<span class="string">"%v\n"</span>, err)</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 输出			</span></span><br><span class="line">／／ couldn<span class="string">'t write to stream: bad file descriptor</span></span><br></pre></td></tr></table></figure>
+<h4 id="errors-Cause">errors.Cause</h4><p>有Wrap方法那也会有UnWrap的方法，这就是<code>errors.Cause</code></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">errors.<span class="function"><span class="title">Cause</span><span class="params">(err)</span></span>  <span class="comment">// 返回Wrap之前的error</span></span><br></pre></td></tr></table></figure>
+<p>前面的例子需要改成这样</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> temporary interface &#123;</span><br><span class="line">		Tepporary() bool</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func IsTemporary(<span class="keyword">err</span> <span class="keyword">error</span>) bool &#123;</span><br><span class="line">		<span class="keyword">te</span>, ok := <span class="keyword">err</span>.Cause(<span class="keyword">err</span>).(temporary)</span><br><span class="line">		<span class="keyword">return</span> ok &amp;&amp; <span class="keyword">te</span>.Temporary()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>github.com/pkg/errors</code>代码也就几百行，还是很不错的，值得推荐。</p>
+<p>以上</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://sineyuan.github.io/2016/08/28/go-error-handle/" data-id="ciskhrwqr0009z413onujao6h" class="article-share-link">Share</a>
+      
+        <a href="http://sineyuan.github.io/2016/08/28/go-error-handle/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2016/05/29/deploy-k8s-on-coreos/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">CoreOS部署kubernetes</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      <a href="/" class="logo">STep by STep</a>
+      &copy; 2016 Sine Yuan<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+<script>
+  var disqus_shortname = 'sineyuansblog';
+  
+  var disqus_url = 'http://sineyuan.github.io/2016/08/28/go-error-handle/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="/js/jquery.min.js" type="text/javascript"></script>
+<script src="/js/jquery.scrollLoading.js" type="text/javascript"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>
