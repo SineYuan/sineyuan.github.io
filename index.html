@@ -78,7 +78,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">August 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">August 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -88,6 +88,10 @@
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2017/01/27/go-naming/">(译)Go naming conventions</a>
+          </li>
         
           <li>
             <a href="/2016/08/28/go-error-handle/">Golang错误处理</a>
@@ -103,10 +107,6 @@
         
           <li>
             <a href="/2016/01/25/tornado-source-code-3/">tornado源码分析笔记(3)</a>
-          </li>
-        
-          <li>
-            <a href="/2016/01/19/tornado-source-code-2/">tornado源码分析笔记(2)</a>
           </li>
         
       </ul>
@@ -136,6 +136,96 @@
 </aside>
         
         <section id="main">
+  
+    <article id="post-go-naming" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/01/27/go-naming/" class="article-date">
+  <time datetime="2017-01-26T16:00:00.000Z" itemprop="datePublished">2017-01-27</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/01/27/go-naming/">(译)Go naming conventions</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本文的内容是Andrew Gerrand在Meetup Golang Paris上一次演讲slide的翻译(<a href="https://www.youtube.com/watch?v=sFUSP8Au_PE" target="_blank" rel="external">youtube</a>，<a href="https://talks.golang.org/2014/names.slide#1" target="_blank" rel="external">slide</a>)，内容是Go里面的一些命名的规范与建议。内容不错，在这里记录分享。</p>
+<h2 id="Names_matter">Names matter</h2><p>可读性定义代码的质量。</p>
+<p>好的命名对可读性非常重要。</p>
+<p>好的命名是: </p>
+<ul>
+<li>连续(容易理解)</li>
+<li>简短(便于输入)</li>
+<li>准确(易于理解)</li>
+</ul>
+<h2 id="A_rule_of_thumb">A rule of thumb</h2><p>一个常用的经验法则是：一个命名声明与使用的地方的距离越大，那么这个名字应该越长。</p>
+<h2 id="Use_MixedCase">Use MixedCase</h2><p>在Go应使用驼峰命名法(不要使用下划线命名)。</p>
+<p>首字母应该大写，像<code>ServeHTTP</code> 和 <code>IDProcessor</code></p>
+<h2 id="Local_variables">Local variables</h2><p>本地变量应保持简短，长短命名将有碍阅读。</p>
+<p>例如一些常用的约定：<br>使用 <code>i</code> 表示索引。<br>使用 <code>r</code> 表示reader。</p>
+<p>长命名可能对于很长的函数或有很对本地变量的函数很有用，但那通常表示你的代码需要重构了。</p>
+<h3 id="坏🌰">坏🌰</h3><figure class="highlight axapta"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">func RuneCount(buffer []<span class="keyword">byte</span>) <span class="keyword">int</span> &#123;</span><br><span class="line">    <span class="keyword">index</span>, <span class="keyword">count</span> := <span class="number">0</span>, <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> <span class="keyword">index</span> &lt; len(buffer) &#123;</span><br><span class="line">        <span class="keyword">if</span> buffer[<span class="keyword">index</span>] &lt; RuneSelf &#123;</span><br><span class="line">            <span class="keyword">index</span>++</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            _, size := DecodeRune(buffer[<span class="keyword">index</span>:])</span><br><span class="line">            <span class="keyword">index</span> += size</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">count</span>++</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">count</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="好🌰">好🌰</h3><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">func RuneCount(b []<span class="typename">byte</span>) <span class="typename">int</span> &#123;</span><br><span class="line">    i, <span class="string">n :</span>= <span class="number">0</span>, <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> i &lt; len(b) &#123;</span><br><span class="line">        <span class="keyword">if</span> b[i] &lt; RuneSelf &#123;</span><br><span class="line">            i++</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            _, <span class="string">size :</span>= DecodeRune(b[<span class="string">i:</span>])</span><br><span class="line">            i += size</span><br><span class="line">        &#125;</span><br><span class="line">        n++</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> n</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="参数">参数</h2><p>函数的参数作用像本地变量，但它们还具有文档的功能。</p>
+<p>当参数类型具有描述性时，使用短命名。</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">AfterFunc</span><span class="params">(d Duration, f <span class="keyword">func</span><span class="params">()</span></span></span>) *<span class="type">Timer</span></span><br><span class="line"></span><br><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">Escape</span><span class="params">(w io.Writer, s []byte)</span></span></span><br></pre></td></tr></table></figure>
+<p>当参数类型很模糊时(例如原生类型，相同的类型的参数时)，那么参数名字需要像文档一样说明。<br><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">Unix</span><span class="params">(sec, nsec int64)</span></span> <span class="type">Time</span></span><br><span class="line"></span><br><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">HasPrefix</span><span class="params">(s, <span class="keyword">prefix</span> []byte)</span></span> bool</span><br></pre></td></tr></table></figure></p>
+<h2 id="返回值">返回值</h2><p>对于一个对外发布的函数，返回值应命名应像文档一样说明返回值的作用。</p>
+<p>好的例子：<br><figure class="highlight autoit"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Copy</span><span class="params">(dst Writer, src Reader)</span> <span class="params">(written int64, err error)</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ScanBytes</span><span class="params">(data []byte, atEOF bool)</span> <span class="params">(advance int, token []byte, err error)</span></span></span><br></pre></td></tr></table></figure></p>
+<h2 id="Receivers">Receivers</h2><p>Receivers是一种特殊类型的参数</p>
+<p>通常情况，使用一到两个其类型简写的字符表示，因为在方法里面他们会经常出现</p>
+<figure class="highlight autoit"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(b *Buffer)</span> <span class="title">Read</span><span class="params">(p []byte)</span> <span class="params">(n int, err error)</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(sh serverHandler)</span> <span class="title">ServeHTTP</span><span class="params">(rw ResponseWriter, req *Request)</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r Rectangle)</span> <span class="title">Size</span><span class="params">()</span> <span class="title">Point</span></span></span><br></pre></td></tr></table></figure>
+<p>一个类型的方法Receiver命名应保持一致(不要在一个方法里面用<code>r</code>而在另一个方法里用<code>rdr</code>)</p>
+<h2 id="Exported_package-level_names">Exported package-level names</h2><p>一个包的导出的名字被其包命修饰，时时铭记这一点。<br>所以在标准库里面有<code>bytes.Buffer</code>和<code>strings.Reader</code>，而不是<code>bytes.ByteBuffer</code>,<code>strings.StringReader</code></p>
+<h2 id="接口类型">接口类型</h2><p>如果一个接口里面只有一个方法，那通常给方法名后面加一个’er’就好了。</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Reader interface &#123;</span><br><span class="line">    <span class="keyword">Read</span>(p []byte) (<span class="keyword">n</span> int, <span class="keyword">err</span> <span class="keyword">error</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>虽然有时英语语法上是不对的，但我们还是这么做(but we do it anyway)<br><figure class="highlight elm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="typedef"><span class="keyword">type</span> <span class="type">Execer</span> interface <span class="container">&#123;</span><br><span class="line">    <span class="type">Exec</span>(query string, args []<span class="type">Value</span>) (<span class="type">Result</span>, error)</span><br><span class="line">&#125;</span></span></span><br></pre></td></tr></table></figure></p>
+<p>有时要做一些转换看起来更好<br><figure class="highlight elm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="typedef"><span class="keyword">type</span> <span class="type">ByteReader</span> interface <span class="container">&#123;</span><br><span class="line">    <span class="type">ReadByte</span>() (c byte, err error)</span><br><span class="line">&#125;</span></span></span><br></pre></td></tr></table></figure></p>
+<p>但一个接口包含多个方法是，选择名字需要准确的描述这个借口的作用(例如: <code>net.Conn</code>, <code>http.ResponseWriter</code>, <code>io.ReadWriter</code>)</p>
+<h2 id="Error">Error</h2><p>错误类型命名类似<code>FooError</code>:</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> <span class="constant">ExitError</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>错误值命名类似<code>ErrFoo</code>:<br><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">var</span> ErrFormat = errors.<span class="function"><span class="title">New</span><span class="params">(<span class="string">"image: unknown format"</span>)</span></span></span><br></pre></td></tr></table></figure></p>
+<h2 id="包命名">包命名</h2><p>对外发布的包名应该说明包的作用</p>
+<p>避免使用util，common，等等</p>
+<h2 id="Import_paths">Import paths</h2><p>包的最后一个部分的路径应和包名相同。<br><figure class="highlight 1c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"compress/gzip"</span> <span class="comment">// package gzip</span></span><br></pre></td></tr></table></figure></p>
+<p>避免在包路径上结巴(233)。</p>
+<figure class="highlight 1c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"code.google.com/p/goauth2/oauth2"</span> <span class="comment">// bad; my fault</span></span><br></pre></td></tr></table></figure>
+<p>对于库来说，通常将代码放在根目录下。<br><figure class="highlight 1c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"github.com/golang/oauth2"</span> <span class="comment">// package oauth2</span></span><br></pre></td></tr></table></figure></p>
+<p>避免大写字母(不是所有的文件系统都是大小写敏感的)。</p>
+<h2 id="标准库">标准库</h2><p>文中许多例子都是来自标准库。</p>
+<p>标准库是个寻找优秀Go代码的地方，常看常新。</p>
+<p><em>但请记住</em>:</p>
+<blockquote>
+<p>When the standard library was written, we were still learning.<br>Most of it we got right, but we made some mistakes.</p>
+</blockquote>
+<h2 id="Conclusion">Conclusion</h2><p>Use short names.<br>使用短的名字</p>
+<p>Think about context.<br>多思考上下文</p>
+<p>Use your judgment.<br>要有自己的判断</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://sineyuan.github.io/2017/01/27/go-naming/" data-id="ciygp2sng0000wb13brv1ou3z" class="article-share-link">Share</a>
+      
+        <a href="http://sineyuan.github.io/2017/01/27/go-naming/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
   
     <article id="post-go-error-handle" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
@@ -203,7 +293,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/08/28/go-error-handle/" data-id="ciskhrwqr0009z413onujao6h" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/08/28/go-error-handle/" data-id="ciygo85oz00093x134ycsjabm" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/08/28/go-error-handle/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -286,7 +376,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/05/29/deploy-k8s-on-coreos/" data-id="ciskhrwqt000az4139nyufbjm" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/05/29/deploy-k8s-on-coreos/" data-id="ciygo85p0000a3x13cxun1y9f" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/05/29/deploy-k8s-on-coreos/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -354,7 +444,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/" data-id="ciskhrwqu000bz4134ox55azy" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/" data-id="ciygo85p2000b3x13l3cz6y17" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -416,7 +506,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/25/tornado-source-code-3/" data-id="ciskhrwqf0001z413wj8971i4" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/25/tornado-source-code-3/" data-id="ciygo85of00013x13obqfhxc9" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/25/tornado-source-code-3/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -656,7 +746,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/" data-id="ciskhrwqh0002z413v8gz1n3m" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/" data-id="ciygo85oh00023x131mneut6b" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -843,7 +933,7 @@ def <span class="function"><span class="title">main</span><span class="params">(
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-1/" data-id="ciskhrwqi0003z4138f28mhhm" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-1/" data-id="ciygo85oj00033x13psydt35p" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/19/tornado-source-code-1/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -952,7 +1042,7 @@ img = <span class="type">Image</span>.open(<span class="string">"captcha.png"</s
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/06/python-captcha/" data-id="ciskhrwql0005z413zxw5hs6n" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/06/python-captcha/" data-id="ciygo85om00053x13sg8absg3" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/06/python-captcha/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -1082,7 +1172,7 @@ public <span class="class"><span class="keyword">class</span> <span class="title
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/02/android-studio-tess-two/" data-id="ciskhrwqw000cz413doojhsan" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/02/android-studio-tess-two/" data-id="ciygo85p4000c3x13ga9v52rs" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/02/android-studio-tess-two/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -1121,112 +1211,9 @@ public <span class="class"><span class="keyword">class</span> <span class="title
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/09/22/migrate-to-hexo/" data-id="ciskhrwqn0007z413w9zsbg0t" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/09/22/migrate-to-hexo/" data-id="ciygo85oq00073x13fya2ipzo" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/09/22/migrate-to-hexo/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-android-package-cmd" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2015/03/05/android-package-cmd/" class="article-date">
-  <time datetime="2015-03-04T16:00:00.000Z" itemprop="datePublished">2015-03-05</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/03/05/android-package-cmd/">命令行编译打包android应用</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>在eclipse中点击一下就能将android项目一键构建，但在这个过程中发生了什么？我们亲手用命令行来实践一下吧.</p>
-<h2 id="构建流程">构建流程</h2><p>先上一张google官方的构建流程图<br><img src="http://7vzu7p.com1.z0.glb.clouddn.com/Android_build.png" alt="build process"></p>
-<ul>
-<li>Android Asset Packaging Tool (aapt) 将文资源件如AndroidManifest.xml还有其他Activity的XML文件编译成二进制文件。将他们打包和生成R.java文件</li>
-<li>aidl将.aidl接口文件转换为java代码</li>
-<li>将所有的java代码包括 R.java and aidl生成的java代码编译成.class文件</li>
-<li>用dx将.class文件编译成Dalvik虚拟机使用的字符码</li>
-<li>将所有的文件打包成.apk文件，包括编译的资源包，未编译的资源文件，.dex文件</li>
-<li>用debug或release key对apk文件签名。</li>
-<li>发布应用</li>
-</ul>
-<h2 id="命令行构建">命令行构建</h2><p>下面我们就来用命令行实践一下,我所使用的sdk版本是android-sdk_r24.0.2-linux<br>首先新建一个Android应用项目<br>    android create project –target 19 –name TestApp –path ~/workspace/TestApp –activity MainActivity –package com.example.testapp</p>
-<h3 id="使用aapt生成R-java和编译的资源包">使用aapt生成R.java和编译的资源包</h3><p>aapt在sdk中的build-tools中找到，从build-tools中选最新的版本的aapt<br>appt的使用方法</p>
-<pre><code>aapt package -f -M ${manifest.file}   
--<span class="ruby"><span class="constant">F</span> <span class="variable">${</span>packaged.resource.file}     
-</span>-<span class="ruby"><span class="constant">I</span> <span class="variable">${</span>path.to.android-jar.library}   
-</span>-<span class="ruby"><span class="constant">S</span> <span class="variable">${</span>android-resource-directory}    
-</span>[-m -J ${folder.to.output.the.R.java}]
-</code></pre><p>实践：</p>
-<pre><code>mkdir <span class="regexp">~/workspace/</span>TestApp/gen
-.<span class="regexp">/aapt package -f -M ~/</span>workspace<span class="regexp">/TestApp/</span>AndroidManifest.xml \  
--F <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>resources.arsc \  
--I <span class="regexp">~/Android/</span>SDK<span class="regexp">/platforms/</span>android-<span class="number">21</span>/android.jar \  
--S <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/res/</span>   \  
--m -J <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/gen/</span>
-</code></pre><h3 id="使用aidl命令把-aidl转成-java文件">使用aidl命令把.aidl转成.java文件</h3><pre><code><span class="title">aidl</span> -p <span class="variable">${android-framework}</span> -I <span class="variable">${srcdir}</span> dir=<span class="string">"<span class="variable">${srcdir}</span>"</span> <span class="variable">${.aidl files}</span>
-</code></pre><p>这里我们没有.aidl文件，所以跳过</p>
-<h3 id="编译-java文件">编译.java文件</h3><p>使用javac编译所有的.java文件</p>
-<pre><code>mkdir <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>classes  
-javac -encoding UTF-<span class="number">8</span> -source <span class="number">1.6</span> -target <span class="number">1.6</span> \  
--bootclasspath  <span class="regexp">~/Android/</span>SDK<span class="regexp">/platforms/</span>android-<span class="number">21</span>/android.jar \  
--d <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>classes \   
-<span class="regexp">~/workspace/</span>TestApp<span class="regexp">/src/</span>com<span class="regexp">/example/</span>testapp<span class="comment">/*.java \  
-~/workspace/TestApp/gen/com/example/testapp/R.java</span>
-</code></pre><h3 id="生成dex文件">生成dex文件</h3><p>生成dex文件的工具是dx，跟aapt在同一目录。<br>dx用法：</p>
-<pre><code><span class="title">dx</span> -–dex --dump-to <span class="variable">${output.dex.file}</span>  --core-library <span class="variable">${compiled.classes.directory}</span> 
-</code></pre><p>实践：</p>
-<pre><code>.<span class="regexp">/dx --dex --dump-to ~/</span>workspace<span class="regexp">/TestApp/</span>bin/classes.dex \  
---core-library  <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>classes
-</code></pre><p>注意在我使用的build-tools/21.1.2中的dx还不兼容使用jdk 8及以上版本，所以在用javac编译时需指定source和target为1.6或1.7。这点需要注意，不然会出现下面的异常</p>
-<pre><code>UNEXPECTED TOP-LEVEL <span class="string">EXCEPTION:</span>
-</code></pre><h3 id="打包所有文件成apk文件">打包所有文件成apk文件</h3><p>打包所有文件成apk文件使用的工具是apkbuilder，不过在较新的android sdk中取消了这个工具，不过apkbuilder只是个批处理文件，我们可以自己生成它。在sdk/tools目录中：</p>
-<pre><code><span class="keyword">cat</span> android | sed -<span class="keyword">e</span> 's/com.android.sdkmanager.Main/com.android.sdklib.build.ApkBuilderMain/<span class="keyword">g</span>' &gt; apkbuilder
-chmod a+x apkbuilder
-</code></pre><p>  详情查看stackoverflow的<a href="http://stackoverflow.com/questions/19273237/android-build-fails-no-such-file-or-directory-apkbuilder" target="_blank" rel="external">这个问答</a><br>  apkbuilder用法：</p>
-<pre><code>apkbuilder  <span class="label">${output</span>.apk.<span class="keyword">file</span>} -<span class="keyword">u</span> -z  <span class="label">${packagedresource</span>.<span class="keyword">file</span>} -f  <span class="label">${dex</span>.<span class="keyword">file</span>}
-</code></pre><p>  实践：</p>
-<pre><code>mkdir <span class="regexp">~/workspace/</span>TestApp/build  
-.<span class="regexp">/apkbuilder ~/</span>workspace<span class="regexp">/TestApp/</span>build/TestApp-unsigned.apk  -u \  
--z <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>resources.arsc \  
--f <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>classes.dex
-</code></pre><h3 id="签名">签名</h3><p>apk需要正确的签名才能在android系统上安装，要签名apk就需要密钥key。生成key使用jdk中的keytool生成密钥证书</p>
-<pre><code>keytool -genkeypair -<span class="keyword">alias</span> <span class="variable">${</span>别名} -keyalg <span class="constant">RSA</span> -keystore <span class="variable">${</span>keystore文件的路径+文件名}.keystore
-</code></pre><p>实践：</p>
-<pre><code>keytool -genkeypair -<span class="type">alias</span> <span class="string">"testkey"</span> -keyalg <span class="string">"RSA"</span> -keystore <span class="string">"test.keystore"</span> 
-</code></pre><p>输入之后回答一堆问题之后就会生成.keystore文件<br>在debug的时候可以使用googleg提供的debug key，debug证书存放可以在$HOME/.android/debug.keystore中。<br>下一步是使用jarsigner给apk文件签名</p>
-<pre><code><span class="title">jarsigner</span>  -keystore <span class="variable">${keystore}</span> -storepass  <span class="variable">${keystore.password}</span> -keypass <span class="variable">${keypass密钥别名密码}</span> -signedjar <span class="variable">${signed.apkfile}</span> <span class="variable">${unsigned.apkfile}</span> <span class="variable">${keyalias密钥别名}</span>
-</code></pre><p>实践：</p>
-<pre><code>jarsigner -keystore test<span class="class">.keystore</span> -storepass <span class="number">1234567890</span> -keypass <span class="number">1234567890</span> -signedjar \  
-~/workspace/TestApp/build/TestApp-signed<span class="class">.apk</span> \  
-~/workspace/TestApp/buildTestApp-unsigned<span class="class">.apk</span> testkey
-</code></pre><h2 id="一步到位">一步到位</h2><p>由上可见，apk的构建非常的繁杂。不过好在android应用在创建的时候就已经配置好ant自动构建脚本了。在项目主目录下直接</p>
-<pre><code><span class="title">ant</span> <span class="built_in">debug</span>
-</code></pre><p>就可在bin下生成debug模式的apk<br>生产release使用</p>
-<pre><code><span class="keyword">ant</span> release
-</code></pre>
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/03/05/android-package-cmd/" data-id="ciskhrwpz0000z413eycwhdef" class="article-share-link">Share</a>
-      
-        <a href="http://sineyuan.github.io/2015/03/05/android-package-cmd/#disqus_thread" class="article-comment-link">Comments</a>
       
       
     </footer>
@@ -1248,7 +1235,7 @@ chmod a+x apkbuilder
   <div class="outer">
     <div id="footer-info" class="inner">
       <a href="/" class="logo">STep by STep</a>
-      &copy; 2016 Sine Yuan<br>
+      &copy; 2017 Sine Yuan<br>
       Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>

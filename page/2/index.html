@@ -78,7 +78,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">August 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">August 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -88,6 +88,10 @@
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2017/01/27/go-naming/">(译)Go naming conventions</a>
+          </li>
         
           <li>
             <a href="/2016/08/28/go-error-handle/">Golang错误处理</a>
@@ -103,10 +107,6 @@
         
           <li>
             <a href="/2016/01/25/tornado-source-code-3/">tornado源码分析笔记(3)</a>
-          </li>
-        
-          <li>
-            <a href="/2016/01/19/tornado-source-code-2/">tornado源码分析笔记(2)</a>
           </li>
         
       </ul>
@@ -136,6 +136,109 @@
 </aside>
         
         <section id="main">
+  
+    <article id="post-android-package-cmd" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/03/05/android-package-cmd/" class="article-date">
+  <time datetime="2015-03-04T16:00:00.000Z" itemprop="datePublished">2015-03-05</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/03/05/android-package-cmd/">命令行编译打包android应用</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在eclipse中点击一下就能将android项目一键构建，但在这个过程中发生了什么？我们亲手用命令行来实践一下吧.</p>
+<h2 id="构建流程">构建流程</h2><p>先上一张google官方的构建流程图<br><img src="http://7vzu7p.com1.z0.glb.clouddn.com/Android_build.png" alt="build process"></p>
+<ul>
+<li>Android Asset Packaging Tool (aapt) 将文资源件如AndroidManifest.xml还有其他Activity的XML文件编译成二进制文件。将他们打包和生成R.java文件</li>
+<li>aidl将.aidl接口文件转换为java代码</li>
+<li>将所有的java代码包括 R.java and aidl生成的java代码编译成.class文件</li>
+<li>用dx将.class文件编译成Dalvik虚拟机使用的字符码</li>
+<li>将所有的文件打包成.apk文件，包括编译的资源包，未编译的资源文件，.dex文件</li>
+<li>用debug或release key对apk文件签名。</li>
+<li>发布应用</li>
+</ul>
+<h2 id="命令行构建">命令行构建</h2><p>下面我们就来用命令行实践一下,我所使用的sdk版本是android-sdk_r24.0.2-linux<br>首先新建一个Android应用项目<br>    android create project –target 19 –name TestApp –path ~/workspace/TestApp –activity MainActivity –package com.example.testapp</p>
+<h3 id="使用aapt生成R-java和编译的资源包">使用aapt生成R.java和编译的资源包</h3><p>aapt在sdk中的build-tools中找到，从build-tools中选最新的版本的aapt<br>appt的使用方法</p>
+<pre><code>aapt package -f -M ${manifest.file}   
+-<span class="ruby"><span class="constant">F</span> <span class="variable">${</span>packaged.resource.file}     
+</span>-<span class="ruby"><span class="constant">I</span> <span class="variable">${</span>path.to.android-jar.library}   
+</span>-<span class="ruby"><span class="constant">S</span> <span class="variable">${</span>android-resource-directory}    
+</span>[-m -J ${folder.to.output.the.R.java}]
+</code></pre><p>实践：</p>
+<pre><code>mkdir <span class="regexp">~/workspace/</span>TestApp/gen
+.<span class="regexp">/aapt package -f -M ~/</span>workspace<span class="regexp">/TestApp/</span>AndroidManifest.xml \  
+-F <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>resources.arsc \  
+-I <span class="regexp">~/Android/</span>SDK<span class="regexp">/platforms/</span>android-<span class="number">21</span>/android.jar \  
+-S <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/res/</span>   \  
+-m -J <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/gen/</span>
+</code></pre><h3 id="使用aidl命令把-aidl转成-java文件">使用aidl命令把.aidl转成.java文件</h3><pre><code><span class="title">aidl</span> -p <span class="variable">${android-framework}</span> -I <span class="variable">${srcdir}</span> dir=<span class="string">"<span class="variable">${srcdir}</span>"</span> <span class="variable">${.aidl files}</span>
+</code></pre><p>这里我们没有.aidl文件，所以跳过</p>
+<h3 id="编译-java文件">编译.java文件</h3><p>使用javac编译所有的.java文件</p>
+<pre><code>mkdir <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>classes  
+javac -encoding UTF-<span class="number">8</span> -source <span class="number">1.6</span> -target <span class="number">1.6</span> \  
+-bootclasspath  <span class="regexp">~/Android/</span>SDK<span class="regexp">/platforms/</span>android-<span class="number">21</span>/android.jar \  
+-d <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>classes \   
+<span class="regexp">~/workspace/</span>TestApp<span class="regexp">/src/</span>com<span class="regexp">/example/</span>testapp<span class="comment">/*.java \  
+~/workspace/TestApp/gen/com/example/testapp/R.java</span>
+</code></pre><h3 id="生成dex文件">生成dex文件</h3><p>生成dex文件的工具是dx，跟aapt在同一目录。<br>dx用法：</p>
+<pre><code><span class="title">dx</span> -–dex --dump-to <span class="variable">${output.dex.file}</span>  --core-library <span class="variable">${compiled.classes.directory}</span> 
+</code></pre><p>实践：</p>
+<pre><code>.<span class="regexp">/dx --dex --dump-to ~/</span>workspace<span class="regexp">/TestApp/</span>bin/classes.dex \  
+--core-library  <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>classes
+</code></pre><p>注意在我使用的build-tools/21.1.2中的dx还不兼容使用jdk 8及以上版本，所以在用javac编译时需指定source和target为1.6或1.7。这点需要注意，不然会出现下面的异常</p>
+<pre><code>UNEXPECTED TOP-LEVEL <span class="string">EXCEPTION:</span>
+</code></pre><h3 id="打包所有文件成apk文件">打包所有文件成apk文件</h3><p>打包所有文件成apk文件使用的工具是apkbuilder，不过在较新的android sdk中取消了这个工具，不过apkbuilder只是个批处理文件，我们可以自己生成它。在sdk/tools目录中：</p>
+<pre><code><span class="keyword">cat</span> android | sed -<span class="keyword">e</span> 's/com.android.sdkmanager.Main/com.android.sdklib.build.ApkBuilderMain/<span class="keyword">g</span>' &gt; apkbuilder
+chmod a+x apkbuilder
+</code></pre><p>  详情查看stackoverflow的<a href="http://stackoverflow.com/questions/19273237/android-build-fails-no-such-file-or-directory-apkbuilder" target="_blank" rel="external">这个问答</a><br>  apkbuilder用法：</p>
+<pre><code>apkbuilder  <span class="label">${output</span>.apk.<span class="keyword">file</span>} -<span class="keyword">u</span> -z  <span class="label">${packagedresource</span>.<span class="keyword">file</span>} -f  <span class="label">${dex</span>.<span class="keyword">file</span>}
+</code></pre><p>  实践：</p>
+<pre><code>mkdir <span class="regexp">~/workspace/</span>TestApp/build  
+.<span class="regexp">/apkbuilder ~/</span>workspace<span class="regexp">/TestApp/</span>build/TestApp-unsigned.apk  -u \  
+-z <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>resources.arsc \  
+-f <span class="regexp">~/workspace/</span>TestApp<span class="regexp">/bin/</span>classes.dex
+</code></pre><h3 id="签名">签名</h3><p>apk需要正确的签名才能在android系统上安装，要签名apk就需要密钥key。生成key使用jdk中的keytool生成密钥证书</p>
+<pre><code>keytool -genkeypair -<span class="keyword">alias</span> <span class="variable">${</span>别名} -keyalg <span class="constant">RSA</span> -keystore <span class="variable">${</span>keystore文件的路径+文件名}.keystore
+</code></pre><p>实践：</p>
+<pre><code>keytool -genkeypair -<span class="type">alias</span> <span class="string">"testkey"</span> -keyalg <span class="string">"RSA"</span> -keystore <span class="string">"test.keystore"</span> 
+</code></pre><p>输入之后回答一堆问题之后就会生成.keystore文件<br>在debug的时候可以使用googleg提供的debug key，debug证书存放可以在$HOME/.android/debug.keystore中。<br>下一步是使用jarsigner给apk文件签名</p>
+<pre><code><span class="title">jarsigner</span>  -keystore <span class="variable">${keystore}</span> -storepass  <span class="variable">${keystore.password}</span> -keypass <span class="variable">${keypass密钥别名密码}</span> -signedjar <span class="variable">${signed.apkfile}</span> <span class="variable">${unsigned.apkfile}</span> <span class="variable">${keyalias密钥别名}</span>
+</code></pre><p>实践：</p>
+<pre><code>jarsigner -keystore test<span class="class">.keystore</span> -storepass <span class="number">1234567890</span> -keypass <span class="number">1234567890</span> -signedjar \  
+~/workspace/TestApp/build/TestApp-signed<span class="class">.apk</span> \  
+~/workspace/TestApp/buildTestApp-unsigned<span class="class">.apk</span> testkey
+</code></pre><h2 id="一步到位">一步到位</h2><p>由上可见，apk的构建非常的繁杂。不过好在android应用在创建的时候就已经配置好ant自动构建脚本了。在项目主目录下直接</p>
+<pre><code><span class="title">ant</span> <span class="built_in">debug</span>
+</code></pre><p>就可在bin下生成debug模式的apk<br>生产release使用</p>
+<pre><code><span class="keyword">ant</span> release
+</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://sineyuan.github.io/2015/03/05/android-package-cmd/" data-id="ciygo85p5000d3x13qv3pb5t2" class="article-share-link">Share</a>
+      
+        <a href="http://sineyuan.github.io/2015/03/05/android-package-cmd/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
   
     <article id="post-latex-thesis" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
@@ -183,7 +286,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/03/02/latex-thesis/" data-id="ciskhrwqp0008z413kyidu5sz" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/03/02/latex-thesis/" data-id="ciygo85os00083x13mh34ynkb" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/03/02/latex-thesis/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -250,7 +353,7 @@ pelican-themes -<span class="tag">i</span> bootstrap2
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/03/01/pelican-configure/" data-id="ciskhrwqm0006z4130vnipw09" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/03/01/pelican-configure/" data-id="ciygo85op00063x1314q6jxu4" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/03/01/pelican-configure/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -349,7 +452,7 @@ git push  origin master
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/02/28/setup-blog/" data-id="ciskhrwqk0004z4130d5srwhm" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/02/28/setup-blog/" data-id="ciygo85ok00043x134yoew7zs" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/02/28/setup-blog/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -373,7 +476,7 @@ git push  origin master
   <div class="outer">
     <div id="footer-info" class="inner">
       <a href="/" class="logo">STep by STep</a>
-      &copy; 2016 Sine Yuan<br>
+      &copy; 2017 Sine Yuan<br>
       Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>
