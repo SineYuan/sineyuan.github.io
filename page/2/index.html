@@ -78,7 +78,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">August 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">August 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -88,6 +88,10 @@
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2017/03/16/mxnet-begin/">MXNet上手</a>
+          </li>
         
           <li>
             <a href="/2017/03/02/tensorflow-mnist-pratice/">Tensorflow Mnist手写数字识别Go实战</a>
@@ -103,10 +107,6 @@
         
           <li>
             <a href="/2016/08/28/go-error-handle/">Golang错误处理</a>
-          </li>
-        
-          <li>
-            <a href="/2016/05/29/deploy-k8s-on-coreos/">CoreOS部署kubernetes</a>
           </li>
         
       </ul>
@@ -136,6 +136,115 @@
 </aside>
         
         <section id="main">
+  
+    <article id="post-python-captcha" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/01/06/python-captcha/" class="article-date">
+  <time datetime="2016-01-06T13:18:32.000Z" itemprop="datePublished">2016-01-06</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/01/06/python-captcha/">使用Python做验证码识别</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>平常我们上网经常遇到的验证码英文名为CAPTCHA， 这其实是一个非常炫酷的名字的缩写，全称为全自动区分计算机和人类的图灵测试（英语：Completely Automated Public Turing test to tell Computers and Humans Apart) 。看起来是不是很高大上啊，图灵测试都出来了。不过确实，对于识别验证码这种对人来说很容易的任务（普通验证码，非12306的）对于计算机来说可不简单。</p>
+<h2 id="工具">工具</h2><p>有用的工具：</p>
+<ul>
+<li><a href="http://www.pythonware.com/products/pil/" target="_blank" rel="external">PIL</a>(Python Image Library)——图片处理库</li>
+<li><a href="http://www.numpy.org/" target="_blank" rel="external">numpy</a>——矩阵运算</li>
+<li><a href="https://github.com/tesseract-ocr/tesseract" target="_blank" rel="external">tesseract</a>——开源的ORC库</li>
+<li><a href="http://scikit-learn.org/stable/index.html" target="_blank" rel="external">scikit-learn</a>——机器学习方面的集成包</li>
+</ul>
+<h2 id="分析验证码">分析验证码</h2><p>验证码也是有计算机生成的，所以不同的验证码有不同的处理方法。所以验证码识别的第一步是观察目标验证码的规律。这次面对的验证码张这样子</p>
+<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/shot.png" alt=" "></p>
+<p>一般来说第一步首先是要将验证码图片转换为二值图去除干扰信息，便于进一步处理。<br>观察分析验证码的字体都是同样的颜色，背景有横的或斜的条纹。直接二值化效果并不好。但是字符之间是没有粘连的，所以我们可以利用这一点提取出字符。</p>
+<h2 id="预处理">预处理</h2><h3 id="寻找字符像素">寻找字符像素</h3><p>首先第一步是提取出字符的颜色也就是RGB值，观察到字符的颜色相同，占整个验证码图片的比例基本上是差不多的。所以我们可以通过分析像素的直方图找出字符的像素值出来。不过我偷懒没用这样的方法，因为图片开头都是横向的条纹，所以我就直接从左往右扫描图片横向中线的像素值，找出像素值突变的地方就可以找到字符的像素值了。</p>
+<h3 id="FloodFill算法提取字符">FloodFill算法提取字符</h3><p>Flood fill算法是从一个区域中提取若干个连通的点与其他相邻区域区分开（或分别染成不同颜色）的经典算法。处理这种没有粘连字符或者粘连但是字符每个颜色不一样的验证码效果拔群。多说无益，看图就明白了</p>
+<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/floodfill4.gif" alt=" "><br><img src="http://7vzu7p.com1.z0.glb.clouddn.com/floodfill8.gif" alt=" "></p>
+<p>FloodFill最简单的实现是用递归</p>
+<pre><code><span class="function"><span class="keyword">def</span> <span class="title">flood_fill</span><span class="params">(img, x0, y0, blank_color, color_to_fill, cmp_func)</span>:</span> 
+    pix = img.load()
+    pix[x0, y0] = color_to_fill
+    offsets = [(<span class="number">1</span>, <span class="number">0</span>), (<span class="number">0</span>, <span class="number">1</span>), (-<span class="number">1</span>, <span class="number">0</span>), (<span class="number">0</span>, -<span class="number">1</span>)]
+    <span class="keyword">for</span> xoffset, yoffset <span class="keyword">in</span> offsets:
+        x, y = x0 + xoffset, y0 + yoffset
+        <span class="keyword">try</span>:
+            <span class="keyword">if</span> cmp_func(pix[x, y], blank_color):
+                flood_fill(img, x, y, blank_color)
+        <span class="keyword">except</span> IndexError:
+            <span class="keyword">pass</span>
+</code></pre><p>不过python不支持尾递归优化，所以运行时回出现异常提示到达最大递归限制。所以改用基于队列的广度优先搜索<br>实现</p>
+<pre><code><span class="function"><span class="keyword">def</span> <span class="title">flood_fill2</span><span class="params">(img, x0, y0, blank_color, color_to_fill, cmp_func)</span>:</span>
+    pix = img.load()
+    visited = set()
+    q = queue.Queue()
+    q.put((x0, y0))
+    visited.add((x0, y0))
+    offsets = [(<span class="number">1</span>, <span class="number">0</span>), (<span class="number">0</span>, <span class="number">1</span>), (-<span class="number">1</span>, <span class="number">0</span>), (<span class="number">0</span>, -<span class="number">1</span>)]
+    <span class="keyword">while</span> <span class="keyword">not</span> q.empty():
+        x, y = q.get()
+        pix[x, y] = color_to_fill
+        <span class="keyword">for</span> xoffset, yoffset <span class="keyword">in</span> offsets:
+            x1, y1 = x + xoffset, y + yoffset
+            <span class="keyword">if</span> (x1, y1) <span class="keyword">in</span> (visited):
+                <span class="keyword">continue</span>  <span class="comment"># 已经访问过了</span>
+            visited.add((x1, y1))
+            <span class="keyword">try</span>:
+                <span class="keyword">if</span> cmp_func(pix[x1, y1], blank_color):
+                       q.put((x1, y1))
+            <span class="keyword">except</span> IndexError:
+                <span class="keyword">pass</span>
+    <span class="keyword">return</span> visited
+</code></pre><h3 id="字符分割">字符分割</h3><p>字符串的分割也是非常重要的一步，对于复杂的验证码，目前还没有非常有效的字符串分割方法。 对于不粘连并且字符之间没有重叠的字符串直接在上下左右四个方向扫描整行或整列是否空白来分割字符</p>
+<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/rrr.png" alt=" "></p>
+<p>对于字符间有重叠的，如下图的2和F。</p>
+<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/linkchar.png" alt=""></p>
+<p>一种方法是使用斜向的切割法，但更好的方法还是统计x坐标上的黑白像素占比，在字符分隔处会有白像素占比的波谷。根据这个波谷的来分割图片。</p>
+<h3 id="标准化(normalize)">标准化(normalize)</h3><p>这一步将切割出来的字符摆正并且统一成一样的大小</p>
+<p>摆正字符的方法是使用旋转卡壳算法。即从 -30度 ~ 30度旋转图片，检测字符间距，取最小间距对应的角度。</p>
+<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/trible91.png" alt=""></p>
+<p>最后在四周填充像素，把所以字符图片统一成一样的尺寸。</p>
+<h3 id="识别">识别</h3><h4 id="Tesseract">Tesseract</h4><p>识别方面可以使用ORC库<a href="https://github.com/tesseract-ocr/tesseract" target="_blank" rel="external">tesseract</a></p>
+<p>在安装tesseract后 python使用<a href="https://pypi.python.org/pypi/pytesseract/0.1" target="_blank" rel="external">pytessract</a>方便的调用tesseractF</p>
+<pre><code><span class="keyword">import</span> pytesseract
+<span class="keyword">from</span> <span class="type">PIL</span> <span class="keyword">import</span> <span class="type">Image</span>
+
+img = <span class="type">Image</span>.open(<span class="string">"captcha.png"</span>)
+
+<span class="literal">result</span> = pytesseract.image_to_string(img, config='-psm <span class="number">7</span>')
+</code></pre><p>不过经测试tesseract的对于标准的印刷体的英文识别效果还是可以的，但若有旋转扭曲等扰动等话识别率就不是很高了。不过tesseract通过训练自己的识别模型来提高识别率。</p>
+<h4 id="机器学习">机器学习</h4><p>另外一个看起来更高大上的方法是应用机器学习的方法来做识别，常用的有SVM和神经网络。</p>
+<p>python下机器学习的库首推<a href="http://scikit-learn.org/stable/index.html" target="_blank" rel="external">scikit-learn</a>。scikit-learn里面集成了各种常用的识别模型，降纬，聚类等算法，还要非常棒的文档，可以说是机器学习方面的百宝箱。</p>
+<p>使用scikit-learn训练验证码识别模型这事。。。还是先挖个坑，下回再填吧</p>
+<hr>
+<h3 id="Reference">Reference</h3><p><a href="http://drops.wooyun.org/tips/141" target="_blank" rel="external">http://drops.wooyun.org/tips/141</a><br><a href="http://drops.wooyun.org/tips/6313" target="_blank" rel="external">http://drops.wooyun.org/tips/6313</a><br><a href="http://pillow.readthedocs.org/en/3.0.x/reference/Image.html" target="_blank" rel="external">http://pillow.readthedocs.org/en/3.0.x/reference/Image.html</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://sineyuan.github.io/2016/01/06/python-captcha/" data-id="cj0gfkmix00073s13hb4g3oww" class="article-share-link">Share</a>
+      
+        <a href="http://sineyuan.github.io/2016/01/06/python-captcha/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
   
     <article id="post-android-studio-tess-two" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
@@ -255,7 +364,7 @@ public <span class="class"><span class="keyword">class</span> <span class="title
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/02/android-studio-tess-two/" data-id="cizs22goi000fnu1356yi5j4m" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/02/android-studio-tess-two/" data-id="cj0gfkmjg000g3s132v6aacjr" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/02/android-studio-tess-two/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -294,7 +403,7 @@ public <span class="class"><span class="keyword">class</span> <span class="title
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/09/22/migrate-to-hexo/" data-id="cizs22go60009nu13bgwzkr14" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/09/22/migrate-to-hexo/" data-id="cj0gfkmj3000a3s139loi1edx" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/09/22/migrate-to-hexo/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -397,7 +506,7 @@ chmod a+x apkbuilder
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/03/05/android-package-cmd/" data-id="cizs22gnf0000nu13o6mc375l" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/03/05/android-package-cmd/" data-id="cj0gfkmi500003s13362ammk7" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/03/05/android-package-cmd/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -455,7 +564,7 @@ chmod a+x apkbuilder
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/03/02/latex-thesis/" data-id="cizs22go8000anu13lcws7u01" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/03/02/latex-thesis/" data-id="cj0gfkmj7000b3s13skpl9njk" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/03/02/latex-thesis/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -522,7 +631,7 @@ pelican-themes -<span class="tag">i</span> bootstrap2
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/03/01/pelican-configure/" data-id="cizs22go40008nu13ekc0ka97" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/03/01/pelican-configure/" data-id="cj0gfkmiy00083s136pyk2len" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/03/01/pelican-configure/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -621,7 +730,7 @@ git push  origin master
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2015/02/28/setup-blog/" data-id="cizs22go10006nu134i7jjkub" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2015/02/28/setup-blog/" data-id="cj0gfkmiv00063s13q0nepytm" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2015/02/28/setup-blog/#disqus_thread" class="article-comment-link">Comments</a>
       

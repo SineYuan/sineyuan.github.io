@@ -78,7 +78,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">August 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">August 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -88,6 +88,10 @@
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2017/03/16/mxnet-begin/">MXNet上手</a>
+          </li>
         
           <li>
             <a href="/2017/03/02/tensorflow-mnist-pratice/">Tensorflow Mnist手写数字识别Go实战</a>
@@ -103,10 +107,6 @@
         
           <li>
             <a href="/2016/08/28/go-error-handle/">Golang错误处理</a>
-          </li>
-        
-          <li>
-            <a href="/2016/05/29/deploy-k8s-on-coreos/">CoreOS部署kubernetes</a>
           </li>
         
       </ul>
@@ -136,6 +136,60 @@
 </aside>
         
         <section id="main">
+  
+    <article id="post-mxnet-begin" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/03/16/mxnet-begin/" class="article-date">
+  <time datetime="2017-03-15T16:00:00.000Z" itemprop="datePublished">2017-03-16</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/03/16/mxnet-begin/">MXNet上手</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>折腾了一段时间Tensorflw后，感觉Tensorflow各方面都非常不错，无论是Tensorflow Serving还是TensorBoard，不得不说Google的大腿就是粗啊。不过Tensorflow在性能上的并不怎么好，训练的时间和内存占用都很高。不过Tensorflow 1.0后也加入了新的实验特性来提高性能，相信Tensorflow以后性能不会再是大的问题。穷人家的孩子还得节俭持家， 所以我把目光投向了MXNet。</p>
+<p>MXNet是一个兼具性灵活和效率的深度学习框架。灵活指的是MXNet兼容声明式和指令式两种编程方式，可以很灵活的定义自己需要的东西。而效率则指MXNet在底层做了很多的优化(具体可以看<a href="https://github.com/dmlc/mxnet/blob/master/docs/zh/note_memory.md" target="_blank" rel="external">这篇文章</a>)，速度与内存消耗方面都做的很好。</p>
+<p>不过相比Tensorflow，MXNet的上手难度要高，文档方面对新手还是不太友好。入门教程可以很快的跑一个MNIST识别的demo，但用高级的<code>module</code>封装了很多细节，当新手要自定义loss函数时往往不知所措。其实我觉得学习MXNet基本概念最开始要看的是<a href="http://mxnet.io/api/python/symbol_in_pictures.html" target="_blank" rel="external">Symbolic Configuration and Execution in Pictures</a>这篇文章。以这篇文章的例子来说<br><img src="https://raw.githubusercontent.com/dmlc/web-data/master/mxnet/symbol/executor_forward.png" alt="build process"></p>
+<p>我们定义Symbol<code>A</code>,<code>B</code>,<code>C</code>,<code>D</code>,<code>E</code>，其中<code>A</code>, <code>B</code>, <code>D</code>为输入节点，<code>E</code>为输出节点，然后绑定输入数据<code>a</code>,<code>b</code>,<code>d</code>到<code>E</code>生成Executor， 最后Executor调用<code>forward</code>计算网络输出。</p>
+<p>除了多一步绑定数据生成Executor，其他跟Tensorflow还是很像的，可以类比Tensorflow的</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">sess</span><span class="class">.run</span>(E, feed_dict=&#123;<span class="attribute">A</span>: a, <span class="attribute">B</span>: b, <span class="attribute">D</span>: d&#125;)</span><br></pre></td></tr></table></figure>
+<p>当我们需要训练模型的时候，我们就需要计算模型中参数的梯度，计算梯度需要调用Executor的<code>backward</code>方法。<br><img src="https://raw.githubusercontent.com/dmlc/web-data/master/mxnet/symbol/executor_backward.png" alt="build process"></p>
+<p>如上，绑定的时候通过<code>args_grad</code>对待求解参数输入一个空的<code>NDArray</code>用于存放梯度计算结果，新版MXNet的API和上图有些不同，如果需要计算梯度，调用<code>forward</code>时需要带上<code>is_train</code>参数</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">executor.<span class="function"><span class="title">forward</span><span class="params">(is_train=True)</span></span></span><br></pre></td></tr></table></figure>
+<p>执行<code>forward</code>后再执行<code>backward</code>方法求解梯度，之后就能得到节点<code>A</code>的梯度<br><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">In [<span class="number">4</span>]: exec<span class="class">.grad_dict</span>[<span class="string">'A'</span>].<span class="function"><span class="title">asnumpy</span><span class="params">()</span></span></span><br><span class="line">Out[<span class="number">4</span>]: <span class="function"><span class="title">array</span><span class="params">([ <span class="number">4</span>.], dtype=float32)</span></span></span><br></pre></td></tr></table></figure></p>
+<p>计算出梯度后我们就可以根据梯度更新模型参数，一遍一遍的迭代直到训练结束。</p>
+<p>从上面的过程可以看出，<code>bind</code>这套api还是很低层的，很多东西都要我们手工完成，所以MXNet在这基础上提供了更高层的api方便开发。我们可以在MXNet项目代码的<code>example/module</code>中的demo里面学习基础用法，这里就直接copy过来</p>
+<p>中等层次的api<br><figure class="highlight coffeescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">##</span></span><br><span class="line"><span class="comment"># Intermediate-level API</span></span><br><span class="line"><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">##</span></span><br><span class="line">mod = mx.mod.Module(softmax)</span><br><span class="line">mod.bind(data_shapes=train_dataiter.provide_data, label_shapes=train_dataiter.provide_label)</span><br><span class="line">mod.init_params()</span><br><span class="line"></span><br><span class="line">mod.init_optimizer(optimizer_params=&#123;<span class="string">'learning_rate'</span>:<span class="number">0.01</span>, <span class="string">'momentum'</span>: <span class="number">0.9</span>&#125;)</span><br><span class="line">metric = mx.metric.create(<span class="string">'acc'</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i_epoch <span class="keyword">in</span> range(n_epoch):</span><br><span class="line">    <span class="keyword">for</span> i_iter, batch <span class="keyword">in</span> enumerate(train_dataiter):</span><br><span class="line">        mod.forward(batch)</span><br><span class="line">        mod.update_metric(metric, batch.label)</span><br><span class="line"></span><br><span class="line">        mod.backward()</span><br><span class="line">        mod.update()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> name, val <span class="keyword">in</span> metric.get_name_value():</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">'epoch %03d: %s=%f'</span> % (i_epoch, name, val))</span><br><span class="line">    metric.reset()</span><br><span class="line">    train_dataiter.reset()</span><br></pre></td></tr></table></figure></p>
+<p>高级api，这个就很简单了</p>
+<figure class="highlight coffeescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">##</span></span><br><span class="line"><span class="comment"># High-level API</span></span><br><span class="line"><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">##</span></span><br><span class="line">logging.basicConfig(level=logging.DEBUG)</span><br><span class="line">train_dataiter.reset()</span><br><span class="line">mod = mx.mod.Module(softmax)</span><br><span class="line">mod.fit(train_dataiter, eval_data=val_dataiter,</span><br><span class="line">        optimizer_params=&#123;<span class="string">'learning_rate'</span>:<span class="number">0.01</span>, <span class="string">'momentum'</span>: <span class="number">0.9</span>&#125;, num_epoch=n_epoch)</span><br></pre></td></tr></table></figure>
+<p>总的来说个人感觉MXNet还是一个非常不错的框架, 开发社区也很活跃，目前有了AWS官方的支持，希望后面越来越好。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://sineyuan.github.io/2017/03/16/mxnet-begin/" data-id="cj0gfkmj100093s13f9lz1jfy" class="article-share-link">Share</a>
+      
+        <a href="http://sineyuan.github.io/2017/03/16/mxnet-begin/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
   
     <article id="post-tensorflow-mnist-pratice" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
@@ -204,7 +258,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2017/03/02/tensorflow-mnist-pratice/" data-id="cizs22gny0005nu13pm8k5l4q" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2017/03/02/tensorflow-mnist-pratice/" data-id="cj0gfkmis00053s13iqplgu54" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2017/03/02/tensorflow-mnist-pratice/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -263,7 +317,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2017/02/19/tensorflow-windows-installation/" data-id="cizs22gnx0004nu138eajfz3g" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2017/02/19/tensorflow-windows-installation/" data-id="cj0gfkmiq00043s13nqo08021" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2017/02/19/tensorflow-windows-installation/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -353,7 +407,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2017/01/27/go-naming/" data-id="cizs22goa000bnu13beqbxym9" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2017/01/27/go-naming/" data-id="cj0gfkmj9000c3s133tv2wnps" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2017/01/27/go-naming/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -431,7 +485,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/08/28/go-error-handle/" data-id="cizs22goc000cnu134qumzicc" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/08/28/go-error-handle/" data-id="cj0gfkmjb000d3s13hyh82d2v" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/08/28/go-error-handle/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -514,7 +568,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/05/29/deploy-k8s-on-coreos/" data-id="cizs22goe000dnu13cvkwjfo7" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/05/29/deploy-k8s-on-coreos/" data-id="cj0gfkmjd000e3s13op81vrvh" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/05/29/deploy-k8s-on-coreos/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -582,7 +636,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/" data-id="cizs22gog000enu13p8wfr4hs" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/" data-id="cj0gfkmje000f3s13pz8e0z5a" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -644,7 +698,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/25/tornado-source-code-3/" data-id="cizs22gnr0001nu136nvn6iqp" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/25/tornado-source-code-3/" data-id="cj0gfkmil00013s131ty7eqrw" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/25/tornado-source-code-3/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -884,7 +938,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/" data-id="cizs22gnu0002nu13odz4dfxo" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/" data-id="cj0gfkmin00023s134jzxndm8" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -1071,118 +1125,9 @@ def <span class="function"><span class="title">main</span><span class="params">(
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-1/" data-id="cizs22gnv0003nu13jrrr2ra9" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-1/" data-id="cj0gfkmip00033s13f4h5y2ra" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/19/tornado-source-code-1/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-python-captcha" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2016/01/06/python-captcha/" class="article-date">
-  <time datetime="2016-01-06T13:18:32.000Z" itemprop="datePublished">2016-01-06</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/01/06/python-captcha/">使用Python做验证码识别</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>平常我们上网经常遇到的验证码英文名为CAPTCHA， 这其实是一个非常炫酷的名字的缩写，全称为全自动区分计算机和人类的图灵测试（英语：Completely Automated Public Turing test to tell Computers and Humans Apart) 。看起来是不是很高大上啊，图灵测试都出来了。不过确实，对于识别验证码这种对人来说很容易的任务（普通验证码，非12306的）对于计算机来说可不简单。</p>
-<h2 id="工具">工具</h2><p>有用的工具：</p>
-<ul>
-<li><a href="http://www.pythonware.com/products/pil/" target="_blank" rel="external">PIL</a>(Python Image Library)——图片处理库</li>
-<li><a href="http://www.numpy.org/" target="_blank" rel="external">numpy</a>——矩阵运算</li>
-<li><a href="https://github.com/tesseract-ocr/tesseract" target="_blank" rel="external">tesseract</a>——开源的ORC库</li>
-<li><a href="http://scikit-learn.org/stable/index.html" target="_blank" rel="external">scikit-learn</a>——机器学习方面的集成包</li>
-</ul>
-<h2 id="分析验证码">分析验证码</h2><p>验证码也是有计算机生成的，所以不同的验证码有不同的处理方法。所以验证码识别的第一步是观察目标验证码的规律。这次面对的验证码张这样子</p>
-<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/shot.png" alt=" "></p>
-<p>一般来说第一步首先是要将验证码图片转换为二值图去除干扰信息，便于进一步处理。<br>观察分析验证码的字体都是同样的颜色，背景有横的或斜的条纹。直接二值化效果并不好。但是字符之间是没有粘连的，所以我们可以利用这一点提取出字符。</p>
-<h2 id="预处理">预处理</h2><h3 id="寻找字符像素">寻找字符像素</h3><p>首先第一步是提取出字符的颜色也就是RGB值，观察到字符的颜色相同，占整个验证码图片的比例基本上是差不多的。所以我们可以通过分析像素的直方图找出字符的像素值出来。不过我偷懒没用这样的方法，因为图片开头都是横向的条纹，所以我就直接从左往右扫描图片横向中线的像素值，找出像素值突变的地方就可以找到字符的像素值了。</p>
-<h3 id="FloodFill算法提取字符">FloodFill算法提取字符</h3><p>Flood fill算法是从一个区域中提取若干个连通的点与其他相邻区域区分开（或分别染成不同颜色）的经典算法。处理这种没有粘连字符或者粘连但是字符每个颜色不一样的验证码效果拔群。多说无益，看图就明白了</p>
-<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/floodfill4.gif" alt=" "><br><img src="http://7vzu7p.com1.z0.glb.clouddn.com/floodfill8.gif" alt=" "></p>
-<p>FloodFill最简单的实现是用递归</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">flood_fill</span><span class="params">(img, x0, y0, blank_color, color_to_fill, cmp_func)</span>:</span> 
-    pix = img.load()
-    pix[x0, y0] = color_to_fill
-    offsets = [(<span class="number">1</span>, <span class="number">0</span>), (<span class="number">0</span>, <span class="number">1</span>), (-<span class="number">1</span>, <span class="number">0</span>), (<span class="number">0</span>, -<span class="number">1</span>)]
-    <span class="keyword">for</span> xoffset, yoffset <span class="keyword">in</span> offsets:
-        x, y = x0 + xoffset, y0 + yoffset
-        <span class="keyword">try</span>:
-            <span class="keyword">if</span> cmp_func(pix[x, y], blank_color):
-                flood_fill(img, x, y, blank_color)
-        <span class="keyword">except</span> IndexError:
-            <span class="keyword">pass</span>
-</code></pre><p>不过python不支持尾递归优化，所以运行时回出现异常提示到达最大递归限制。所以改用基于队列的广度优先搜索<br>实现</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">flood_fill2</span><span class="params">(img, x0, y0, blank_color, color_to_fill, cmp_func)</span>:</span>
-    pix = img.load()
-    visited = set()
-    q = queue.Queue()
-    q.put((x0, y0))
-    visited.add((x0, y0))
-    offsets = [(<span class="number">1</span>, <span class="number">0</span>), (<span class="number">0</span>, <span class="number">1</span>), (-<span class="number">1</span>, <span class="number">0</span>), (<span class="number">0</span>, -<span class="number">1</span>)]
-    <span class="keyword">while</span> <span class="keyword">not</span> q.empty():
-        x, y = q.get()
-        pix[x, y] = color_to_fill
-        <span class="keyword">for</span> xoffset, yoffset <span class="keyword">in</span> offsets:
-            x1, y1 = x + xoffset, y + yoffset
-            <span class="keyword">if</span> (x1, y1) <span class="keyword">in</span> (visited):
-                <span class="keyword">continue</span>  <span class="comment"># 已经访问过了</span>
-            visited.add((x1, y1))
-            <span class="keyword">try</span>:
-                <span class="keyword">if</span> cmp_func(pix[x1, y1], blank_color):
-                       q.put((x1, y1))
-            <span class="keyword">except</span> IndexError:
-                <span class="keyword">pass</span>
-    <span class="keyword">return</span> visited
-</code></pre><h3 id="字符分割">字符分割</h3><p>字符串的分割也是非常重要的一步，对于复杂的验证码，目前还没有非常有效的字符串分割方法。 对于不粘连并且字符之间没有重叠的字符串直接在上下左右四个方向扫描整行或整列是否空白来分割字符</p>
-<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/rrr.png" alt=" "></p>
-<p>对于字符间有重叠的，如下图的2和F。</p>
-<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/linkchar.png" alt=""></p>
-<p>一种方法是使用斜向的切割法，但更好的方法还是统计x坐标上的黑白像素占比，在字符分隔处会有白像素占比的波谷。根据这个波谷的来分割图片。</p>
-<h3 id="标准化(normalize)">标准化(normalize)</h3><p>这一步将切割出来的字符摆正并且统一成一样的大小</p>
-<p>摆正字符的方法是使用旋转卡壳算法。即从 -30度 ~ 30度旋转图片，检测字符间距，取最小间距对应的角度。</p>
-<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/trible91.png" alt=""></p>
-<p>最后在四周填充像素，把所以字符图片统一成一样的尺寸。</p>
-<h3 id="识别">识别</h3><h4 id="Tesseract">Tesseract</h4><p>识别方面可以使用ORC库<a href="https://github.com/tesseract-ocr/tesseract" target="_blank" rel="external">tesseract</a></p>
-<p>在安装tesseract后 python使用<a href="https://pypi.python.org/pypi/pytesseract/0.1" target="_blank" rel="external">pytessract</a>方便的调用tesseractF</p>
-<pre><code><span class="keyword">import</span> pytesseract
-<span class="keyword">from</span> <span class="type">PIL</span> <span class="keyword">import</span> <span class="type">Image</span>
-
-img = <span class="type">Image</span>.open(<span class="string">"captcha.png"</span>)
-
-<span class="literal">result</span> = pytesseract.image_to_string(img, config='-psm <span class="number">7</span>')
-</code></pre><p>不过经测试tesseract的对于标准的印刷体的英文识别效果还是可以的，但若有旋转扭曲等扰动等话识别率就不是很高了。不过tesseract通过训练自己的识别模型来提高识别率。</p>
-<h4 id="机器学习">机器学习</h4><p>另外一个看起来更高大上的方法是应用机器学习的方法来做识别，常用的有SVM和神经网络。</p>
-<p>python下机器学习的库首推<a href="http://scikit-learn.org/stable/index.html" target="_blank" rel="external">scikit-learn</a>。scikit-learn里面集成了各种常用的识别模型，降纬，聚类等算法，还要非常棒的文档，可以说是机器学习方面的百宝箱。</p>
-<p>使用scikit-learn训练验证码识别模型这事。。。还是先挖个坑，下回再填吧</p>
-<hr>
-<h3 id="Reference">Reference</h3><p><a href="http://drops.wooyun.org/tips/141" target="_blank" rel="external">http://drops.wooyun.org/tips/141</a><br><a href="http://drops.wooyun.org/tips/6313" target="_blank" rel="external">http://drops.wooyun.org/tips/6313</a><br><a href="http://pillow.readthedocs.org/en/3.0.x/reference/Image.html" target="_blank" rel="external">http://pillow.readthedocs.org/en/3.0.x/reference/Image.html</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/06/python-captcha/" data-id="cizs22go30007nu13pu5wi5hc" class="article-share-link">Share</a>
-      
-        <a href="http://sineyuan.github.io/2016/01/06/python-captcha/#disqus_thread" class="article-comment-link">Comments</a>
       
       
     </footer>
