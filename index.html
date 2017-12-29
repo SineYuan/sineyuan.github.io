@@ -78,7 +78,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">August 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">August 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -88,6 +88,10 @@
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2017/12/29/clickhouse-docker-quick-start/">用Docker快速上手Clickhouse</a>
+          </li>
         
           <li>
             <a href="/2017/03/16/mxnet-begin/">MXNet上手</a>
@@ -103,10 +107,6 @@
         
           <li>
             <a href="/2017/01/27/go-naming/">(译)Go naming conventions</a>
-          </li>
-        
-          <li>
-            <a href="/2016/08/28/go-error-handle/">Golang错误处理</a>
           </li>
         
       </ul>
@@ -136,6 +136,86 @@
 </aside>
         
         <section id="main">
+  
+    <article id="post-clickhouse-docker-quick-start" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/12/29/clickhouse-docker-quick-start/" class="article-date">
+  <time datetime="2017-12-28T16:00:00.000Z" itemprop="datePublished">2017-12-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/12/29/clickhouse-docker-quick-start/">用Docker快速上手Clickhouse</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="用Docker快速上手Clickhouse">用Docker快速上手Clickhouse</h1><p><a href="https://clickhouse.yandex/" target="_blank" rel="external">ClickHouse</a>是一个由俄罗斯搜索巨头Yandex开源的分布式列存储OLAP数据库。主要的特点有</p>
+<ul>
+<li>xxx</li>
+<li>yyy</li>
+<li>zzz</li>
+</ul>
+<p>看起来非常厉害的样子，但Clickhouse最吸引人的一点应该就是一个“快”字吧。但是骡子是马拉出来溜溜，让我们开始吧。</p>
+<h2 id="单机">单机</h2><p>Clickhouse官方有提供clickhouse的<a href="https://hub.docker.com/r/yandex/clickhouse-server/" target="_blank" rel="external">docker镜像</a>, 只要简单运行</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d --name clickhouse-server --ulimit nofile=<span class="number">262144</span>:<span class="number">262144</span> -p <span class="number">9000</span>:<span class="number">9000</span> yandex/clickhouse-server:<span class="number">1.1</span></span><br></pre></td></tr></table></figure>
+<p><code>clickhouse-server</code> 就可以跑起来了。但我们想有更多的控制项。</p>
+<p>先将默认的配置拷贝出来</p>
+<figure class="highlight xquery"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mkdir etc</span><br><span class="line">mkdir data</span><br><span class="line"></span><br><span class="line">docker run -it --rm --entrypoint=/bin/bash -v <span class="variable">$PWD</span>:/work --privileged=<span class="literal">true</span> --user=root yandex/clickhouse-server:<span class="number">1.1</span></span><br><span class="line">cp -r /etc/clickhouse-server/* /work/etc/</span><br><span class="line">exit</span><br></pre></td></tr></table></figure>
+<p>再运行</p>
+<figure class="highlight haml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">docker run -d --name clickhouse-server \</span><br><span class="line">	-<span class="ruby">-ulimit nofile=<span class="number">262144</span><span class="symbol">:</span><span class="number">262144</span> \</span><br><span class="line"></span>	-<span class="ruby">p <span class="number">9000</span><span class="symbol">:</span><span class="number">9000</span> \</span><br><span class="line"></span>	-<span class="ruby">v <span class="variable">$PWD</span><span class="symbol">:/etc/clickhouse-server</span> \</span><br><span class="line"></span>	-<span class="ruby">v <span class="variable">$PWD</span>/<span class="symbol">data:</span>/var/lib/clickhosue \</span><br><span class="line"></span>	-<span class="ruby">-privileged=<span class="keyword">true</span> --user=root \</span><br><span class="line"></span>	yandex/clickhouse-server:1.1</span><br></pre></td></tr></table></figure>
+<p>clickhouse 跑起来之后，就可以去 <a href="https://clickhouse.yandex/tutorial.html" target="_blank" rel="external">官方教程</a> 那里玩一玩啦。</p>
+<h2 id="集群部署">集群部署</h2><p>clickhouse性能再好，单机总是有上限的。但clickhouse可以通过集群分片来应对数据的增长。</p>
+<p>用docker-compose我们可以很轻松的跑一个clickhouse集群。<br>下面我们来跑一个3节点分片的clickhouse集群</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">mkdir -<span class="tag">p</span> clickhouse-<span class="number">3s</span>hards/ch01</span><br><span class="line">mkdir -<span class="tag">p</span> clickhouse-<span class="number">3s</span>hards/ch02</span><br><span class="line">mkdir -<span class="tag">p</span> clickhouse-<span class="number">3s</span>hards/ch03</span><br><span class="line"></span><br><span class="line">mkdir -<span class="tag">p</span> clickhouse-<span class="number">3s</span>hards/ch01/data</span><br><span class="line">mkdir -<span class="tag">p</span> clickhouse-<span class="number">3s</span>hards/ch02/data</span><br><span class="line">mkdir -<span class="tag">p</span> clickhouse-<span class="number">3s</span>hards/ch03/data</span><br><span class="line"></span><br><span class="line">cp -r etc clickhouse-<span class="number">3s</span>hards/ch01/etc</span><br><span class="line">cp -r etc clickhouse-<span class="number">3s</span>hards/ch02/etc</span><br><span class="line">cp -r etc clickhouse-<span class="number">3s</span>hards/ch03/etc</span><br><span class="line"></span><br><span class="line">vim docker-compose.yaml</span><br></pre></td></tr></table></figure>
+<p>配置clickhouse集群</p>
+<p>为方便管理，我们将集群相关的配置拿出来，放在metrika.xml。在每个config.xml文件里面加入下面一行引入 metrika.xml。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">include_from</span>&gt;</span>/etc/clickhouse-server/metrika.xml<span class="tag">&lt;/<span class="title">include_from</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">yandex</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">clickhouse_remote_servers</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- 集群名 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="title">perftest_3shards_1replicas</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!-- 分片地址 --&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="title">shard</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">internal_replication</span>&gt;</span>true<span class="tag">&lt;/<span class="title">internal_replication</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">replica</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="title">host</span>&gt;</span>clickhouse01<span class="tag">&lt;/<span class="title">host</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="title">port</span>&gt;</span>9000<span class="tag">&lt;/<span class="title">port</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="title">replica</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="title">shard</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="title">shard</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">internal_replication</span>&gt;</span>true<span class="tag">&lt;/<span class="title">internal_replication</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">replica</span>&gt;</span> </span><br><span class="line">                <span class="tag">&lt;<span class="title">host</span>&gt;</span>clickhouse02<span class="tag">&lt;/<span class="title">host</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="title">port</span>&gt;</span>9000<span class="tag">&lt;/<span class="title">port</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="title">replica</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="title">shard</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="title">shard</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">internal_replication</span>&gt;</span>true<span class="tag">&lt;/<span class="title">internal_replication</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">replica</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="title">host</span>&gt;</span>clickhouse03<span class="tag">&lt;/<span class="title">host</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="title">port</span>&gt;</span>9000<span class="tag">&lt;/<span class="title">port</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="title">replica</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="title">shard</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="title">perftest_3shards_1replicas</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">clickhouse_remote_servers</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- 宏配置，用于分布式建表时做替换，每个节点配置不能相同 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">macros</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="title">shard</span>&gt;</span>01<span class="tag">&lt;/<span class="title">shard</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="title">replica</span>&gt;</span>01<span class="tag">&lt;/<span class="title">replica</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">macros</span>&gt;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="title">networks</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="title">ip</span>&gt;</span>::/0<span class="tag">&lt;/<span class="title">ip</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">networks</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="title">yandex</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>docker-compose.yaml</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">version</span>: <span class="string">'2'</span></span><br><span class="line"></span><br><span class="line"><span class="less"><span class="attribute">services</span>:</span><br><span class="line">  <span class="attribute">clickhouse01</span>:</span><br><span class="line">    <span class="attribute">image</span>: yandex/<span class="attribute">clickhouse-server</span>:<span class="number">1.1</span></span><br><span class="line">    <span class="attribute">expose</span>:</span><br><span class="line">      - <span class="string">"9000"</span></span><br><span class="line">    <span class="attribute">user</span>: root</span><br><span class="line">    <span class="attribute">ports</span>:</span><br><span class="line">      - <span class="string">"9001:9000"</span></span><br><span class="line">    <span class="attribute">volumes</span>:</span><br><span class="line">      - ./ch01/<span class="attribute">etc</span>:/etc/clickhouse-server </span><br><span class="line">      - ./ch01/<span class="attribute">data</span>:/var/lib/clickhouse</span><br><span class="line">    <span class="attribute">ulimits</span>:</span><br><span class="line">      <span class="attribute">nofile</span>:</span><br><span class="line">        <span class="attribute">soft</span>: <span class="number">262144</span>  </span><br><span class="line">        <span class="attribute">hard</span>: <span class="number">262144</span>  </span><br><span class="line">    <span class="attribute">privileged</span>: true</span><br><span class="line"></span><br><span class="line">  <span class="attribute">clickhouse02</span>:</span><br><span class="line">    <span class="attribute">image</span>: yandex/<span class="attribute">clickhouse-server</span>:<span class="number">1.1</span></span><br><span class="line">    <span class="attribute">expose</span>:</span><br><span class="line">      - <span class="string">"9000"</span></span><br><span class="line">    <span class="attribute">user</span>: root</span><br><span class="line">    <span class="attribute">ports</span>:</span><br><span class="line">      - <span class="string">"9002:9000"</span>  </span><br><span class="line">    <span class="attribute">volumes</span>:</span><br><span class="line">      - ./ch02/<span class="attribute">etc</span>:/etc/clickhouse-server </span><br><span class="line">      - ./ch02/<span class="attribute">data</span>:/var/lib/clickhouse</span><br><span class="line">    <span class="attribute">ulimits</span>:</span><br><span class="line">      <span class="attribute">nofile</span>:</span><br><span class="line">        <span class="attribute">soft</span>: <span class="number">262144</span>  </span><br><span class="line">        <span class="attribute">hard</span>: <span class="number">262144</span>  </span><br><span class="line">    <span class="attribute">privileged</span>: true</span><br><span class="line"></span><br><span class="line">  <span class="attribute">clickhouse03</span>:</span><br><span class="line">    <span class="attribute">image</span>: yandex/<span class="attribute">clickhouse-server</span>:<span class="number">1.1</span></span><br><span class="line">    <span class="attribute">expose</span>:</span><br><span class="line">      - <span class="string">"9000"</span></span><br><span class="line">    <span class="attribute">user</span>: root</span><br><span class="line">    <span class="attribute">ports</span>:</span><br><span class="line">      - <span class="string">"9003:9000"</span>  </span><br><span class="line">    <span class="attribute">volumes</span>:</span><br><span class="line">      - ./ch03/<span class="attribute">etc</span>:/etc/clickhouse-server </span><br><span class="line">      - ./ch03/<span class="attribute">data</span>:/var/lib/clickhouse</span><br><span class="line">    <span class="attribute">ulimits</span>:</span><br><span class="line">      <span class="attribute">nofile</span>:</span><br><span class="line">        <span class="attribute">soft</span>: <span class="number">262144</span>  </span><br><span class="line">        <span class="attribute">hard</span>: <span class="number">262144</span>  </span><br><span class="line">    <span class="attribute">privileged</span>: true</span></span><br></pre></td></tr></table></figure>
+<p>配置之后启动集群</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker-compose <span class="operator">-d</span> up</span><br></pre></td></tr></table></figure>
+<p>事不宜迟，我们来先在每个clickhouse-server上都建一个本地表和Distributed表。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">clickhouse-client <span class="comment">--port=9001</span></span><br><span class="line"># 其他clickhouse-server 同样处理</span><br><span class="line"># clickhouse-client <span class="comment">--port=9002</span></span><br><span class="line"># clickhouse-client <span class="comment">--port=9003</span></span><br><span class="line"></span><br><span class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> chtest_local (TDate <span class="built_in">Date</span>,<span class="keyword">Value</span> UInt16) <span class="keyword">ENGINE</span> = MergeTree(TDate, (<span class="keyword">Value</span>, TDate), <span class="number">8192</span>);</span></span><br><span class="line"></span><br><span class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> chtest_all <span class="keyword">AS</span> chtest_local <span class="keyword">ENGINE</span> = <span class="keyword">Distributed</span>(perftest_3shards_1replicas, <span class="keyword">default</span>, chtest_local, <span class="keyword">rand</span>());</span></span><br></pre></td></tr></table></figure>
+<p>在任意一台插入一些数据</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">clickhouse-client <span class="comment">--port=9001</span></span><br><span class="line"></span><br><span class="line"><span class="operator"><span class="keyword">insert</span> <span class="keyword">into</span> chtest_all (TDate,<span class="keyword">Value</span>) <span class="keyword">values</span> (<span class="string">'2017-12-25'</span>, <span class="number">111</span>);</span></span><br><span class="line"><span class="operator"><span class="keyword">insert</span> <span class="keyword">into</span> chtest_all (TDate,<span class="keyword">Value</span>) <span class="keyword">values</span> (<span class="string">'2017-12-25'</span>, <span class="number">222</span>);</span></span><br><span class="line"><span class="operator"><span class="keyword">insert</span> <span class="keyword">into</span> chtest_all (TDate,<span class="keyword">Value</span>) <span class="keyword">values</span> (<span class="string">'2017-12-26'</span>, <span class="number">333</span>);</span></span><br><span class="line"><span class="operator"><span class="keyword">insert</span> <span class="keyword">into</span> chtest_local (TDate,<span class="keyword">Value</span>) <span class="keyword">values</span> (<span class="string">'2017-12-26'</span>, <span class="number">444</span>);</span></span><br></pre></td></tr></table></figure>
+<p>之后就可以查 chtest_all 获取全部都数据。注意的是写入 chtest_local 的数据也是可以在 chtest_all 查出来的。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line">:) select * from chtest_all;</span><br><span class="line"></span><br><span class="line">SELECT *</span><br><span class="line">FROM chtest_all </span><br><span class="line"></span><br><span class="line">┌──────TDate─┬─Value─┐</span><br><span class="line">│ <span class="number">2017</span>-<span class="number">12</span>-<span class="number">26</span> │   <span class="number">444</span> │</span><br><span class="line">└────────────┴───────┘</span><br><span class="line">┌──────TDate─┬─Value─┐</span><br><span class="line">│ <span class="number">2017</span>-<span class="number">12</span>-<span class="number">25</span> │   <span class="number">111</span> │</span><br><span class="line">└────────────┴───────┘</span><br><span class="line">┌──────TDate─┬─Value─┐</span><br><span class="line">│ <span class="number">2017</span>-<span class="number">12</span>-<span class="number">25</span> │   <span class="number">222</span> │</span><br><span class="line">└────────────┴───────┘</span><br><span class="line">┌──────TDate─┬─Value─┐</span><br><span class="line">│ <span class="number">2017</span>-<span class="number">12</span>-<span class="number">26</span> │   <span class="number">333</span> │</span><br><span class="line">└────────────┴───────┘</span><br><span class="line"></span><br><span class="line"><span class="number">4</span> rows in <span class="built_in">set</span>. Elapsed: <span class="number">0.008</span> sec. </span><br><span class="line"></span><br><span class="line">:) select * from chtest_local;</span><br><span class="line"></span><br><span class="line">SELECT *</span><br><span class="line">FROM chtest_local </span><br><span class="line"></span><br><span class="line">┌──────TDate─┬─Value─┐</span><br><span class="line">│ <span class="number">2017</span>-<span class="number">12</span>-<span class="number">26</span> │   <span class="number">444</span> │</span><br><span class="line">└────────────┴───────┘</span><br><span class="line">┌──────TDate─┬─Value─┐</span><br><span class="line">│ <span class="number">2017</span>-<span class="number">12</span>-<span class="number">25</span> │   <span class="number">111</span> │</span><br><span class="line">└────────────┴───────┘</span><br><span class="line"></span><br><span class="line"><span class="number">2</span> rows in <span class="built_in">set</span>. Elapsed: <span class="number">0.006</span> sec. </span><br><span class="line"></span><br><span class="line">:) select * from chtest_local;</span><br><span class="line"></span><br><span class="line">SELECT *</span><br><span class="line">FROM chtest_local </span><br><span class="line"></span><br><span class="line">┌──────TDate─┬─Value─┐</span><br><span class="line">│ <span class="number">2017</span>-<span class="number">12</span>-<span class="number">25</span> │   <span class="number">222</span> │</span><br><span class="line">└────────────┴───────┘</span><br><span class="line"></span><br><span class="line"><span class="number">1</span> rows in <span class="built_in">set</span>. Elapsed: <span class="number">0.005</span> sec. </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">:) select * from chtest_local;</span><br><span class="line"></span><br><span class="line">SELECT *</span><br><span class="line">FROM chtest_local </span><br><span class="line"></span><br><span class="line">┌──────TDate─┬─Value─┐</span><br><span class="line">│ <span class="number">2017</span>-<span class="number">12</span>-<span class="number">25</span> │   <span class="number">222</span> │</span><br><span class="line">└────────────┴───────┘</span><br><span class="line"></span><br><span class="line"><span class="number">1</span> rows in <span class="built_in">set</span>. Elapsed: <span class="number">0.005</span> sec.</span><br></pre></td></tr></table></figure>
+<p>当我们任意分片挂掉的时候，是无法读的Distributed表的，当写入Distributed表是数据分片到挂了的服务时是会报错的。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="operator"><span class="keyword">stop</span> cluster3shards_clickhouse03_1</span><br><span class="line"></span><br><span class="line">clickhouse-<span class="keyword">client</span> <span class="comment">--port=9001</span></span></span><br></pre></td></tr></table></figure>
+<h2 id="高可用集群">高可用集群</h2><p>在分布式系统里面，为保证服务的可用性，我们需要数据多副本存储。</p>
+<p>clickhouse 的 数据副本同步需要用到 zookeeper，所以我们修改<code>docker-compose.yaml</code>，加多一个节点，配置成2个分片，2个副本的高可用集群。</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">version</span>: <span class="string">'2'</span></span><br><span class="line"></span><br><span class="line"><span class="less"><span class="attribute">services</span>:</span><br><span class="line">  <span class="attribute">zookeeper</span>:</span><br><span class="line">    <span class="attribute">image</span>: <span class="attribute">zookeeper</span>:<span class="number">3.5</span></span><br><span class="line">    <span class="attribute">ports</span>:</span><br><span class="line">      - <span class="string">"2181:2181"</span></span><br><span class="line">      - <span class="string">"2182:2182"</span></span><br><span class="line"></span><br><span class="line">  <span class="attribute">clickhouse01</span>:</span><br><span class="line">    <span class="attribute">image</span>: yandex/<span class="attribute">clickhouse-server</span>:<span class="number">1.1</span></span><br><span class="line">    <span class="attribute">expose</span>:</span><br><span class="line">      - <span class="string">"9000"</span></span><br><span class="line">    <span class="attribute">user</span>: root</span><br><span class="line">    <span class="attribute">privileged</span>: true</span><br><span class="line">    <span class="attribute">ports</span>:</span><br><span class="line">      - <span class="string">"9001:9000"</span></span><br><span class="line">    <span class="attribute">volumes</span>:</span><br><span class="line">      - ./ch01/<span class="attribute">etc</span>:/etc/clickhouse-server </span><br><span class="line">      - ./ch01/<span class="attribute">data</span>:/var/lib/clickhouse</span><br><span class="line">    <span class="attribute">ulimits</span>:</span><br><span class="line">      <span class="attribute">nofile</span>:</span><br><span class="line">        <span class="attribute">soft</span>: <span class="number">262144</span>  </span><br><span class="line">        <span class="attribute">hard</span>: <span class="number">262144</span>  </span><br><span class="line">    <span class="attribute">depends_on</span>:</span><br><span class="line">      - <span class="string">"zookeeper"</span></span><br><span class="line"></span><br><span class="line">  <span class="attribute">clickhouse02</span>:</span><br><span class="line">    <span class="attribute">image</span>: yandex/<span class="attribute">clickhouse-server</span>:<span class="number">1.1</span></span><br><span class="line">    <span class="attribute">expose</span>:</span><br><span class="line">      - <span class="string">"9000"</span></span><br><span class="line">    <span class="attribute">user</span>: root</span><br><span class="line">    <span class="attribute">privileged</span>: true</span><br><span class="line">    <span class="attribute">ports</span>:</span><br><span class="line">      - <span class="string">"9002:9000"</span>  </span><br><span class="line">    <span class="attribute">volumes</span>:</span><br><span class="line">      - ./ch02/<span class="attribute">etc</span>:/etc/clickhouse-server </span><br><span class="line">      - ./ch02/<span class="attribute">data</span>:/var/lib/clickhouse</span><br><span class="line">    <span class="attribute">ulimits</span>:</span><br><span class="line">      <span class="attribute">nofile</span>:</span><br><span class="line">        <span class="attribute">soft</span>: <span class="number">262144</span>  </span><br><span class="line">        <span class="attribute">hard</span>: <span class="number">262144</span>  </span><br><span class="line">    <span class="attribute">depends_on</span>:</span><br><span class="line">      - <span class="string">"zookeeper"</span></span><br><span class="line"></span><br><span class="line">  <span class="attribute">clickhouse03</span>:</span><br><span class="line">    <span class="attribute">image</span>: yandex/<span class="attribute">clickhouse-server</span>:<span class="number">1.1</span></span><br><span class="line">    <span class="attribute">expose</span>:</span><br><span class="line">      - <span class="string">"9000"</span></span><br><span class="line">    <span class="attribute">user</span>: root</span><br><span class="line">    <span class="attribute">privileged</span>: true  </span><br><span class="line">    <span class="attribute">ports</span>:</span><br><span class="line">      - <span class="string">"9003:9000"</span>  </span><br><span class="line">    <span class="attribute">volumes</span>:</span><br><span class="line">      - ./ch03/<span class="attribute">etc</span>:/etc/clickhouse-server </span><br><span class="line">      - ./ch03/<span class="attribute">data</span>:/var/lib/clickhouse</span><br><span class="line">    <span class="attribute">ulimits</span>:</span><br><span class="line">      <span class="attribute">nofile</span>:</span><br><span class="line">        <span class="attribute">soft</span>: <span class="number">262144</span>  </span><br><span class="line">        <span class="attribute">hard</span>: <span class="number">262144</span>  </span><br><span class="line">    <span class="attribute">depends_on</span>:</span><br><span class="line">      - <span class="string">"zookeeper"</span></span><br><span class="line"></span><br><span class="line">  <span class="attribute">clickhouse04</span>:</span><br><span class="line">    <span class="attribute">image</span>: yandex/<span class="attribute">clickhouse-server</span>:<span class="number">1.1</span></span><br><span class="line">    <span class="attribute">expose</span>:</span><br><span class="line">      - <span class="string">"9000"</span></span><br><span class="line">    <span class="attribute">user</span>: root</span><br><span class="line">    <span class="attribute">privileged</span>: true    </span><br><span class="line">    <span class="attribute">ports</span>:</span><br><span class="line">      - <span class="string">"9004:9000"</span>  </span><br><span class="line">    <span class="attribute">volumes</span>:</span><br><span class="line">      - ./ch04/<span class="attribute">etc</span>:/etc/clickhouse-server </span><br><span class="line">      - ./ch04/<span class="attribute">data</span>:/var/lib/clickhouse</span><br><span class="line">    <span class="attribute">ulimits</span>:</span><br><span class="line">      <span class="attribute">nofile</span>:</span><br><span class="line">        <span class="attribute">soft</span>: <span class="number">262144</span>  </span><br><span class="line">        <span class="attribute">hard</span>: <span class="number">262144</span>  </span><br><span class="line">    <span class="attribute">depends_on</span>:</span><br><span class="line">      - <span class="string">"zookeeper"</span></span></span><br></pre></td></tr></table></figure>
+<p>集群配置</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">yandex</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">clickhouse_remote_servers</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="title">perftest_2shards_2replicas</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="title">shard</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">internal_replication</span>&gt;</span>true<span class="tag">&lt;/<span class="title">internal_replication</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">replica</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="title">host</span>&gt;</span>clickhouse01<span class="tag">&lt;/<span class="title">host</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="title">port</span>&gt;</span>9000<span class="tag">&lt;/<span class="title">port</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="title">replica</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">replica</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="title">host</span>&gt;</span>clickhouse03<span class="tag">&lt;/<span class="title">host</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="title">port</span>&gt;</span>9000<span class="tag">&lt;/<span class="title">port</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="title">replica</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="title">shard</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="title">shard</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">internal_replication</span>&gt;</span>true<span class="tag">&lt;/<span class="title">internal_replication</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">replica</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="title">host</span>&gt;</span>clickhouse02<span class="tag">&lt;/<span class="title">host</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="title">port</span>&gt;</span>9000<span class="tag">&lt;/<span class="title">port</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="title">replica</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">replica</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="title">host</span>&gt;</span>clickhouse04<span class="tag">&lt;/<span class="title">host</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="title">port</span>&gt;</span>9000<span class="tag">&lt;/<span class="title">port</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="title">replica</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="title">shard</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="title">perftest_2shards_2replicas</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">clickhouse_remote_servers</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="title">macros</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="title">shard</span>&gt;</span>01<span class="tag">&lt;/<span class="title">shard</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="title">replica</span>&gt;</span>02<span class="tag">&lt;/<span class="title">replica</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">macros</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="title">zookeeper-servers</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">node</span> <span class="attribute">index</span>=<span class="value">"1"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="title">host</span>&gt;</span>zookeeper<span class="tag">&lt;/<span class="title">host</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="title">port</span>&gt;</span>2181<span class="tag">&lt;/<span class="title">port</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="title">node</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">zookeeper-servers</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="title">networks</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="title">ip</span>&gt;</span>::/0<span class="tag">&lt;/<span class="title">ip</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">networks</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="title">yandex</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>集群起来之后，在每一个节点创建表</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> chtest_local (TDate <span class="built_in">Date</span>,<span class="keyword">Value</span> UInt16) <span class="keyword">ENGINE</span> = MergeTree(TDate, (<span class="keyword">Value</span>, TDate), <span class="number">8192</span>);</span></span><br><span class="line"></span><br><span class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> chtest_replica (TDate <span class="built_in">Date</span>,<span class="keyword">Value</span> UInt16)</span><br><span class="line"><span class="keyword">ENGINE</span> = ReplicatedMergeTree(</span><br><span class="line">    <span class="string">'/clickhouse_perftest/tables/&#123;shard&#125;/ontime'</span>,</span><br><span class="line">    <span class="string">'&#123;replica&#125;'</span>,</span><br><span class="line">    TDate,</span><br><span class="line">    (<span class="keyword">Value</span>, TDate),</span><br><span class="line">    <span class="number">8192</span>);</span></span><br><span class="line">    </span><br><span class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> chtest_all <span class="keyword">AS</span> chtest_replica <span class="keyword">ENGINE</span> = <span class="keyword">Distributed</span>(perftest_2shards_2replicas, <span class="keyword">default</span>, chtest_replica, <span class="keyword">rand</span>());</span></span><br></pre></td></tr></table></figure>
+<p>后面再任意一台机器往 chtest_all 插入数据，可以看到ch01 与 ch03, ch02 与 ch04 都存有相同的数据。</p>
+<h2 id="总结">总结</h2>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://sineyuan.github.io/2017/12/29/clickhouse-docker-quick-start/" data-id="cjbrnor8z000g1g13lq5hd5t9" class="article-share-link">Share</a>
+      
+        <a href="http://sineyuan.github.io/2017/12/29/clickhouse-docker-quick-start/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
   
     <article id="post-mxnet-begin" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
@@ -179,7 +259,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2017/03/16/mxnet-begin/" data-id="cj8u6xhkc0009n21367dok0a9" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2017/03/16/mxnet-begin/" data-id="cjbrnor8j00091g13c9jjng48" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2017/03/16/mxnet-begin/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -258,7 +338,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2017/03/02/tensorflow-mnist-pratice/" data-id="cj8u6xhk50005n213wz68w0kt" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2017/03/02/tensorflow-mnist-pratice/" data-id="cjbrnor8b00051g13za88e8k4" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2017/03/02/tensorflow-mnist-pratice/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -317,7 +397,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2017/02/19/tensorflow-windows-installation/" data-id="cj8u6xhk30004n213f45tgp74" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2017/02/19/tensorflow-windows-installation/" data-id="cjbrnor8900041g13gligj770" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2017/02/19/tensorflow-windows-installation/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -407,7 +487,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2017/01/27/go-naming/" data-id="cj8u6xhkj000cn2133ngjuse7" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2017/01/27/go-naming/" data-id="cjbrnor8s000c1g1321l8suld" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2017/01/27/go-naming/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -485,7 +565,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/08/28/go-error-handle/" data-id="cj8u6xhkk000dn21303iy7ewi" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/08/28/go-error-handle/" data-id="cjbrnor8t000d1g13tx2petft" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/08/28/go-error-handle/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -568,7 +648,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/05/29/deploy-k8s-on-coreos/" data-id="cj8u6xhkm000en213yrqn2lbi" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/05/29/deploy-k8s-on-coreos/" data-id="cjbrnor8v000e1g137fx4du4p" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/05/29/deploy-k8s-on-coreos/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -636,7 +716,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/" data-id="cj8u6xhko000fn2139gny610p" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/" data-id="cjbrnor8w000f1g13yb1gx8hd" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -698,7 +778,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/25/tornado-source-code-3/" data-id="cj8u6xhjr0001n213f4becmeg" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/25/tornado-source-code-3/" data-id="cjbrnor7v00011g13toznptyz" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/25/tornado-source-code-3/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -938,196 +1018,9 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/" data-id="cj8u6xhjz0002n213qadf1nu1" class="article-share-link">Share</a>
+      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/" data-id="cjbrnor8300021g13tw62qe8s" class="article-share-link">Share</a>
       
         <a href="http://sineyuan.github.io/2016/01/19/tornado-source-code-2/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-tornado-source-code-1" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2016/01/19/tornado-source-code-1/" class="article-date">
-  <time datetime="2016-01-19T12:11:34.000Z" itemprop="datePublished">2016-01-19</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/01/19/tornado-source-code-1/">tornado源码分析笔记(1)</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Tornado 是一个用 Python 实现的 Web 服务器框架，其最大的特点是使用异步非阻塞IO的处理方式来获取高负载和高性能。到底 Tornado 的底层是如何实现的呢？我们来一起看看。</p>
-<p>注明一下，这里展示的 Tornado 版本为4.2.1，不同版本可能会有一些出入。</p>
-<p>让我们从官方的 helloworld 开始我们的旅程：</p>
-<p>helloworld.py:</p>
-<pre><code>import tornado<span class="class">.httpserver</span>
-import tornado<span class="class">.ioloop</span>
-import tornado<span class="class">.options</span>
-import tornado<span class="class">.web</span>
-
-from tornado<span class="class">.options</span> import define, options
-
-<span class="function"><span class="title">define</span><span class="params">(<span class="string">"port"</span>, default=<span class="number">8888</span>, help=<span class="string">"run on the given port"</span>, type=int)</span></span>
-
-
-class <span class="function"><span class="title">MainHandler</span><span class="params">(tornado.web.RequestHandler)</span></span>:
-    def <span class="function"><span class="title">get</span><span class="params">(self)</span></span>:
-        self.<span class="function"><span class="title">write</span><span class="params">(<span class="string">"Hello, world"</span>)</span></span>
-
-
-def <span class="function"><span class="title">main</span><span class="params">()</span></span>:
-    tornado<span class="class">.options</span><span class="class">.parse_command_line</span>()
-    application = tornado<span class="class">.web</span><span class="class">.Application</span>([
-        (r<span class="string">"/"</span>, MainHandler),
-    ])
-    http_server = tornado<span class="class">.httpserver</span><span class="class">.HTTPServer</span>(application)
-    http_server.<span class="function"><span class="title">listen</span><span class="params">(options.port)</span></span>
-    tornado<span class="class">.ioloop</span><span class="class">.IOLoop</span><span class="class">.current</span>().<span class="function"><span class="title">start</span><span class="params">()</span></span>
-
-
-<span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:
-    <span class="function"><span class="title">main</span><span class="params">()</span></span>                         
-</code></pre><p>Tornado 的基本框架是先实现处理各种模式的<code>RequestHandler</code>类，用这些模式和对应的 Handler 初始化一个<code>Application</code>类，再用这个<code>Application</code>类初始化一个<code>HTTPServer</code>，设置监听端口，再启动<code>IOLoop</code> 。<br>我们先来看<code>Application</code>:</p>
-<p>web.py:</p>
-<pre><code><span class="class"><span class="keyword">class</span> <span class="title">Application</span><span class="params">(httputil.HTTPServerConnectionDelegate)</span>:</span>
-
-    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, handlers=None, default_host=<span class="string">""</span>, transforms=None,
-                 **settings)</span>:</span>
-
-        ...  <span class="comment"># 省略transform和ui模块的设置</span>
-
-        self.handlers = []
-        self.named_handlers = {}
-        self.default_host = default_host
-        self.settings = settings
-        <span class="keyword">if</span> self.settings.get(<span class="string">"static_path"</span>):
-            path = self.settings[<span class="string">"static_path"</span>]
-            handlers = list(handlers <span class="keyword">or</span> [])
-            static_url_prefix = settings.get(<span class="string">"static_url_prefix"</span>,
-                                             <span class="string">"/static/"</span>)
-            static_handler_class = settings.get(<span class="string">"static_handler_class"</span>,
-                                                StaticFileHandler)
-            static_handler_args = settings.get(<span class="string">"static_handler_args"</span>, {})
-            static_handler_args[<span class="string">'path'</span>] = path
-            <span class="keyword">for</span> pattern <span class="keyword">in</span> [re.escape(static_url_prefix) + <span class="string">r"(.*)"</span>,
-                            <span class="string">r"/(favicon\.ico)"</span>, <span class="string">r"/(robots\.txt)"</span>]:
-                handlers.insert(<span class="number">0</span>, (pattern, static_handler_class,
-                                    static_handler_args))
-        <span class="keyword">if</span> handlers:
-            self.add_handlers(<span class="string">".*$"</span>, handlers)
-
-        ...
-</code></pre><p><code>Application</code>的初始化的工作主要是设置 transform , 加载 ui 模块，为静态文件设置<code>StaticFileHandler</code>，后面还有为 debug 模式设置 autoreload，最主要的还是调用<code>self.add_handlers(&quot;.*$&quot;, handlers)</code>来添加 handlers，</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">add_handlers</span><span class="params">(self, host_pattern, host_handlers)</span>:</span>
-    <span class="string">"""Appends the given handlers to our handler list."""</span>
-    <span class="keyword">if</span> <span class="keyword">not</span> host_pattern.endswith(<span class="string">"$"</span>):
-        host_pattern += <span class="string">"$"</span>
-    handlers = []
-
-    <span class="comment"># 确保全部匹配的 handler 处于 self.handlers 的最后 </span>
-    <span class="keyword">if</span> self.handlers <span class="keyword">and</span> self.handlers[-<span class="number">1</span>][<span class="number">0</span>].pattern == <span class="string">'.*$'</span>:
-        self.handlers.insert(-<span class="number">1</span>, (re.compile(host_pattern), handlers))
-    <span class="keyword">else</span>:
-        self.handlers.append((re.compile(host_pattern), handlers))
-
-    <span class="keyword">for</span> spec <span class="keyword">in</span> host_handlers:
-        <span class="keyword">if</span> isinstance(spec, (tuple, list)):
-            <span class="keyword">assert</span> len(spec) <span class="keyword">in</span> (<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>)
-            spec = URLSpec(*spec)
-        handlers.append(spec)
-        <span class="keyword">if</span> spec.name:
-            <span class="keyword">if</span> spec.name <span class="keyword">in</span> self.named_handlers:
-                app_log.warning(
-                    <span class="string">"Multiple handlers named %s; replacing previous value"</span>,
-                    spec.name)
-            self.named_handlers[spec.name] = spec
-</code></pre><p>接下来我们看<code>HttpServer</code>类，它的初始化没什么好讲的，值得注意到一点是它以<code>self.request_callback</code>属性来保存<code>Application</code>类。直接来看<code>listen</code>方法<code>HttpServer</code>的 listen 方法直接继承自<code>TCPServer</code>的<code>listen</code>方法。</p>
-<p>tcpserver.py:</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">listen</span><span class="params">(self, port, address=<span class="string">""</span>)</span>:</span>
-
-        sockets = bind_sockets(port, address=address)
-        self.add_sockets(sockets)
-</code></pre><p>Socket 连接要经过 create -&gt; bind -&gt; listen 的三部曲。bind_sockets 函数走完了前面两步：就是创建 socket 并进行设置，然后 bind。因为输入的 address 可能对应多个IP地址，所以<code>bind_sockets</code>返回值为一个 socket 的列表。 我们来看<code>add_sockets</code>：</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">add_sockets</span><span class="params">(self, sockets)</span>:</span>
-
-        <span class="keyword">if</span> self.io_loop <span class="keyword">is</span> <span class="keyword">None</span>:
-            self.io_loop = IOLoop.current()
-
-        <span class="keyword">for</span> sock <span class="keyword">in</span> sockets:
-            self._sockets[sock.fileno()] = sock
-            add_accept_handler(sock, self._handle_connection,
-                               io_loop=self.io_loop)
-</code></pre><p>一开始先获得<code>IOLoop</code>实例，对于<code>IOLoop</code>是全局的单例，关于<code>IOLoop</code>的将在其他地方详述。然后调用<code>add_accept_handler</code>用于设置 socket 接收到连接时的回调函数为<code>TCPServer._handle_connection</code>。先来看 <code>add_accept_handler</code>。</p>
-<p>netutil.py:</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">add_accept_handler</span><span class="params">(sock, callback, io_loop=None)</span>:</span>
-
-    <span class="keyword">if</span> io_loop <span class="keyword">is</span> <span class="keyword">None</span>:
-        io_loop = IOLoop.current()
-
-    <span class="function"><span class="keyword">def</span> <span class="title">accept_handler</span><span class="params">(fd, events)</span>:</span>
-
-        <span class="keyword">for</span> i <span class="keyword">in</span> xrange(_DEFAULT_BACKLOG):
-            <span class="keyword">try</span>:
-                connection, address = sock.accept()
-            <span class="keyword">except</span> socket.error <span class="keyword">as</span> e:
-                <span class="comment"># _ERRNO_WOULDBLOCK indicate we have accepted every</span>
-                <span class="comment"># connection that is available.</span>
-                <span class="keyword">if</span> errno_from_exception(e) <span class="keyword">in</span> _ERRNO_WOULDBLOCK:
-                    <span class="keyword">return</span>
-                <span class="comment"># ECONNABORTED indicates that there was a connection</span>
-                <span class="comment"># but it was closed while still in the accept queue.</span>
-                <span class="comment"># (observed on FreeBSD).</span>
-                <span class="keyword">if</span> errno_from_exception(e) == errno.ECONNABORTED:
-                    <span class="keyword">continue</span>
-                <span class="keyword">raise</span>
-            callback(connection, address)
-    io_loop.add_handler(sock, accept_handler, IOLoop.READ)
-</code></pre><p><code>add_accept_handler</code>向<code>io_loop</code>注册了 socket，在<code>IOLoop.READ</code>事件到来时的 调用<code>accept_handler</code>来处理 socket 事件。<code>accept_handler</code>就定义在<code>add_accept_handler</code>内部，可以看到其实就是<code>sock.accept()</code>获取连接的 socket 和 address，然后再调用回调函数，也就是<code>TCPServer. _handle_connection</code>:</p>
-<p>tcpserver.py:</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">_handle_connection</span><span class="params">(self, connection, address)</span>:</span>
-        <span class="keyword">if</span> self.ssl_options <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:
-
-            ...  <span class="comment"># 处理ssl</span>
-
-        <span class="keyword">try</span>:
-            <span class="keyword">if</span> self.ssl_options <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:
-                stream = SSLIOStream(connection, io_loop=self.io_loop,
-                                     max_buffer_size=self.max_buffer_size,
-                                     read_chunk_size=self.read_chunk_size)
-            <span class="keyword">else</span>:
-                stream = IOStream(connection, io_loop=self.io_loop,
-                                  max_buffer_size=self.max_buffer_size,
-                                  read_chunk_size=self.read_chunk_size)
-            future = self.handle_stream(stream, address)
-            <span class="keyword">if</span> future <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:
-                self.io_loop.add_future(future, <span class="keyword">lambda</span> f: f.result())
-        <span class="keyword">except</span> Exception:
-            app_log.error(<span class="string">"Error in connection callback"</span>, exc_info=<span class="keyword">True</span>)
-</code></pre><p>我们略去处理 ssl 的部分，在这里主要的内容就是将 socket 封装成<code>IOStream</code>类给上层处理。<code>handle_stream</code>方法在<code>HttpServer</code>中实现，返回<code>None</code>或一个<code>future</code>对象。关于<code>future</code>对象后面再细讲。</p>
-<p>到此<code>Application</code>和<code>httpserver</code>就准备就绪，下面我们来看看 tornado 的核心——<code>IOLoop</code></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://sineyuan.github.io/2016/01/19/tornado-source-code-1/" data-id="cj8u6xhk20003n213fd0ncsum" class="article-share-link">Share</a>
-      
-        <a href="http://sineyuan.github.io/2016/01/19/tornado-source-code-1/#disqus_thread" class="article-comment-link">Comments</a>
       
       
     </footer>
