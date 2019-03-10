@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="en-us" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    
+    
+    <title>从kafka导入数据到Clickhouse</title>
+    
+
+
+    
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/solarized-dark.min.css" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/go.min.js"></script>
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+        <link rel="stylesheet" href="/css/main.css">
+    
+
+    
+    
+
+    
+<script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+</head>
+
+
+<body>
+    <script>
+        window.addEventListener("resize", resizeThrottler, false);
+
+        var resizeTimeout;
+        function resizeThrottler() {
+        
+        if ( !resizeTimeout ) {
+            resizeTimeout = setTimeout(function() {
+            resizeTimeout = null;
+            actualResizeHandler();
+        
+            
+            }, 66);
+        }
+        }
+        actualResizeHandler()
+        function actualResizeHandler() {
+                if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent))
+                {
+                    document.body.classList.add('mobile');
+                }else{
+                    document.body.classList.remove('mobile');  
+                }
+        }</script>
+    
+
+
+    
+
+
+
+<div class="inner" style="position:relative;">
+  
+  <div class="side-btn"><a href="/" class="back">Home</a></div>
+  
+<div class="blog-post">
+  <h2>从kafka导入数据到Clickhouse</h2>
+        
+
+<h1 id="从kafka导入数据到clickhouse">从kafka导入数据到Clickhouse</h1>
+
+<p>Kafka 是目前应用非常广泛的开源消息中间件，一个常用的的场景就是做数据总线收集各个服务的消息日志，下游各种数据服务订阅消费数据，生成各种报表或数据应用等。Clickhouse 的自带了 Kafka Engine，使得 Clickhouse 和 Kafka 的集成变得非常容易。</p>
+
+<h2 id="创建-kafka-表">创建 Kafka 表</h2>
+
+<p>Clickhouse 的 Kafka Engine 可以将 Kafka 中的流映射成一个表，方便我们的后续处理。只要建表的时候制定</p>
+
+<pre><code>Kafka(broker_list, topic_list, group_name, format[, schema])
+</code></pre>
+
+<ul>
+<li><code>broker_list</code>: 逗号分隔的 Kafka broker 列表</li>
+<li><code>topic_list</code>: 消费的topic</li>
+<li><code>group_name</code>: consumer group 的id， 同一个 group_name 的 clickhouse 会在同一个 consumer group 消费数据</li>
+<li><code>format</code>: kafka 消息的格式</li>
+</ul>
+
+<p>在前文的所述的3节点 clickhouse 集群上，在每一个节点都建一个 Kafka Engine 的表从 kafka 的events topic读数据。</p>
+
+<pre><code>CREATE TABLE event_stream (ts UInt64, tag String, cnt Int64, val Double) 
+ENGINE = Kafka('127.0.0.1:9092', 'events', 'group1', 'JSONEachRow');
+</code></pre>
+
+<h2 id="写入数据">写入数据</h2>
+
+<p>现在我们试着往 kafka 写一点数据</p>
+
+<pre><code>bin/kafka-console-producer.sh --broker-list 127.0.0.1:9092 --topic events
+
+&gt;{&quot;ts&quot;:1515897449,&quot;tag&quot;:&quot;aa&quot;,&quot;cnt&quot;:3,&quot;val&quot;:0.7}
+&gt;{&quot;ts&quot;:1515897450,&quot;tag&quot;:&quot;bb&quot;,&quot;cnt&quot;:9,&quot;val&quot;:0.28}
+&gt;{&quot;ts&quot;:1515897451,&quot;tag&quot;:&quot;cc&quot;,&quot;cnt&quot;:7,&quot;val&quot;:0.93}
+&gt;{&quot;ts&quot;:1515897452,&quot;tag&quot;:&quot;dd&quot;,&quot;cnt&quot;:1,&quot;val&quot;:0.78}
+
+</code></pre>
+
+<p>然后在每个 clickhose 节点中查看数据。</p>
+
+<pre><code>select * from event_stream;
+</code></pre>
+
+<p><code>clickhouse-server-01</code></p>
+
+<pre><code>┌─────────ts─┬─tag─┬─cnt─┬────────────────val─┐
+│ 1515897449 │ aa  │   3 │ 0.7000000000000001 │
+└────────────┴─────┴─────┴────────────────────┘
+┌─────────ts─┬─tag─┬─cnt─┬──val─┐
+│ 1515897452 │ dd  │   1 │ 0.78 │
+└────────────┴─────┴─────┴──────┘
+</code></pre>
+
+<p><code>clickhouse-server-02</code></p>
+
+<pre><code>┌─────────ts─┬─tag─┬─cnt─┬──val─┐
+│ 1515897450 │ bb  │   9 │ 0.28 │
+└────────────┴─────┴─────┴──────┘
+</code></pre>
+
+<p><code>clickhouse-server-03</code></p>
+
+<pre><code>┌─────────ts─┬─tag─┬─cnt─┬──val─┐
+│ 1515897451 │ cc  │   7 │ 0.93 │
+└────────────┴─────┴─────┴──────┘
+</code></pre>
+
+<p>注意的是由于一个kafka的partition 只能由一个 group consumer 消费，所以clickhouse 节点数需要大于 topic 的 partition 数。</p>
+
+<p>由于 Kafka 表只是 kafka 流的一个视图而已，当数据被 select 了一次之后，这个数据就会被认为已经消费了，下次 select 就不会再出现。所以Kafka表单独使用是没什么用的，一般是用来和 MaterialView 配合，将Kafka表里面的数据自动导入到 MaterialView 里面。</p>
+
+<h2 id="与-materialview-集成">与 MaterialView 集成</h2>
+
+<p>我们现在每一节点建一个 MaterialView 保存 Kafka 里面的数据, 再顺手建一个全局的Distributed表。</p>
+
+<pre><code>CREATE MATERIALIZED VIEW events ENGINE = MergeTree(day, (day,ts, tag, cnt, val), 8192) AS
+SELECT toDate(toDateTime(ts)) AS day, ts, tag, cnt, val FROM event_stream;
+
+CREATE TABLE events_all AS events
+ENGINE = Distributed(perftest_3shards_1replicas, default, events, rand());
+</code></pre>
+
+<p>再往Kafka里面写些数据，就能在各个节点的 events 或 events_all 里面查出来了。</p>
+
+<h2 id="总结">总结</h2>
+
+<p>clichouse 和 Kafka的配合可以说是十分的便利，只有配置好，clickhouse 从 kafka 读数据和写入都是如此的方便。不过还是有相当的局限性，因为目前对 kafka 数据格式的支持还是<a href="https://clickhouse.yandex/docs/en/formats/index.html">有限</a>。如果能通过插件之类的扩展方式自定义format就好了。另外，clickhouse 是否保证数据的一致性，不重复不丢？详细的情况还需要进一步探究。</p>
+
+<hr />
+
+<p>参考资料</p>
+
+<p><a href="https://clickhouse.yandex/tutorial.html">https://clickhouse.yandex/tutorial.html</a><br />
+<a href="https://clickhouse.yandex/docs/en/table_engines/kafka.html">https://clickhouse.yandex/docs/en/table_engines/kafka.html</a></p>
+
+  </div>
+
+<footer>
+  <hr>
+  <small style="font-size:16px;float:right;margin:0 1rem;">
+    &copy; 2019 <a href="https://github.com/SineYuan">.</a>
+    
+  </small>
+</footer>
+</div> 
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+  crossorigin="anonymous"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+
+
+
+<script>
+ (function(){
+  var seriesA = document.getElementsByTagName("a");
+  seriesA = Array.from(seriesA).filter(x =>x.getAttribute("data-series"));
+  if(seriesA.length){
+    var nameSeries = {}
+    seriesA.forEach(x =>{
+      var xdata = x.getAttribute("data-series")
+      if(nameSeries[xdata]){
+        nameSeries[xdata].push(x)
+      }else{
+        nameSeries[xdata] = [x]
+      }
+    })
+  }
+
+  function createE(){
+    var detailsArr = [] 
+    var postPosArr = [] 
+    for(let i in nameSeries){
+      var dcreateE = document.createElement("details")
+      var screateE = document.createElement("summary")
+      screateE.textContent = i;
+      var inner = screateE.outerHTML + "<br >" 
+
+      nameSeries[i].forEach(x =>{
+        inner += x.outerHTML
+        x.parentElement.style.display = "none"
+      })
+      postPosArr.push(nameSeries[i][0])
+      dcreateE.innerHTML = inner
+      detailsArr.push(dcreateE)
+    }
+    console.info(postPosArr)
+    console.log(detailsArr[0])
+    postPosArr.forEach(a =>{
+      a.parentElement.style.display = "block"
+      a.outerHTML = detailsArr.shift().outerHTML
+    })
+  }
+  createE()
+ })()
+</script>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "sineyuansblog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</body>
+
+</html>
+

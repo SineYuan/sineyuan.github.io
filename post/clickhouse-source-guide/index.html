@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="en-us" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    
+    
+    <title>Clickhouse源码导读</title>
+    
+
+
+    
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/solarized-dark.min.css" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/go.min.js"></script>
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+        <link rel="stylesheet" href="/css/main.css">
+    
+
+    
+    
+
+    
+<script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+</head>
+
+
+<body>
+    <script>
+        window.addEventListener("resize", resizeThrottler, false);
+
+        var resizeTimeout;
+        function resizeThrottler() {
+        
+        if ( !resizeTimeout ) {
+            resizeTimeout = setTimeout(function() {
+            resizeTimeout = null;
+            actualResizeHandler();
+        
+            
+            }, 66);
+        }
+        }
+        actualResizeHandler()
+        function actualResizeHandler() {
+                if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent))
+                {
+                    document.body.classList.add('mobile');
+                }else{
+                    document.body.classList.remove('mobile');  
+                }
+        }</script>
+    
+
+
+    
+
+
+
+<div class="inner" style="position:relative;">
+  
+  <div class="side-btn"><a href="/" class="back">Home</a></div>
+  
+<div class="blog-post">
+  <h2>Clickhouse源码导读</h2>
+        
+
+<h1 id="clickhouse源码导读">Clickhouse源码导读</h1>
+
+<p>ClickHouse 是一个由俄罗斯搜索巨头Yandex开源的分布式列存储OLAP数据库。最突出的特点有特点就是一个快字。为了搞懂Clickhouse为什么快，我粗略的看了看Clickhouse的源码，总结一份导读指南，方便他人探索。</p>
+
+<h2 id="基本流程">基本流程</h2>
+
+<p>先从<a href="https://github.com/yandex/ClickHouse">github</a>下载源码看看，本文内容基于 <code>v18.14.17-stable</code> 版本。Clickhouse整个项目的结构还是很清晰的，入口的 main函数在 <code>dbms/programs/main.cpp</code>。主程序会根据指令分发到 <code>dbms/programs</code> 目录下的程序中处理。我们主要关注 <code>clickhouse server</code>，所以直接来到 <code>dbms/programs/server/Server.cpp</code>，一路走下来解析参数配置，初始化server，再启动服务监听端口。</p>
+
+<p>clickhouse 使用的是 <a href="https://pocoproject.org/"><code>poco</code></a> 这个网络库来处理网络请求，每个client连接的处理逻辑在 <code>dbms/programs/server/TCPHandler.cpp</code>的<code>TCPHandler::runImpl()</code>方法里面。除去握手，初始化上下文，异常处理和数据统计的代码，主要的业务可以抽象成:</p>
+
+<pre><code>// dbms/programs/server/TCPHandler.cpp
+
+TCPHandler.runImpl()
+{
+    ...
+    while(1) {
+        receivePacket()
+
+        /// Processing Query
+        state.io = executeQuery(state.query, query_context, false, state.stage);
+
+        if (state.io.out)
+            state.need_receive_data_for_insert = true;
+
+        if (state.need_receive_data_for_insert)
+            processInsertQuery(global_settings);
+        else
+            processOrdinaryQuery();
+
+    ...     
+}
+</code></pre>
+
+<p>client发送的sql在 <code>executeQuery</code> 函数处理，<code>processInsertQuery</code> 和 <code>processOrdinaryQuery</code> 负责将结果返回给client。</p>
+
+<p><code>executeQuery</code> 函数的实现在<code>dbms/src/Interpreters/executeQuery.cpp</code>, 主要逻辑简化如下：</p>
+
+<pre><code>dbms/src/Interpreters/executeQuery.cpp 
+
+executeQueryImpl(...)
+{	
+	...
+	ast = parseQuery(parser, begin, end, &quot;&quot;, max_query_size);
+	...
+
+	auto interpreter = InterpreterFactory::get(ast, context, stage);
+    res = interpreter-&gt;execute();
+
+    ...
+}
+</code></pre>
+
+<p>类比 mysql 的处理流程，先解析sql语句生成抽象语法树(AST)，<code>InterpreterFactory</code>工厂类根据AST生成 执行器<code>Interpreter</code>类实例来执行。</p>
+
+<p><code>interpreter-&gt;execute()</code> 返回到结果 <code>res</code> 是一个 <code>BlockIO</code>, <code>BlockIO</code> 其实就是一个 <code>BlockInputStream</code>和<code>BlockOutputStream</code>的一个封装。这里就引出了 Clickhouse 里面的一些重要概念。</p>
+
+<h2 id="block和block-stream">Block和Block Stream</h2>
+
+<p>Clickhouse是面向OLAP的列存储数据库系统，数据的存储和读写都是批量处理的。根据<a href="https://clickhouse.yandex/docs/zh/development/architecture/#block">文档</a>, 一个<code>Block</code>代表着一批的数据，内部是用列来划分的，也就是一个<code>(IColumn, IDataType, column name)</code>三元组的集合。Clickhouse 的数据处理都是以Block为单位的，而Clickhouse的高性能也得益于能够使用向量化技术一次批量的处理一个Block里同类型的数据。</p>
+
+<p>而 <code>Block Stream</code>就是一个个 <code>Block</code> 组成的数据流。<code>Block Stream</code>分为两种，负责数据写入的实现 <code>IBlockOutputStream</code>接口，通过<code>write</code>方法写入一个<code>Block</code>。负责数据读取的实现 <code>IBlockInputStream</code>接口，通过<code>read</code>方法读取一个<code>Block</code>。</p>
+
+<pre><code>// dbms/src/DataStreams/IBlockOutputStream.h
+class IBlockOutputStream : private boost::noncopyable
+{
+public:
+	...
+
+    /** Write block.
+      */
+    virtual void write(const Block &amp; block) = 0;
+    ...
+}
+
+// dbms/src/DataStreams/IBlockInputStream.h
+class IBlockInputStream : private boost::noncopyable
+{
+public:
+    IBlockInputStream() {}
+	...
+
+    /** Read next block.
+      * If there are no more blocks, return an empty block (for which operator `bool` returns false).
+      * NOTE: Only one thread can read from one instance of IBlockInputStream simultaneously.
+      * This also applies for readPrefix, readSuffix.
+      */
+    virtual Block read() = 0;
+    ...
+}
+
+</code></pre>
+
+<p>不同的Stream可以组合起来完成数据的转化。比如最初的 <code>IBlockInputStream</code>外层套一个 <code>FilterBlockInputStream</code>过滤掉不符合条件的数据，再接一个<code>AggregatingBlockInputStream</code>将原始数据聚合给下一个 <code>IBlockInputStream</code>。其实<code>Block Stream</code>类似<code>TiDB</code>里面的算子, 或者类比<code>Python</code>的迭代器，最外层不断调用 <code>read</code>/<code>write</code>方法驱动整个计算的进行。</p>
+
+<p>下面我们追踪最简单的数据写入Insert过程和查询Select过程讲讲相关的代码。</p>
+
+<h2 id="写入">写入</h2>
+
+<p>让我们回到<code>InterpreterFactory</code>, Insert语句对应<code>InterpreterInsertQuery</code>这个执行器。</p>
+
+<pre><code>// dbms/src/Interpreters/InterpreterFactory.cpp
+
+InterpreterFactory::get() 
+{
+	if (typeid_cast&lt;ASTSelectQuery *&gt;(query.get()))
+    {
+        /// This is internal part of ASTSelectWithUnionQuery.
+        /// Even if there is SELECT without union, it is represented by ASTSelectWithUnionQuery with single ASTSelectQuery as a child.
+        return std::make_unique&lt;InterpreterSelectQuery&gt;(query, context, Names{}, stage);
+    }
+    else if (typeid_cast&lt;ASTSelectWithUnionQuery *&gt;(query.get()))
+    {
+        ProfileEvents::increment(ProfileEvents::SelectQuery);
+        return std::make_unique&lt;InterpreterSelectWithUnionQuery&gt;(query, context, Names{}, stage);
+    }
+    else if (typeid_cast&lt;ASTInsertQuery *&gt;(query.get()))
+    {
+        ProfileEvents::increment(ProfileEvents::InsertQuery);
+        /// readonly is checked inside InterpreterInsertQuery
+        bool allow_materialized = static_cast&lt;bool&gt;(context.getSettingsRef().insert_allow_materialized_columns);
+        return std::make_unique&lt;InterpreterInsertQuery&gt;(query, context, allow_materialized);
+    }
+
+    ....... // 分发
+}
+
+</code></pre>
+
+<pre><code>// dbms/src/Interpreters/InterpreterInsertQuery.cpp
+
+StoragePtr InterpreterInsertQuery::getTable(const ASTInsertQuery &amp; query)
+{
+    if (query.table_function)
+    {
+        auto table_function = typeid_cast&lt;const ASTFunction *&gt;(query.table_function.get());
+        const auto &amp; factory = TableFunctionFactory::instance();
+        return factory.get(table_function-&gt;name, context)-&gt;execute(query.table_function, context);
+    }
+
+    /// Into what table to write.
+    return context.getTable(query.database, query.table);
+}
+
+BlockIO InterpreterInsertQuery::execute()
+{
+	... 
+	StoragePtr table = getTable(query);
+	...
+	out = std::make_shared&lt;PushingToViewsBlockOutputStream&gt;(query.database, query.table, table, context, query_ptr, query.no_destination);
+	...	
+}
+
+</code></pre>
+
+<p><code>PushingToViewsBlockOutputStream</code>的会先写入更低层的<code>BlockOutputStream</code>, 然后查看一下写入的数据源是否有 <code>MaterialView</code>,若有，调用<code>process</code>方法用<code>MaterializingBlockInputStream</code>往相关的<code>MaterialView</code>写入数据。而<code>PushingToViewsBlockOutputStream</code>更低层的<code>BlockOutputStream</code>是 <code>getTable</code> 方法获取的<code>IStorage</code>对象提供的。</p>
+
+<pre><code>// dbms/src/Storages/IStorage.h
+
+class IStorage : public std::enable_shared_from_this&lt;IStorage&gt;, private boost::noncopyable, public ITableDeclaration
+{
+	....
+	virtual BlockOutputStreamPtr write(
+        const ASTPtr &amp; /*query*/,
+        const Settings &amp; /*settings*/)
+    {
+        throw Exception(&quot;Method write is not supported by storage &quot; + getName(), ErrorCodes::NOT_IMPLEMENTED);
+    }
+    ....
+    virtual BlockInputStreams read(
+        const Names &amp; /*column_names*/,
+        const SelectQueryInfo &amp; /*query_info*/,
+        const Context &amp; /*context*/,
+        QueryProcessingStage::Enum /*processed_stage*/,
+        size_t /*max_block_size*/,
+        unsigned /*num_streams*/)
+    {
+        throw Exception(&quot;Method read is not supported by storage &quot; + getName(), ErrorCodes::NOT_IMPLEMENTED);
+    }
+    ....
+
+}
+</code></pre>
+
+<p><code>IStorage</code> 是Clickhouse存储引擎的接口，我们直接看最关键的 <code>MergeTree</code>引擎的实现</p>
+
+<pre><code>// dbms/src/Storages/StorageMergeTree.cpp
+
+BlockOutputStreamPtr StorageMergeTree::write(const ASTPtr &amp; /*query*/, const Settings &amp; /*settings*/)
+{
+    return std::make_shared&lt;MergeTreeBlockOutputStream&gt;(*this);
+}
+</code></pre>
+
+<pre><code>dbms/src/Storages/MergeTree/MergeTreeBlockOutputStream.cpp
+
+void MergeTreeBlockOutputStream::write(const Block &amp; block)
+{
+    storage.data.delayInsertOrThrowIfNeeded();
+
+    auto part_blocks = storage.writer.splitBlockIntoParts(block);
+    for (auto &amp; current_block : part_blocks)
+    {
+        Stopwatch watch;
+
+        MergeTreeData::MutableDataPartPtr part = storage.writer.writeTempPart(current_block);
+        storage.data.renameTempPartAndAdd(part, &amp;storage.increment);
+
+        PartLog::addNewPart(storage.context, part, watch.elapsed());
+
+        /// Initiate async merge - it will be done if it's good time for merge and if there are space in 'background_pool'.
+        storage.background_task_handle-&gt;wake();
+    }
+}
+</code></pre>
+
+<p>追踪到最底层的 <code>MergeTreeBlockOutputStream</code> 我们会发现最终数据由<code>MergeTreeDataWriter</code>(<code>dbms/src/Storages/MergeTree/MergeTreeDataWriter.h</code>)写入，而<code>MergeTreeDataWriter</code>是<code>MergeTreeData</code>(<code>dbms/src/Storages/MergeTree/MergeTreeData.h</code>)的封装，<code>MergeTree</code>的数据都由<code>MergeTreeData</code>对象管理。存储的格式可以看看<a href="http://jackpgao.github.io/2017/12/06/ClickHouse-Primary-key/">这篇文章</a>，后面可能会另写文再说说。</p>
+
+<p><code>MergeTreeBlockOutputStream</code>一次写入一个<code>Block</code>,然后会唤醒后台任务将一个个小的<code>Block</code>合并。这应该就是<code>MergeTree</code>命名的由来了。由此我们可知，Clickhouse应尽可能的批量写入数据而不是一条一条的写。</p>
+
+<p>最后再回来往上走，看看是在哪里调用最外层的 <code>write</code>方法写入的。</p>
+
+<pre><code>void TCPHandler::processInsertQuery(const Settings &amp; global_settings)
+{
+    /** Made above the rest of the lines, so that in case of `writePrefix` function throws an exception,
+      *  client receive exception before sending data.
+      */
+    state.io.out-&gt;writePrefix();
+
+    /// Send block to the client - table structure.
+    Block block = state.io.out-&gt;getHeader();
+    sendData(block);
+
+    readData(global_settings);    &lt;--- here
+    state.io.out-&gt;writeSuffix();
+    state.io.onFinish();
+}
+
+
+void TCPHandler::readData(const Settings &amp; global_settings)
+{
+	...
+	receiveData()
+	...
+}
+
+bool TCPHandler::receiveData()
+{
+   	... 
+    /// Read one block from the network and write it down
+    Block block = state.block_in-&gt;read();
+
+    ....
+        if (block)
+            state.io.out-&gt;write(block);
+        return true;
+    ....
+}
+</code></pre>
+
+<h2 id="读取">读取</h2>
+
+<p>读取最外层<code>BlockStream</code>的地方就在<code>processOrdinaryQuery</code>。</p>
+
+<pre><code>// dbms/programs/server/TCPHandler.cpp
+
+void TCPHandler::processOrdinaryQuery()
+
+{
+	....
+	AsynchronousBlockInputStream async_in(state.io.in);
+	...
+	block = async_in.read();
+	...
+	sendData(block);
+
+}
+</code></pre>
+
+<p>在前面的<code>InterpreterFactory::get</code>方法可以看到Select语句会在初始化<code>InterpreterSelectQuery</code>, 于是我们来到<code>InterpreterSelectQuery.cpp</code></p>
+
+<pre><code>dbms/src/Interpreters/InterpreterSelectQuery.cpp
+
+void InterpreterSelectQuery::executeImpl(....)
+{
+	auto optimize_prewhere = [&amp;](auto &amp; merge_tree)
+        {
+            SelectQueryInfo query_info;
+            query_info.query = query_ptr;
+            query_info.sets = query_analyzer-&gt;getPreparedSets();
+
+            /// Try transferring some condition from WHERE to PREWHERE if enabled and viable
+            if (settings.optimize_move_to_prewhere &amp;&amp; query.where_expression &amp;&amp; !query.prewhere_expression &amp;&amp; !query.final())
+                MergeTreeWhereOptimizer{query_info, context, merge_tree.getData(), query_analyzer-&gt;getRequiredSourceColumns(), log};
+        };
+
+	AnalysisResult expressions;	
+
+	expressions = analyzeExpressions(from_stage, false);
+
+	/** Read the data from Storage. from_stage - to what stage the request was completed in Storage. */
+    executeFetchColumns(from_stage, pipeline, expressions.prewhere_info, expressions.columns_to_remove_after_prewhere);
+    ....
+    if (expressions.has_where)
+        executeWhere(pipeline, expressions.before_where, expressions.remove_where_filter);
+
+    if (expressions.need_aggregate)
+        executeAggregation(pipeline, expressions.before_aggregation, aggregate_overflow_row, aggregate_final);
+    else
+    {
+        executeExpression(pipeline, expressions.before_order_and_select);
+        executeDistinct(pipeline, true, expressions.selected_columns);
+    }
+
+    if (!expressions.second_stage &amp;&amp; !expressions.need_aggregate &amp;&amp; !expressions.has_having)
+    {
+        if (expressions.has_order_by)
+            executeOrder(pipeline);
+
+        if (expressions.has_order_by &amp;&amp; query.limit_length)
+            executeDistinct(pipeline, false, expressions.selected_columns);
+
+        if (query.limit_length)
+            executePreLimit(pipeline);
+     .....       
+}
+</code></pre>
+
+<p>可以看到，最底层的<code>IBlockInputStream</code>通过<code>executeFetchColumns</code>方法从<code>storage</code>里面读取出来。</p>
+
+<pre><code>
+void InterpreterSelectQuery::executeFetchColumns(...)
+{
+	...
+	pipeline.streams = storage-&gt;read(required_columns, query_info, context, processing_stage, max_block_size, max_streams);
+
+	if (pipeline.streams.empty())
+        {
+            pipeline.streams.emplace_back(std::make_shared&lt;NullBlockInputStream&gt;(storage-&gt;getSampleBlockForColumns(required_columns)));
+
+            if (query_info.prewhere_info)
+                pipeline.streams.back() = std::make_shared&lt;FilterBlockInputStream&gt;(
+                        pipeline.streams.back(), prewhere_info-&gt;prewhere_actions,
+                        prewhere_info-&gt;prewhere_column_name, prewhere_info-&gt;remove_prewhere_column
+                );
+        }
+        ....
+}
+</code></pre>
+
+<p>跟写入过程类似, StorageMergeTree调用封装了<code>MergeTreeData</code>的<code>MergeTreeDataSelectExecutor</code>的<code>read</code>方法从存储里面获取数据。</p>
+
+<pre><code>// dbms/programs/src/Storages/StorageMergeTree.cpp
+
+BlockInputStreams StorageMergeTree::read(...)
+{
+    return reader.read(column_names, query_info, context, max_block_size, num_streams, 0);
+}
+</code></pre>
+
+<p>回到<code>InterpreterSelectQuery</code>, <code>executeFetchColumns</code>方法取出数据后会调用各种<code>executeXXX</code>方法再给套上各种数据处理的<code>BlockStream</code>。</p>
+
+<pre><code>...
+void InterpreterSelectQuery::executeWhere(Pipeline &amp; pipeline, const ExpressionActionsPtr &amp; expression, bool remove_fiter)
+{
+    pipeline.transform([&amp;](auto &amp; stream)
+    {
+        stream = std::make_shared&lt;FilterBlockInputStream&gt;(stream, expression, query.where_expression-&gt;getColumnName(), remove_fiter);
+    });
+}
+
+void InterpreterSelectQuery::executeAggregation(Pipeline &amp; pipeline, const ExpressionActionsPtr &amp; expression, bool overflow_row, bool final)
+{
+	...
+}
+</code></pre>
+
+<h2 id="高性能">高性能</h2>
+
+<p>Clickhouse<a href="https://clickhouse.yandex/docs/zh/development/architecture">文档</a>里面提到了Clickhouse高性能的秘密是vectorized query execution 和 runtime code generation，即向量化SIMD的运用和JIT。这两点是怎么体现的呢？</p>
+
+<h3 id="jit">JIT</h3>
+
+<p>其实我们只要在代码里面搜<code>USE_EMBEDDED_COMPILER</code>这个编译宏就可以找出所有JIT相关的代码。最主要的地方在<code>dbms/src/Interpreters/ExpressionJIT.cpp</code>里面。</p>
+
+<p>若是开启了<code>USE_EMBEDDED_COMPILER</code>， <code>compileFunctions</code>函数会将复杂的表达式即时编译成机器码执行, Clickhouse会缓存编译结果，由此提高性能。</p>
+
+<h3 id="simd">SIMD</h3>
+
+<p>SIMD (Single Instruction Multiple Data) 是一种采用一个控制器来控制多个处理器，同时对一组数据（又称“数据向量”）中的每一个分别执行相同的操作从而实现空间上的并行性的技术。简单来说就是一条指令处理多个数据，由此来提升性能。</p>
+
+<p>SIMD技术需要CPU支持SIMD的指令集，如<a href="https://zh.wikipedia.org/wiki/MMX">MMX</a>、<a href="https://zh.wikipedia.org/wiki/MMX">SSE</a>、<a href="https://zh.wikipedia.org/wiki/AVX%E6%8C%87%E4%BB%A4%E9%9B%86">AVX</a>。</p>
+
+<p>Clickhouse使用的是SSE2，我们可以在代码里面搜<code>__SSE2__</code>这个编译宏找出所有SIMD相关的代码。Clickhouse在许多地方比如过滤，压缩，字符串处理函数等都有用到<code>__SSE2__</code>。比较多的地方还是在过滤，毕竟是最常用的场景。</p>
+
+  </div>
+
+<footer>
+  <hr>
+  <small style="font-size:16px;float:right;margin:0 1rem;">
+    &copy; 2019 <a href="https://github.com/SineYuan">.</a>
+    
+  </small>
+</footer>
+</div> 
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+  crossorigin="anonymous"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+
+
+
+<script>
+ (function(){
+  var seriesA = document.getElementsByTagName("a");
+  seriesA = Array.from(seriesA).filter(x =>x.getAttribute("data-series"));
+  if(seriesA.length){
+    var nameSeries = {}
+    seriesA.forEach(x =>{
+      var xdata = x.getAttribute("data-series")
+      if(nameSeries[xdata]){
+        nameSeries[xdata].push(x)
+      }else{
+        nameSeries[xdata] = [x]
+      }
+    })
+  }
+
+  function createE(){
+    var detailsArr = [] 
+    var postPosArr = [] 
+    for(let i in nameSeries){
+      var dcreateE = document.createElement("details")
+      var screateE = document.createElement("summary")
+      screateE.textContent = i;
+      var inner = screateE.outerHTML + "<br >" 
+
+      nameSeries[i].forEach(x =>{
+        inner += x.outerHTML
+        x.parentElement.style.display = "none"
+      })
+      postPosArr.push(nameSeries[i][0])
+      dcreateE.innerHTML = inner
+      detailsArr.push(dcreateE)
+    }
+    console.info(postPosArr)
+    console.log(detailsArr[0])
+    postPosArr.forEach(a =>{
+      a.parentElement.style.display = "block"
+      a.outerHTML = detailsArr.shift().outerHTML
+    })
+  }
+  createE()
+ })()
+</script>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "sineyuansblog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</body>
+
+</html>
+

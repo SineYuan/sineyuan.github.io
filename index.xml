@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Step By Step</title>
+    <link>http://sineyuan.github.io/</link>
+    <description>Recent content on Step By Step</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 08 Jan 2019 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="http://sineyuan.github.io/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>SIMD直观介绍</title>
+      <link>http://sineyuan.github.io/post/simd-intuitive/</link>
+      <pubDate>Tue, 08 Jan 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/simd-intuitive/</guid>
+      <description>上期讲到了Clickhoue性能高的原因是应用了向量化技术,也就是SIMD(Single Instruction Multiple Data，单指令多数据流)的指令来一次处理多个数据。这么讲有点抽象，今天就用几个例子感受一下SIMD具体是怎么运作的。
+本文例子来自dendibakh的博客系列，一个非常好的介绍SIMD的系列，十分推荐。
+First Look 先来看个简单的例子
+#include &amp;lt;vector&amp;gt; void foo( std::vector&amp;lt;unsigned&amp;gt;&amp;amp; lhs, std::vector&amp;lt;unsigned&amp;gt;&amp;amp; rhs ) { for( unsigned i = 0; i &amp;lt; lhs.size(); i++ ) { lhs[i] = ( rhs[i] + 1 ) &amp;gt;&amp;gt; 1; } }  我们用clang加上 -O2 -march=core-avx2 -std=c++14 -fno-unroll-loops 的编译选项来编译上面这段代码，-fno-unroll-loops告诉编译器禁止做循环展开的优化，-march=core-avx2提示编译器使用 avx2 指令集来做向量话。编译生成的汇编代码可以直观的在Compiler Explorer看到结果。
+我们可以看到，循环内的代码实际上生成来两个版本，一个是正常版
+mov edx, dword ptr [r9 + 4*rsi] # loading rhs[i] add edx, 1 # rhs[i] + 1 shr edx # (rhs[i] + 1) &amp;gt;&amp;gt; 1 mov dword ptr [rax + 4*rsi], edx # store result to lhs mov esi, edi add edi, 1 # incrementing i by 1 cmp rcx, rsi ja &amp;lt;next iteration&amp;gt;  一个是使用了AVX2指令的向量化版本</description>
+    </item>
+    
+    <item>
+      <title>Clickhouse源码导读</title>
+      <link>http://sineyuan.github.io/post/clickhouse-source-guide/</link>
+      <pubDate>Sun, 09 Dec 2018 00:00:00 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/clickhouse-source-guide/</guid>
+      <description>Clickhouse源码导读 ClickHouse 是一个由俄罗斯搜索巨头Yandex开源的分布式列存储OLAP数据库。最突出的特点有特点就是一个快字。为了搞懂Clickhouse为什么快，我粗略的看了看Clickhouse的源码，总结一份导读指南，方便他人探索。
+基本流程 先从github下载源码看看，本文内容基于 v18.14.17-stable 版本。Clickhouse整个项目的结构还是很清晰的，入口的 main函数在 dbms/programs/main.cpp。主程序会根据指令分发到 dbms/programs 目录下的程序中处理。我们主要关注 clickhouse server，所以直接来到 dbms/programs/server/Server.cpp，一路走下来解析参数配置，初始化server，再启动服务监听端口。
+clickhouse 使用的是 poco 这个网络库来处理网络请求，每个client连接的处理逻辑在 dbms/programs/server/TCPHandler.cpp的TCPHandler::runImpl()方法里面。除去握手，初始化上下文，异常处理和数据统计的代码，主要的业务可以抽象成:
+// dbms/programs/server/TCPHandler.cpp TCPHandler.runImpl() { ... while(1) { receivePacket() /// Processing Query state.io = executeQuery(state.query, query_context, false, state.stage); if (state.io.out) state.need_receive_data_for_insert = true; if (state.need_receive_data_for_insert) processInsertQuery(global_settings); else processOrdinaryQuery(); ... }  client发送的sql在 executeQuery 函数处理，processInsertQuery 和 processOrdinaryQuery 负责将结果返回给client。
+executeQuery 函数的实现在dbms/src/Interpreters/executeQuery.cpp, 主要逻辑简化如下：
+dbms/src/Interpreters/executeQuery.cpp executeQueryImpl(...) {	... ast = parseQuery(parser, begin, end, &amp;quot;&amp;quot;, max_query_size); .</description>
+    </item>
+    
+    <item>
+      <title>从kafka导入数据到Clickhouse</title>
+      <link>http://sineyuan.github.io/post/clickhouse-kafka/</link>
+      <pubDate>Sun, 14 Jan 2018 00:00:00 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/clickhouse-kafka/</guid>
+      <description>从kafka导入数据到Clickhouse Kafka 是目前应用非常广泛的开源消息中间件，一个常用的的场景就是做数据总线收集各个服务的消息日志，下游各种数据服务订阅消费数据，生成各种报表或数据应用等。Clickhouse 的自带了 Kafka Engine，使得 Clickhouse 和 Kafka 的集成变得非常容易。
+创建 Kafka 表 Clickhouse 的 Kafka Engine 可以将 Kafka 中的流映射成一个表，方便我们的后续处理。只要建表的时候制定
+Kafka(broker_list, topic_list, group_name, format[, schema])   broker_list: 逗号分隔的 Kafka broker 列表 topic_list: 消费的topic group_name: consumer group 的id， 同一个 group_name 的 clickhouse 会在同一个 consumer group 消费数据 format: kafka 消息的格式  在前文的所述的3节点 clickhouse 集群上，在每一个节点都建一个 Kafka Engine 的表从 kafka 的events topic读数据。
+CREATE TABLE event_stream (ts UInt64, tag String, cnt Int64, val Double) ENGINE = Kafka(&#39;127.</description>
+    </item>
+    
+    <item>
+      <title>用Docker快速上手Clickhouse</title>
+      <link>http://sineyuan.github.io/post/clickhouse-docker-quick-start/</link>
+      <pubDate>Fri, 29 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/clickhouse-docker-quick-start/</guid>
+      <description>用Docker快速上手Clickhouse ClickHouse 是一个由俄罗斯搜索巨头Yandex开源的分布式列存储OLAP数据库。主要的特点有
+ 非常快 分布式，高可用，线性拓展 功能强大  看起来非常厉害的样子，但 Clickhouse 最吸引人的一点应该就是一个“快”字吧。但是骡子是马拉出来溜溜，让我们开始吧。
+单机 Clickhouse官方有提供 clickhouse 的docker镜像, 只要简单运行
+docker run -d --name clickhouse-server --ulimit nofile=262144:262144 -p 9000:9000 yandex/clickhouse-server:1.1  clickhouse-server 就可以跑起来了。但我们想有更多的控制项。
+先将默认的配置拷贝出来
+mkdir etc mkdir data docker run -it --rm --entrypoint=/bin/bash -v $PWD:/work --privileged=true --user=root yandex/clickhouse-server:1.1 cp -r /etc/clickhouse-server/* /work/etc/ exit  再运行
+docker run -d --name clickhouse-server \ --ulimit nofile=262144:262144 \ -p 9000:9000 \ -v $PWD:/etc/clickhouse-server \ -v $PWD/data:/var/lib/clickhosue \ --privileged=true --user=root \ yandex/clickhouse-server:1.</description>
+    </item>
+    
+    <item>
+      <title>MXNet上手</title>
+      <link>http://sineyuan.github.io/post/mxnet-begin/</link>
+      <pubDate>Thu, 16 Mar 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/mxnet-begin/</guid>
+      <description>折腾了一段时间Tensorflw后，感觉Tensorflow各方面都非常不错，无论是Tensorflow Serving还是TensorBoard，不得不说Google的大腿就是粗啊。不过Tensorflow在性能上的并不怎么好，训练的时间和内存占用都很高。不过Tensorflow 1.0后也加入了新的实验特性来提高性能，相信Tensorflow以后性能不会再是大的问题。穷人家的孩子还得节俭持家， 所以我把目光投向了MXNet。
+MXNet是一个兼具性灵活和效率的深度学习框架。灵活指的是MXNet兼容声明式和指令式两种编程方式，可以很灵活的定义自己需要的东西。而效率则指MXNet在底层做了很多的优化(具体可以看这篇文章)，速度与内存消耗方面都做的很好。
+不过相比Tensorflow，MXNet的上手难度要高，文档方面对新手还是不太友好。入门教程可以很快的跑一个MNIST识别的demo，但用高级的module封装了很多细节，当新手要自定义loss函数时往往不知所措。其实我觉得学习MXNet基本概念最开始要看的是Symbolic Configuration and Execution in Pictures这篇文章。以这篇文章的例子来说 我们定义SymbolA,B,C,D,E，其中A, B, D为输入节点，E为输出节点，然后绑定输入数据a,b,d到E生成Executor， 最后Executor调用forward计算网络输出。
+除了多一步绑定数据生成Executor，其他跟Tensorflow还是很像的，可以类比Tensorflow的
+sess.run(E, feed_dict={A: a, B: b, D: d})  当我们需要训练模型的时候，我们就需要计算模型中参数的梯度，计算梯度需要调用Executor的backward方法。 如上，绑定的时候通过args_grad对待求解参数输入一个空的NDArray用于存放梯度计算结果，新版MXNet的API和上图有些不同，如果需要计算梯度，调用forward时需要带上is_train参数
+executor.forward(is_train=True)  执行forward后再执行backward方法求解梯度，之后就能得到节点A的梯度
+In [4]: exec.grad_dict[&#39;A&#39;].asnumpy() Out[4]: array([ 4.], dtype=float32)  计算出梯度后我们就可以根据梯度更新模型参数，一遍一遍的迭代直到训练结束。
+从上面的过程可以看出，bind这套api还是很低层的，很多东西都要我们手工完成，所以MXNet在这基础上提供了更高层的api方便开发。我们可以在MXNet项目代码的example/module中的demo里面学习基础用法，这里就直接copy过来
+中等层次的api
+################################################################################ # Intermediate-level API ################################################################################ mod = mx.mod.Module(softmax) mod.bind(data_shapes=train_dataiter.provide_data, label_shapes=train_dataiter.provide_label) mod.init_params() mod.init_optimizer(optimizer_params={&#39;learning_rate&#39;:0.01, &#39;momentum&#39;: 0.9}) metric = mx.metric.create(&#39;acc&#39;) for i_epoch in range(n_epoch): for i_iter, batch in enumerate(train_dataiter): mod.forward(batch) mod.update_metric(metric, batch.label) mod.backward() mod.</description>
+    </item>
+    
+    <item>
+      <title>Tensorflow Mnist手写数字识别Go实战</title>
+      <link>http://sineyuan.github.io/post/tensorflow-mnist-pratice/</link>
+      <pubDate>Thu, 02 Mar 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/tensorflow-mnist-pratice/</guid>
+      <description>Tensflow安装好以后，当然要上手折腾一下啦。其实Tensorflow的入门教程很多地方都有，官方的Tutorials也写的很好。所以在这里记录一下本人折腾的过程，做一些补充。
+基础知识 首先学习Tensorflow的基本使用和关于神经网络的知识，这里推荐的教程有：
+ Tensorflow官方教程 没有博士学位，照样玩转TensorFlow深度学习  本文所用代码放在了github上，如果想编译运行请将项目clone到$GOPATH/src下
+训练模型 我们先训练一个最简单的识别模型，代码码改自https://github.com/martin-gorner/tensorflow-mnist-tutorial
+# mnist_softmax.py import argparse import tensorflow as tf from tensorflow.examples.tutorials.mnist import input_data from tensorflow.contrib.session_bundle import exporter def main(flags): mnist = input_data.read_data_sets(flags.mnist_data_dir, reshape=False, one_hot=True) # neural network with 1 layer of 10 softmax neurons # # · · · · · · · · · · (input data, flattened pixels) X [batch, 784] # 784 = 28 * 28 # \x/x\x/x\x/x\x/x\x/ -- fully connected layer (softmax) W [784, 10] b[10] # · · · · · · · · Y [batch, 10] # The model is: # # Y = softmax( X * W + b) # X: matrix for 100 grayscale images of 28x28 pixels, flattened (there are 100 images in a mini-batch) # W: weight matrix with 784 lines and 10 columns # b: bias vector with 10 dimensions # +: add with broadcasting: adds the vector to each line of the matrix (numpy) # softmax(matrix) applies softmax on each line # softmax(line) applies an exp to each value then divides by the norm of the resulting line # Y: output matrix with 100 lines and 10 columns # input X: 28x28 grayscale images, the first dimension (None) will index the images in the mini-batch X = tf.</description>
+    </item>
+    
+    <item>
+      <title>在Windows上安装Tensorflow</title>
+      <link>http://sineyuan.github.io/post/tensorflow-windows-installation/</link>
+      <pubDate>Sun, 19 Feb 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/tensorflow-windows-installation/</guid>
+      <description>Tensorflow可以说是目前最火的机器学习框架。由于某些原因，我只能在Windows上使用GPU版本的Tensorflow。好在 Tensorflow1.0在最近也发布了，对于windows平台的支持也不错，这里将安装过程记录一下。
+安装Python/Anaconda 首先第一步当然是安装python，直接去python官网下载安装就好了，不过tensorflow在windows平台上只支持python3.5x以上的版本，下载时需要注意。
+通常开发的时候还需要numpy, scipy等数据挖掘，科学计算方面常用的包。python官方是没有的，用到时又需要去下载。为了免去这个麻烦，我们还可以直接安装python的发行版Anaconda，这个发行版包含了大部分常用的包，开箱即用。Anaconda下载地址https://www.continuum.io/downloads#windows， 也是注意要选python3.5以上的版本。
+安装Tensorflow 在命令行直接使用pip安装Tensorflow
+C:\&amp;gt; pip3 install --upgrade tensorflow  GPU版本用
+C:\&amp;gt; pip3 install --upgrade tensorflow-gpu  安装CUDA和cuDNN(GPU版本) 若是用gpu版本的Tensorflow还需要安装CUDA和cuDNN才能够跑gpu任务。不过在此之前需要确认你的NVIDIA支持CUDA Compute Capability 3.0 以上版本，具体型号可以在这里查看。
+安装CUDA CUDA（Compute Unified Device Architecture）是由NVIDIA所推出的一种集成技术通过CUDA我们可以调用GPU来运行密集的计算。
+在NVIDIA官网这里下载并安装CUDA驱动(版本 &amp;gt;= 7.0)即可。我这里安装的是CUDA 8.0
+安装cuDNN cuDNN是NVIDIA推出的深度学习GPU加速库，提供向前向后传播，卷积, pooling, normalization等深度学习常用函数的GPU加速功能。
+官网下载cuDNN。选择CUDA8.0对应的cuDNN v5.1 Library for Windows 10。
+解压下载下来的cudnn-8.0-windows10-x64-v5.1.zip文件，将里面的bin，include，lib文件夹覆盖到C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0目录下。
+当CUDA和cuDNN安装好之后，在python里import tensorflow的时候应该会显示成功加载一系列的库。
+ In [1]: import tensorflow as tf I c:\tf_jenkins\home\workspace\release-win\device\gpu\os\windows\tensorflow\stream_executor\dso_loader.cc:135] successfully opened CUDA library cublas64_80.dll locally I c:\tf_jenkins\home\workspace\release-win\device\gpu\os\windows\tensorflow\stream_executor\dso_loader.</description>
+    </item>
+    
+    <item>
+      <title>(译)Go naming conventions</title>
+      <link>http://sineyuan.github.io/post/go-naming/</link>
+      <pubDate>Fri, 27 Jan 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/go-naming/</guid>
+      <description>本文的内容是Andrew Gerrand在Meetup Golang Paris上一次演讲slide的翻译(youtube，slide)，内容是Go里面的一些命名的规范与建议。内容不错，在这里记录分享。
+Names matter 可读性定义代码的质量。
+好的命名对可读性非常重要。
+好的命名是:
+ 连续(容易理解) 简短(便于输入) 准确(易于理解)  A rule of thumb 一个常用的经验法则是：一个命名声明与使用的地方的距离越大，那么这个名字应该越长。
+Use MixedCase 在Go应使用驼峰命名法(不要使用下划线命名)。
+首字母应该大写，像ServeHTTP 和 IDProcessor
+Local variables 本地变量应保持简短，长短命名将有碍阅读。
+例如一些常用的约定： 使用 i 表示索引。 使用 r 表示reader。
+长命名可能对于很长的函数或有很对本地变量的函数很有用，但那通常表示你的代码需要重构了。
+坏🌰 func RuneCount(buffer []byte) int { index, count := 0, 0 for index &amp;lt; len(buffer) { if buffer[index] &amp;lt; RuneSelf { index++ } else { _, size := DecodeRune(buffer[index:]) index += size } count++ } return count }  好🌰 func RuneCount(b []byte) int { i, n := 0, 0 for i &amp;lt; len(b) { if b[i] &amp;lt; RuneSelf { i++ } else { _, size := DecodeRune(b[i:]) i += size } n++ } return n }  参数 函数的参数作用像本地变量，但它们还具有文档的功能。</description>
+    </item>
+    
+    <item>
+      <title>Golang错误处理</title>
+      <link>http://sineyuan.github.io/post/go-error-handle/</link>
+      <pubDate>Sun, 28 Aug 2016 01:25:03 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/go-error-handle/</guid>
+      <description>本文是GopherCon 2016的演讲Dont Just Check Errors Handle Them Gracefully的笔记，详情可点击链接观看(请带梯子上油管)
+常见错误处理策略 Sentiel errors if err == ErrSomething { ... }  这是最常见的处理方法，通过判断错误类型来做相应的处理。常见的有
+io.EOF syscall.ENOENT go/build.NoGoError path/filepath.SkipDir  但这种处理方法是最不灵活的一种方法，因为我们必须知道确定的错误类型。如果我们需要使用自定义的一些错误类型，当我们的代码作为一个package导出时，错误变成了api的一部分，这样就有了强耦合，以后要是修改错误会很麻烦。
+另外，当我们使用fmt.Errorf的时候，我们需要通过判断错误string的内容来区分错误，如：
+func readfile(path string) error { err := openfile(path) if err != nil { return fmt.Errorf(&amp;quot;cannot open file: %v&amp;quot;, err) } ... } func main() { err := readfile(&amp;quot;.bash&amp;quot;) if strings.Contains(err.Error(), &amp;quot;not found&amp;quot;) { // handle error } }  这是种非常糟糕的做法，当错误信息改变时，对应的错误处理也要相应改变， 另外还要性能的问题。
+除非是标准库里面的函数，否则避免使用Sentiel errors</description>
+    </item>
+    
+    <item>
+      <title>CoreOS部署kubernetes</title>
+      <link>http://sineyuan.github.io/post/deploy-k8s-on-coreos/</link>
+      <pubDate>Sun, 29 May 2016 22:07:38 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/deploy-k8s-on-coreos/</guid>
+      <description>准备工作 下载Kubernetes 在github下载最新的kuberbetes二进制包，这里我下载的是v1.2.4的版本。
+tar zxvf kubernetes.tar.gz cd kubernetes // 解压amd64的版本 tar zxvf kubernetes/server/kubernetes-server-linux-amd64.tar.gz cd kubernetes/server/kubernetes/server/bin // 将下列文件复制到各个节点上 cp kube-apiserver kube-proxy kubelet kube-scheduler kube-controller-manager /opt/bin  将kube-apiserver kube-proxy kubelet kube-scheduler kube-controller-manager复制到各个节点上，我这里放到各个节点到/opt/bin文件夹里
+启动etcd 可以参考前文。确保etcdctl命令可用。在这里我用etcd2代替etcd
+配置网络 由于每个节点docker容器的ip可能是相同的，为了使不同节点上的docker容器能够互相连接，所以需要有一种方法来统一分配每个节点的docker容器ip，防止冲突，并提供不同节点容器的连接能力，也就是SDN(software defined network) kubernetes没有提供这个功能，不过有许多的kubernetes社区有许多解决方案。如flannel,calico, OVS 等
+这里我选用CoreOS的flannel
+flannel使用etcd来保存子网ip等分配，新加入节点的flanned通过访问etcd来获取一个可用的子网网段，并负责容器间的代理转发。
+在CoreOS中自带flannel.service，但实际上CoreOS为了节省空间，这个service实际上是运行了一个flannel的docker容器，第一次启动时需要从网络下载flannel的镜像。由于众所周知的原因，我们还是下载编译好的二进制包吧。
+在https://github.com/coreos/flannel下载最新的release，解压出flanneld，同样放入/opt/bin里
+在所有节点/etc/systemd/system/*.service里添加flannel.service文件
+[Unit] Description=Flannel network fabric for CoreOS Requires=etcd2.service After=etcd2.service [Service] EnvironmentFile=/etc/environment ExecStartPre=-/bin/bash -c &amp;quot;until /usr/bin/etcdctl set /coreos.com/network/config &#39;{\&amp;quot;Network\&amp;quot;: \&amp;quot;10.100.0.0/16\&amp;quot;}&#39;; do echo \&amp;quot;waiting for etcd to become available.</description>
+    </item>
+    
+    <item>
+      <title>OSX上摆脱vagrant搭建CoreOS集群</title>
+      <link>http://sineyuan.github.io/post/coreos-osx-without-vagrant/</link>
+      <pubDate>Sun, 29 May 2016 11:35:27 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/coreos-osx-without-vagrant/</guid>
+      <description>一般我们在OSX下使用vagrant＋virtualbox部署虚拟机集群做开发测试。现在我们还可以有更轻量的选择——xhyve。xhyve是FreeBSD 下的虚拟技术 bhyve (The BSD Hypervisor) 的OSX移植，在OS X 10.10.3 Yosemite 之后的版本中可以使用。由于xhyve是基于FreeBSD原生的虚拟方案，所以它性能好并且非常的轻量，只有 230 KB，不依赖其他软件或库。当xhyve发布时CoreOS快速的跟进，推出了基于xhyve的coreos-xhyve。这里我们使用corectl——一个coreos-xhyve的命令行工具来搭建CoreOS集群。
+安装corectl 最快的方法使用brew
+ brew install corectl  从源码编译
+git clone git@github.com:TheNewNormal/corectl.git cd corectl make  安装好后运行corectl -h可以看到所支持的命令
+corectl -h CoreOS over OSX made simple. ❯❯❯ http://github.com/TheNewNormal/corectl Usage: corectl [flags] corectl [command] Available Commands: rm Removes one or more CoreOS images from local fs kill Halts one or more running CoreOS instances ls Lists locally available CoreOS images load Loads CoreOS instances defined in an instrumentation file.</description>
+    </item>
+    
+    <item>
+      <title>tornado源码分析笔记(3)</title>
+      <link>http://sineyuan.github.io/post/tornado-source-code-3/</link>
+      <pubDate>Mon, 25 Jan 2016 00:19:32 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/tornado-source-code-3/</guid>
+      <description>今天我们来讲讲tornado的Future和coroutine。
+Future 首先什么是future？按照我的理解，Future是一个用来保存异步处理的结果和回调的一个类。tornado的Future其实是实现了跟python concurrent这个包一样的api。在concurrent这个包里面是这样用Future的
+import concurrent.futures def done_callback(future): print(&amp;quot;I am done&amp;quot;) print(future.result()) with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor: future = executor.submit(pow, 323, 1235) future.add_done_callback(done_callback) print(future.done())  ThreadPoolExecutor在线程池中执行pow，不等函数执行完就立即返回一个future作为一个桥梁，拿到这个future后程序就可以去做其他事情了，当pow执行完之后回调用done_callback。而主线程也可以通过future来获取运行情况或者进行取消等操作。
+Future的源码在concurrent.py里面，很简单，这里也就不贴出来了。在tornado中，Future的使用是通过IOLoop的add_future方法起作用的。
+ioloop.py:
+ def add_future(self, future, callback): assert is_future(future) callback = stack_context.wrap(callback) future.add_done_callback( lambda future: self.add_callback(callback, future))  我们可以看到，add_future为future添加了一个回调函数，当future完成的时候，也就是调用了future.set_result或future.set_exception后向IOLoop注册了callback函数，当IOLoop下一轮poll之前就会调用这个callback函数。下面是一个简单的使用例子，耗时任务使用另外的线程完成。
+import time import threading import tornado.ioloop from tornado.concurrent import Future ioloop = tornado.ioloop.IOLoop.current() def long_task(future, sec=5): print(&amp;quot;long task start&amp;quot;) time.sleep(sec) future.set_result(&amp;quot;long task done in %s sec&amp;quot; % sec) def after_task_done(future): print(future.</description>
+    </item>
+    
+    <item>
+      <title>tornado源码分析笔记(2)</title>
+      <link>http://sineyuan.github.io/post/tornado-source-code-2/</link>
+      <pubDate>Tue, 19 Jan 2016 21:01:28 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/tornado-source-code-2/</guid>
+      <description>IOLoop就是 tornado 的事件循环，是一个全局的单例，通过IOLoop.current()或IOLoop.instance()访问。IOLoop.current()内部调用的也是instance()方法。所以我们来看instance():
+class IOLoop(Configurable): ... # Global lock for creating global IOLoop instance _instance_lock = threading.Lock() _current = threading.local() @staticmethod def instance(): if not hasattr(IOLoop, &amp;quot;_instance&amp;quot;): with IOLoop._instance_lock: if not hasattr(IOLoop, &amp;quot;_instance&amp;quot;): # New instance after double check IOLoop._instance = IOLoop() return IOLoop._instance  IOLoop没有__init__()函数，所以我们要去看它的父类Configurable:
+class Configurable(object): __impl_class = None __impl_kwargs = None def __new__(cls, *args, **kwargs): base = cls.configurable_base() init_kwargs = {} if cls is base: impl = cls.</description>
+    </item>
+    
+    <item>
+      <title>tornado源码分析笔记(1)</title>
+      <link>http://sineyuan.github.io/post/tornado-source-code-1/</link>
+      <pubDate>Tue, 19 Jan 2016 20:11:34 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/tornado-source-code-1/</guid>
+      <description>Tornado 是一个用 Python 实现的 Web 服务器框架，其最大的特点是使用异步非阻塞IO的处理方式来获取高负载和高性能。到底 Tornado 的底层是如何实现的呢？我们来一起看看。
+注明一下，这里展示的 Tornado 版本为4.2.1，不同版本可能会有一些出入。
+让我们从官方的 helloworld 开始我们的旅程：
+helloworld.py:
+import tornado.httpserver import tornado.ioloop import tornado.options import tornado.web from tornado.options import define, options define(&amp;quot;port&amp;quot;, default=8888, help=&amp;quot;run on the given port&amp;quot;, type=int) class MainHandler(tornado.web.RequestHandler): def get(self): self.write(&amp;quot;Hello, world&amp;quot;) def main(): tornado.options.parse_command_line() application = tornado.web.Application([ (r&amp;quot;/&amp;quot;, MainHandler), ]) http_server = tornado.httpserver.HTTPServer(application) http_server.listen(options.port) tornado.ioloop.IOLoop.current().start() if __name__ == &amp;quot;__main__&amp;quot;: main()  Tornado 的基本框架是先实现处理各种模式的RequestHandler类，用这些模式和对应的 Handler 初始化一个Application类，再用这个Application类初始化一个HTTPServer，设置监听端口，再启动IOLoop 。 我们先来看Application:
+web.py:
+class Application(httputil.</description>
+    </item>
+    
+    <item>
+      <title>使用Python做验证码识别</title>
+      <link>http://sineyuan.github.io/post/python-captcha/</link>
+      <pubDate>Wed, 06 Jan 2016 21:18:32 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/python-captcha/</guid>
+      <description>平常我们上网经常遇到的验证码英文名为CAPTCHA， 这其实是一个非常炫酷的名字的缩写，全称为全自动区分计算机和人类的图灵测试（英语：Completely Automated Public Turing test to tell Computers and Humans Apart) 。看起来是不是很高大上啊，图灵测试都出来了。不过确实，对于识别验证码这种对人来说很容易的任务（普通验证码，非12306的）对于计算机来说可不简单。
+工具 有用的工具：
+ PIL(Python Image Library)——图片处理库 numpy——矩阵运算 tesseract——开源的ORC库 scikit-learn——机器学习方面的集成包  分析验证码 验证码也是有计算机生成的，所以不同的验证码有不同的处理方法。所以验证码识别的第一步是观察目标验证码的规律。这次面对的验证码张这样子
+一般来说第一步首先是要将验证码图片转换为二值图去除干扰信息，便于进一步处理。 观察分析验证码的字体都是同样的颜色，背景有横的或斜的条纹。直接二值化效果并不好。但是字符之间是没有粘连的，所以我们可以利用这一点提取出字符。
+预处理 寻找字符像素 首先第一步是提取出字符的颜色也就是RGB值，观察到字符的颜色相同，占整个验证码图片的比例基本上是差不多的。所以我们可以通过分析像素的直方图找出字符的像素值出来。不过我偷懒没用这样的方法，因为图片开头都是横向的条纹，所以我就直接从左往右扫描图片横向中线的像素值，找出像素值突变的地方就可以找到字符的像素值了。
+FloodFill算法提取字符 Flood fill算法是从一个区域中提取若干个连通的点与其他相邻区域区分开（或分别染成不同颜色）的经典算法。处理这种没有粘连字符或者粘连但是字符每个颜色不一样的验证码效果拔群。多说无益，看图就明白了
+FloodFill最简单的实现是用递归
+def flood_fill(img, x0, y0, blank_color, color_to_fill, cmp_func): pix = img.load() pix[x0, y0] = color_to_fill offsets = [(1, 0), (0, 1), (-1, 0), (0, -1)] for xoffset, yoffset in offsets: x, y = x0 + xoffset, y0 + yoffset try: if cmp_func(pix[x, y], blank_color): flood_fill(img, x, y, blank_color) except IndexError: pass  不过python不支持尾递归优化，所以运行时回出现异常提示到达最大递归限制。所以改用基于队列的广度优先搜索 实现</description>
+    </item>
+    
+    <item>
+      <title>在Android Studio中使用tess-Two</title>
+      <link>http://sineyuan.github.io/post/android-studio-tess-two/</link>
+      <pubDate>Sat, 02 Jan 2016 17:49:15 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/android-studio-tess-two/</guid>
+      <description>Tesseract &amp;amp; tess-two Tesseract是一个开源的OCR(optical character Recognition)库，最初由惠普公司开发，然后开源之后由google维护。使用Tesseract可以从图片中识别出文字。Tesseract支持多种文字，还可以针对目标训练自己的识别模型，可以说大大方便了开发者。tess-two是Tesseract在Android平台上的移植。更多信息参阅tess-two主页
+tess-two在Android Studio的配置 1. 下载安装Android NDK 2. 下载解压tess-two或者直接git clone 3. 使用NDK编译解压出来的 tess-two 下的 tess-two 文件夹 cd tess-two/tess-two ndk-build  4. 配置Android Studio 在你的项目目录下新建一个libraries的文件夹，将NDK编译好的tess-two/tess-two目录复制到libraries下。
+在libraries/tess-two目录下新建一个 build.gradle 的文件。将下面的内容复制进去
+apply plugin: &#39;android-library&#39; buildscript { repositories { mavenCentral() } dependencies { classpath &#39;com.android.tools.build:gradle:1.5.0&#39; // 根据你的gradle版本进行调整 } } android { compileSdkVersion 23 // 根据你的项目进行调整 buildToolsVersion &amp;quot;23.0.2&amp;quot; // 根据你的项目进行调整 defaultConfig { minSdkVersion 15 // 根据你的项目进行调整 targetSdkVersion 23 // 根据你的项目进行调整 } sourceSets.</description>
+    </item>
+    
+    <item>
+      <title>命令行编译打包android应用</title>
+      <link>http://sineyuan.github.io/post/android-package-cmd/</link>
+      <pubDate>Thu, 05 Mar 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/android-package-cmd/</guid>
+      <description>在eclipse中点击一下就能将android项目一键构建，但在这个过程中发生了什么？我们亲手用命令行来实践一下吧.
+构建流程 先上一张google官方的构建流程图  Android Asset Packaging Tool (aapt) 将文资源件如AndroidManifest.xml还有其他Activity的XML文件编译成二进制文件。将他们打包和生成R.java文件 aidl将.aidl接口文件转换为java代码 将所有的java代码包括 R.java and aidl生成的java代码编译成.class文件 用dx将.class文件编译成Dalvik虚拟机使用的字符码 将所有的文件打包成.apk文件，包括编译的资源包，未编译的资源文件，.dex文件 用debug或release key对apk文件签名。 发布应用  命令行构建 下面我们就来用命令行实践一下,我所使用的sdk版本是android-sdk_r24.0.2-linux 首先新建一个Android应用项目 android create project &amp;ndash;target 19 &amp;ndash;name TestApp &amp;ndash;path ~/workspace/TestApp &amp;ndash;activity MainActivity &amp;ndash;package com.example.testapp
+使用aapt生成R.java和编译的资源包 aapt在sdk中的build-tools中找到，从build-tools中选最新的版本的aapt appt的使用方法
+aapt package -f -M ${manifest.file} -F ${packaged.resource.file} -I ${path.to.android-jar.library} -S ${android-resource-directory} [-m -J ${folder.to.output.the.R.java}]  实践：
+mkdir ~/workspace/TestApp/gen ./aapt package -f -M ~/workspace/TestApp/AndroidManifest.xml \ -F ~/workspace/TestApp/bin/resources.arsc \ -I ~/Android/SDK/platforms/android-21/android.jar \ -S ~/workspace/TestApp/res/ \ -m -J ~/workspace/TestApp/gen/  使用aidl命令把.</description>
+    </item>
+    
+    <item>
+      <title>使用LaTex写毕业论文</title>
+      <link>http://sineyuan.github.io/post/latex-thesis/</link>
+      <pubDate>Mon, 02 Mar 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/latex-thesis/</guid>
+      <description>临近毕业，又是大四狗们忙着写毕业论文的时候了。写论文烦，论文的排版更烦，要对照着论文格式要求，调整位置、大小、字体等细节，还有引用、目录、注脚、参考文献之类的。使用word对论文进行排版有着诸多的不便，那有没有其他更好的方法呢？今天我就来介绍一下使用latex对论文排版的方法。
+什么是LaTex  LaTeX是一种基于TeX的排版系统，由美国电脑学家莱斯利·兰伯特在20世纪80年代初期开发，利用这种格式，即使用户没有排版和程序设计的知识也可以充分发挥由TeX所提供的强大功能，能在几天，甚至几小时内生成很多具有书籍质量的印刷品。对于生成复杂表格和数学公式，这一点表现得尤为突出。因此它非常适用于生成高印刷质量的科技和数学类文档。这个系统同样适用于生成从简单的信件到完整书籍的所有其他种类的文档。
+ 以上是wiki上的解释。总的来说，LaTex是一套排版系统，与word那种所见即所得对排版方式不太，用LaTex排版更像是写程序一样，将想要的排版效果用指令写出来，再通过LaTex编译成文档。简单来说，你只要按照要求撰写tex文件，就能够通过LaTex生成排版好的pdf文件。 有些人可能听到写程序就头大了，其实使用命令来排版的好处正是我们可以将各种版式做成模板文件，使用者只要调用模板即可，完全不用去处理字体样大小、位置，目录生成，图片公式序号等诸多细节，使我们专注于内容。更多关于LaTex和word的比较这篇文章有很详细的论述。现在使用LaTex听起来是不是很诱人？不过好处也不是白给的，就我的实践来说，LaTex还是有不足之处：
+ 某些项目如表格，图形比word更加复杂 所见非所得，有错误的话需要重新编译，耗时间 有一定的门槛，需要一定的学习才能使用  综上所述，我认为学习使用LaTex还是有个不错的选择，LaTex也是可以用来做简历，PPT等文档的。本文的目的也是希望用一些指导来降低LaTex学习使用上的难度。
+TexLive的安装 LaTex是不支持中文，目前支持中文比较好的发行版是xelatex，安装TexLive就有了。由于大部分人使用的是windows操作系统，所以这里讲解windows下TexLive的安装。 4. 首先我们去http://tug.org/texlive/acquire-netinstall.html下载Texlive安装器 install-tl-windows.exe 。 5. 运行install-tl-windows.exe进入安装界面，选择要安装方案 TexLive全部的安装包有4G，里面有许多其他国家的语言包我们用不着的，所以出现的第一个对话窗选择Custom install。 点击“进一步定制”右边的“修改”，取消掉一些语言和包 以上是我的选择，总大小在3G，这个方案应该还有再精简的空间，不过我也没精力再去实验了。 3. 等待下载安装完成即可。
+安装编辑器 工欲善其事，必先利其器。TexLive自带的编辑器TeXworks功能太少，我们换一个更强大的编辑器TexMaker。TexMaker功能强大，对于公式表格等都有很好的支持。[点我下载]直接解压运行文件夹里面的texmaker即可使用。
+学习LaTex 使用LaTex没有一点基础是不行的，但我们也无需成为一个LaTex的高手，除非是做科研的，那个时间成本可是很大的，一些基本入门教程，遇到问题勤搜索就可以了。下面是一些不错的基础教程推荐给大家。
+一份其实很短的 LaTeX 入门文档
+LATEX 2ε 入门指南
+XeLaTEX/LATEX 中文排版之胡言乱语
+模板 自制模板是一件十分复杂麻烦的事情，不过好在很多高校都有LaTex论文模板，这里推荐一个网站LaTexStudio，上面收集有很多高校的论文模板和教程资源。 模板点我直达 一般下载文件里面都会说明使用方法的，跟着做就是了。</description>
+    </item>
+    
+    <item>
+      <title>Pelican的配置与使用</title>
+      <link>http://sineyuan.github.io/post/pelican-configure/</link>
+      <pubDate>Sun, 01 Mar 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/pelican-configure/</guid>
+      <description>上一篇教程讲了如何使用GithubPage和Pelican来搭建个人静态博客，这篇是上一篇的继续，主要说明一下Pelican的配置和在写博客过程中遇到的问题及其解决方法。闲话不说，我们继续。
+Pelican插件的使用 大部分的时候Pelican提供的功能是不能够满足我们的需求的，比如Google的Analytical，sitemap，评论系统，导航页面等。这时就需要安装相应的插件来提供这些功能了。其实Pelican插件的安装使用非常简单，Pelican的全部插件都在pelican-plugins这个项目上，先从github上clone这个项目
+cd blog git clone git://github.com/getpelican/pelican-plugins.git  然后需要什么差件，就在主目录下的配置文件pelicanconf.py中声明并设置就可以了，例如在要使用设置Sitemap插件，就在pelicanconf.py中设置如下 PLUGIN_PATH=u&amp;quot;pelican-plugins&amp;quot; #指定插件源文件的存放目录 PLUGINS = [&#39;summary&#39;,&#39;sitemap&#39;,&#39;neighbors&#39;] #[]里面的是启用的插 # 配置sitemap 插件 SITEMAP = {
+&amp;quot;format&amp;quot;: &amp;quot;xml&amp;quot;, &amp;quot;priorities&amp;quot;: { &amp;quot;articles&amp;quot;: 0.7, &amp;quot;indexes&amp;quot;: 0.5, &amp;quot;pages&amp;quot;: 0.3, }, &amp;quot;changefreqs&amp;quot;: { &amp;quot;articles&amp;quot;: &amp;quot;monthly&amp;quot;, &amp;quot;indexes&amp;quot;: &amp;quot;daily&amp;quot;, &amp;quot;pages&amp;quot;: &amp;quot;monthly&amp;quot;, }  } } 在pelican-plugins项目主页上有这些插件的功能简介
+Pelican主题 同样，Pelican的主题也有一个主页：pelican-themes，同样先clone下来
+git clone https://github.com/getpelican/pelican-themes.git  之后cd进pelican-themes中，想装什么主题就用pelican-themes -i语句安装
+cd pelican-themes pelican-themes -i bootstrap2  最后在pelicanconf.py中添加下面的语句设置安装过的主题，最后make一下就可以了
+THEME = &#39;bootstrap2&#39;  能够成功的前提是在主题的文件夹中源文件确实存在，有些主题文件夹是空的，这时只需要去到相应的项目主页clone下来就可以了。 在http://pelicanthemes.com/这个网页上可以预览到所有的主题，喜欢的就clone下来吧。
+第三方评论系统 因为GithubPage是静态博客，所以不支持评论系统，不过我们可以通过Disqus解决这个问题。Disqus是一家第三方社会化评论系统，主要为网站主提供评论托管服。首先要到Disqus上注册一个帐号，注册完后点击右上角的齿轮，在弹出的选项中点击add Disqus to Site,在弹出的页面中注册你的博客名。完成注册后，回到小齿轮那就会多了个admin选项，点进去，在跳出的页面中我们就可以管理你博客的评论了。在Settings=&amp;gt;Site Identity中可以看到shortname，请记下来。 然后在pelicanconf.</description>
+    </item>
+    
+    <item>
+      <title>用Pelican&#43;GithubPage搭建个人静态博客</title>
+      <link>http://sineyuan.github.io/post/setup-blog/</link>
+      <pubDate>Sat, 28 Feb 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/setup-blog/</guid>
+      <description>为什么要写博客 关于为什么要写博客，其实刘未鹏写过两篇非常好的博文：书写是为了更好的思考，为什么你应该（从现在开始就）写博客，希望大家都能看一看。其实我知道我这个博客一年除了我之外访客可能没有多少个，所以这里更多的是关于自己思考的一个整理和学习的记录，如果能够帮到其他的人，那对我来说也是十分开心的事情了。
+技术选择 搭建博客的方法有很多，主流的是使用wordpress，不过对于我这种小博客来说，用不着太过复杂的技术，静态网页就足够了。所以我选择了GithubPage来托管网站，因为我使用python，所以我使用了基于python的pelican作为静态网页生成器。看的有点晕？没关系，接着走下去，我会解释清楚的。
+GithubPage 如果你对编程有所了解，就一定听说过github。它号称程序员的Facebook。有着极高的人气，许多重要的项目都托管在上面。 简单说，它是一个具有版本管理功能的代码仓库，你可以将你的项目代码存放到github的服务器上，就像网盘一样，你可以在github上管理的的项目代码，也可以和别人一起共同协做开发。github对于程序员来说是个非常重要的网站。 对于一个想参与到一个项目的新手来说，看到一大堆源码，只会让人头晕脑涨，不知何处入手。他希望看到的是，一个简明易懂的网页，说明这个项目的具体情况。或者对于一个想使用github上项目软件的人来说，他需要一个向使用说明书一样的东西，来告诉他这个软件怎么使用，如何配置。因此，github就设计了Pages功能，允许用户自定义项目首页，用来替代默认的源码列表。上面有关于项目的wiki等信息，方便用户使用或参与到项目中来。所以，github Pages可以被认为是用户编写的、托管在github上的静态网页。 GithubPage也允许托管个人主页，所以我们将我们的博客当做一个项目托管在github上，当我们访问GithubPage时，github服务器就会根据我们博客项目中的文件生成网页文件，发送给我们。我们只要修改项目中的文件，就能够管理我们的博客。 使用GithubPage的好处还有： + 免费，无限流量，300M的存储空间对于中小型博客来说够用了 + 管理发布简单方便，你只需要关注与内容，其他的都有github帮你搞定 + 享受git的版本管理功能，不用担心文章遗失。
+git入门 当然，github是需要有一定的使用git基础的，不过如果只是为了写博客的话，不要求完全掌握git，只需要知道git是干什么的和最基本的命令的使用即可。这方面推荐先看一看git的入门教程，goole一下git + 入门就有很多了。对于懒人来说下面为你准备了几个教程，跟着教程走，将git安装上，走一遍流程就行了 git - 简明指南 git教程——廖雪峰的官方网站 猴子都能懂的GIT入门
+github帐号 要使用GithubPage先要有github帐号，赶紧去注册一个吧 注册之后再把GitHub Bootcmap过一遍，熟悉一下流程 建立GitHubPage 这里再次偷个懒，如何建立GithubPage官方主页上已经写的很清楚了，跟着做就可以了。 完成github官方的教程后你访问你的 username.github.io应该就有一个 &amp;ldquo;hello world&amp;rdquo;的页面了，除此之外什么也没有。下面我们就要使用pelican生产自己博客的html文件，放上GithubPage上去。 ps：你可以绑定自己的域名到GithubPage上，不过首先你需要先购买一个域名，如何购买域名，绑定域名这又是另外一个故事了，网上有这方面的教程，善用google就出来了。这里也不做展开了。
+Pelican 建立好GithubPage之后我们看到只有一个index.html的页面，我们必须事先做好我们博客的html文件再放上GithubPage上别人才能访问的到。写html十分的复杂，这样机械的任务当然是要交给机器来做，人就只是关注与内容如何写就好了。所以我们需要一个程序来将我们的文章转化为我们博客的html文件的程序。Pelican就是这样的一个静态网页生成程序。项目中文指南在此，可以去看看简介。当然你也可以使用其他的静态网页生成程序，如基于ruby的 Jekyll，其使用都是大同小异的。 Pelican是基于python的程序，所以首先需要安装python。如何安装python？还是找老朋友谷歌和度娘吧。其实最好的教程还是推荐官方网站 python.org。 安装好python之后我们还需要安装pip来安装Pelican（绕晕了，有完没完啊！————革命尚未成功，同志仍需努力，小伙伴们撑住啊！）pip是一个python包的管理程序，有了它就可以很方便的下载管理python的软件包，是使用python的必备工具。不同平台有不同的安装方法，具体怎么做？还是问问老朋友吧 ╮(╯_╰)╭ （摊手～～）
+下载安装 很简单，在终端或cmd下一个命令就可以了
+pip install pelican  建一个博客 先建一个文件夹，再cd进文件夹里面，运行下面的命令，回答一串问题就可以了
+mkdir /path/to/your/blog cd /path/to/your/blog pelican-quickstart  之后你就会看到文件夹里有一些的东东，这些文件具体的是：
+blog/ ├── content #你写的文章放在这里 │ └── (pages) ├── output #这里放生成的html文件 ├── develop_server.</description>
+    </item>
+    
+    <item>
+      <title>Pelican的配置与使用</title>
+      <link>http://sineyuan.github.io/post/pelican-configure/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/pelican-configure/</guid>
+      <description>上一篇教程讲了如何使用GithubPage和Pelican来搭建个人静态博客，这篇是上一篇的继续，主要说明一下Pelican的配置和在写博客过程中遇到的问题及其解决方法。闲话不说，我们继续。
+Pelican插件的使用 大部分的时候Pelican提供的功能是不能够满足我们的需求的，比如Google的Analytical，sitemap，评论系统，导航页面等。这时就需要安装相应的插件来提供这些功能了。其实Pelican插件的安装使用非常简单，Pelican的全部插件都在pelican-plugins这个项目上，先从github上clone这个项目
+cd blog git clone git://github.com/getpelican/pelican-plugins.git  然后需要什么差件，就在主目录下的配置文件pelicanconf.py中声明并设置就可以了，例如在要使用设置Sitemap插件，就在pelicanconf.py中设置如下 PLUGIN_PATH=u&amp;quot;pelican-plugins&amp;quot; #指定插件源文件的存放目录 PLUGINS = [&#39;summary&#39;,&#39;sitemap&#39;,&#39;neighbors&#39;] #[]里面的是启用的插 # 配置sitemap 插件 SITEMAP = {
+&amp;quot;format&amp;quot;: &amp;quot;xml&amp;quot;, &amp;quot;priorities&amp;quot;: { &amp;quot;articles&amp;quot;: 0.7, &amp;quot;indexes&amp;quot;: 0.5, &amp;quot;pages&amp;quot;: 0.3, }, &amp;quot;changefreqs&amp;quot;: { &amp;quot;articles&amp;quot;: &amp;quot;monthly&amp;quot;, &amp;quot;indexes&amp;quot;: &amp;quot;daily&amp;quot;, &amp;quot;pages&amp;quot;: &amp;quot;monthly&amp;quot;, }  } } 在pelican-plugins项目主页上有这些插件的功能简介
+Pelican主题 同样，Pelican的主题也有一个主页：pelican-themes，同样先clone下来
+git clone https://github.com/getpelican/pelican-themes.git  之后cd进pelican-themes中，想装什么主题就用pelican-themes -i语句安装
+cd pelican-themes pelican-themes -i bootstrap2  最后在pelicanconf.py中添加下面的语句设置安装过的主题，最后make一下就可以了
+THEME = &#39;bootstrap2&#39;  能够成功的前提是在主题的文件夹中源文件确实存在，有些主题文件夹是空的，这时只需要去到相应的项目主页clone下来就可以了。 在http://pelicanthemes.com/这个网页上可以预览到所有的主题，喜欢的就clone下来吧。
+第三方评论系统 因为GithubPage是静态博客，所以不支持评论系统，不过我们可以通过Disqus解决这个问题。Disqus是一家第三方社会化评论系统，主要为网站主提供评论托管服。首先要到Disqus上注册一个帐号，注册完后点击右上角的齿轮，在弹出的选项中点击add Disqus to Site,在弹出的页面中注册你的博客名。完成注册后，回到小齿轮那就会多了个admin选项，点进去，在跳出的页面中我们就可以管理你博客的评论了。在Settings=&amp;gt;Site Identity中可以看到shortname，请记下来。 然后在pelicanconf.</description>
+    </item>
+    
+  </channel>
+</rss>

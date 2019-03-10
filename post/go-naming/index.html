@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="en-us" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    
+    
+    <title>(译)Go naming conventions</title>
+    
+
+
+    
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/solarized-dark.min.css" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/go.min.js"></script>
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+        <link rel="stylesheet" href="/css/main.css">
+    
+
+    
+    
+
+    
+<script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+</head>
+
+
+<body>
+    <script>
+        window.addEventListener("resize", resizeThrottler, false);
+
+        var resizeTimeout;
+        function resizeThrottler() {
+        
+        if ( !resizeTimeout ) {
+            resizeTimeout = setTimeout(function() {
+            resizeTimeout = null;
+            actualResizeHandler();
+        
+            
+            }, 66);
+        }
+        }
+        actualResizeHandler()
+        function actualResizeHandler() {
+                if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent))
+                {
+                    document.body.classList.add('mobile');
+                }else{
+                    document.body.classList.remove('mobile');  
+                }
+        }</script>
+    
+
+
+    
+
+
+
+<div class="inner" style="position:relative;">
+  
+  <div class="side-btn"><a href="/" class="back">Home</a></div>
+  
+<div class="blog-post">
+  <h2>(译)Go naming conventions</h2>
+        
+
+<p>本文的内容是Andrew Gerrand在Meetup Golang Paris上一次演讲slide的翻译(<a href="https://www.youtube.com/watch?v=sFUSP8Au_PE">youtube</a>，<a href="https://talks.golang.org/2014/names.slide#1">slide</a>)，内容是Go里面的一些命名的规范与建议。内容不错，在这里记录分享。</p>
+
+<h2 id="names-matter">Names matter</h2>
+
+<p>可读性定义代码的质量。</p>
+
+<p>好的命名对可读性非常重要。</p>
+
+<p>好的命名是:</p>
+
+<ul>
+<li>连续(容易理解)</li>
+<li>简短(便于输入)</li>
+<li>准确(易于理解)</li>
+</ul>
+
+<h2 id="a-rule-of-thumb">A rule of thumb</h2>
+
+<p>一个常用的经验法则是：一个命名声明与使用的地方的距离越大，那么这个名字应该越长。</p>
+
+<h2 id="use-mixedcase">Use MixedCase</h2>
+
+<p>在Go应使用驼峰命名法(不要使用下划线命名)。</p>
+
+<p>首字母应该大写，像<code>ServeHTTP</code> 和 <code>IDProcessor</code></p>
+
+<h2 id="local-variables">Local variables</h2>
+
+<p>本地变量应保持简短，长短命名将有碍阅读。</p>
+
+<p>例如一些常用的约定：
+使用 <code>i</code> 表示索引。
+使用 <code>r</code> 表示reader。</p>
+
+<p>长命名可能对于很长的函数或有很对本地变量的函数很有用，但那通常表示你的代码需要重构了。</p>
+
+<h3 id="坏">坏🌰</h3>
+
+<pre><code>func RuneCount(buffer []byte) int {
+    index, count := 0, 0
+    for index &lt; len(buffer) {
+        if buffer[index] &lt; RuneSelf {
+            index++
+        } else {
+            _, size := DecodeRune(buffer[index:])
+            index += size
+        }
+        count++
+    }
+    return count
+}
+</code></pre>
+
+<h3 id="好">好🌰</h3>
+
+<pre><code>func RuneCount(b []byte) int {
+    i, n := 0, 0
+    for i &lt; len(b) {
+        if b[i] &lt; RuneSelf {
+            i++
+        } else {
+            _, size := DecodeRune(b[i:])
+            i += size
+        }
+        n++
+    }
+    return n
+}
+</code></pre>
+
+<h2 id="参数">参数</h2>
+
+<p>函数的参数作用像本地变量，但它们还具有文档的功能。</p>
+
+<p>当参数类型具有描述性时，使用短命名。</p>
+
+<pre><code>func AfterFunc(d Duration, f func()) *Timer
+
+func Escape(w io.Writer, s []byte)
+</code></pre>
+
+<p>当参数类型很模糊时(例如原生类型，相同的类型的参数时)，那么参数名字需要像文档一样说明。</p>
+
+<pre><code>func Unix(sec, nsec int64) Time
+
+func HasPrefix(s, prefix []byte) bool
+</code></pre>
+
+<h2 id="返回值">返回值</h2>
+
+<p>对于一个对外发布的函数，返回值应命名应像文档一样说明返回值的作用。</p>
+
+<p>好的例子：</p>
+
+<pre><code>func Copy(dst Writer, src Reader) (written int64, err error)
+
+func ScanBytes(data []byte, atEOF bool) (advance int, token []byte, err error)
+</code></pre>
+
+<h2 id="receivers">Receivers</h2>
+
+<p>Receivers是一种特殊类型的参数</p>
+
+<p>通常情况，使用一到两个其类型简写的字符表示，因为在方法里面他们会经常出现</p>
+
+<pre><code>func (b *Buffer) Read(p []byte) (n int, err error)
+
+func (sh serverHandler) ServeHTTP(rw ResponseWriter, req *Request)
+
+func (r Rectangle) Size() Point
+</code></pre>
+
+<p>一个类型的方法Receiver命名应保持一致(不要在一个方法里面用<code>r</code>而在另一个方法里用<code>rdr</code>)</p>
+
+<h2 id="exported-package-level-names">Exported package-level names</h2>
+
+<p>一个包的导出的名字被其包命修饰，时时铭记这一点。
+所以在标准库里面有<code>bytes.Buffer</code>和<code>strings.Reader</code>，而不是<code>bytes.ByteBuffer</code>,<code>strings.StringReader</code></p>
+
+<h2 id="接口类型">接口类型</h2>
+
+<p>如果一个接口里面只有一个方法，那通常给方法名后面加一个&rsquo;er&rsquo;就好了。</p>
+
+<pre><code>type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+</code></pre>
+
+<p>虽然有时英语语法上是不对的，但我们还是这么做(but we do it anyway)</p>
+
+<pre><code>type Execer interface {
+    Exec(query string, args []Value) (Result, error)
+}
+</code></pre>
+
+<p>有时要做一些转换看起来更好</p>
+
+<pre><code>type ByteReader interface {
+    ReadByte() (c byte, err error)
+}
+</code></pre>
+
+<p>但一个接口包含多个方法是，选择名字需要准确的描述这个借口的作用(例如: <code>net.Conn</code>, <code>http.ResponseWriter</code>, <code>io.ReadWriter</code>)</p>
+
+<h2 id="error">Error</h2>
+
+<p>错误类型命名类似<code>FooError</code>:</p>
+
+<pre><code>type ExitError struct {
+    ...
+}
+</code></pre>
+
+<p>错误值命名类似<code>ErrFoo</code>:</p>
+
+<pre><code>var ErrFormat = errors.New(&quot;image: unknown format&quot;)
+</code></pre>
+
+<h2 id="包命名">包命名</h2>
+
+<p>对外发布的包名应该说明包的作用</p>
+
+<p>避免使用util，common，等等</p>
+
+<h2 id="import-paths">Import paths</h2>
+
+<p>包的最后一个部分的路径应和包名相同。</p>
+
+<pre><code>&quot;compress/gzip&quot; // package gzip
+</code></pre>
+
+<p>避免在包路径上结巴(233)。</p>
+
+<pre><code>&quot;code.google.com/p/goauth2/oauth2&quot; // bad; my fault
+</code></pre>
+
+<p>对于库来说，通常将代码放在根目录下。</p>
+
+<pre><code>&quot;github.com/golang/oauth2&quot; // package oauth2
+</code></pre>
+
+<p>避免大写字母(不是所有的文件系统都是大小写敏感的)。</p>
+
+<h2 id="标准库">标准库</h2>
+
+<p>文中许多例子都是来自标准库。</p>
+
+<p>标准库是个寻找优秀Go代码的地方，常看常新。</p>
+
+<p><em>但请记住</em>:</p>
+
+<blockquote>
+<p>When the standard library was written, we were still learning.
+Most of it we got right, but we made some mistakes.</p>
+</blockquote>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Use short names.
+使用短的名字</p>
+
+<p>Think about context.
+多思考上下文</p>
+
+<p>Use your judgment.
+要有自己的判断</p>
+
+  </div>
+
+<footer>
+  <hr>
+  <small style="font-size:16px;float:right;margin:0 1rem;">
+    &copy; 2019 <a href="https://github.com/SineYuan">.</a>
+    
+  </small>
+</footer>
+</div> 
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+  crossorigin="anonymous"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+
+
+
+<script>
+ (function(){
+  var seriesA = document.getElementsByTagName("a");
+  seriesA = Array.from(seriesA).filter(x =>x.getAttribute("data-series"));
+  if(seriesA.length){
+    var nameSeries = {}
+    seriesA.forEach(x =>{
+      var xdata = x.getAttribute("data-series")
+      if(nameSeries[xdata]){
+        nameSeries[xdata].push(x)
+      }else{
+        nameSeries[xdata] = [x]
+      }
+    })
+  }
+
+  function createE(){
+    var detailsArr = [] 
+    var postPosArr = [] 
+    for(let i in nameSeries){
+      var dcreateE = document.createElement("details")
+      var screateE = document.createElement("summary")
+      screateE.textContent = i;
+      var inner = screateE.outerHTML + "<br >" 
+
+      nameSeries[i].forEach(x =>{
+        inner += x.outerHTML
+        x.parentElement.style.display = "none"
+      })
+      postPosArr.push(nameSeries[i][0])
+      dcreateE.innerHTML = inner
+      detailsArr.push(dcreateE)
+    }
+    console.info(postPosArr)
+    console.log(detailsArr[0])
+    postPosArr.forEach(a =>{
+      a.parentElement.style.display = "block"
+      a.outerHTML = detailsArr.shift().outerHTML
+    })
+  }
+  createE()
+ })()
+</script>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "sineyuansblog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</body>
+
+</html>
+

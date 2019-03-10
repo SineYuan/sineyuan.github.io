@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="en-us" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    
+    
+    <title>tornado源码分析笔记(3)</title>
+    
+
+
+    
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/solarized-dark.min.css" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/go.min.js"></script>
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+        <link rel="stylesheet" href="/css/main.css">
+    
+
+    
+    
+
+    
+<script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+</head>
+
+
+<body>
+    <script>
+        window.addEventListener("resize", resizeThrottler, false);
+
+        var resizeTimeout;
+        function resizeThrottler() {
+        
+        if ( !resizeTimeout ) {
+            resizeTimeout = setTimeout(function() {
+            resizeTimeout = null;
+            actualResizeHandler();
+        
+            
+            }, 66);
+        }
+        }
+        actualResizeHandler()
+        function actualResizeHandler() {
+                if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent))
+                {
+                    document.body.classList.add('mobile');
+                }else{
+                    document.body.classList.remove('mobile');  
+                }
+        }</script>
+    
+
+
+    
+
+
+
+<div class="inner" style="position:relative;">
+  
+  <div class="side-btn"><a href="/" class="back">Home</a></div>
+  
+<div class="blog-post">
+  <h2>tornado源码分析笔记(3)</h2>
+        
+
+<p>今天我们来讲讲tornado的<code>Future</code>和coroutine。</p>
+
+<h2 id="future">Future</h2>
+
+<p>首先什么是<code>future</code>？按照我的理解，<code>Future</code>是一个用来保存异步处理的结果和回调的一个类。tornado的<code>Future</code>其实是实现了跟python <a href="https://docs.python.org/3/library/concurrent.futures.html">concurrent</a>这个包一样的api。在<code>concurrent</code>这个包里面是这样用<code>Future</code>的</p>
+
+<pre><code>import concurrent.futures
+
+def done_callback(future):
+    print(&quot;I am done&quot;)
+    print(future.result())
+
+with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+    future = executor.submit(pow, 323, 1235)
+    future.add_done_callback(done_callback)
+    print(future.done())
+    
+</code></pre>
+
+<p><code>ThreadPoolExecutor</code>在线程池中执行<code>pow</code>，不等函数执行完就立即返回一个<code>future</code>作为一个桥梁，拿到这个<code>future</code>后程序就可以去做其他事情了，当<code>pow</code>执行完之后回调用<code>done_callback</code>。而主线程也可以通过<code>future</code>来获取运行情况或者进行取消等操作。</p>
+
+<p><code>Future</code>的源码在concurrent.py里面，很简单，这里也就不贴出来了。在tornado中，<code>Future</code>的使用是通过<code>IOLoop</code>的<code>add_future</code>方法起作用的。</p>
+
+<p>ioloop.py:</p>
+
+<pre><code>    def add_future(self, future, callback):
+
+        assert is_future(future)
+        callback = stack_context.wrap(callback)
+        future.add_done_callback(
+            lambda future: self.add_callback(callback, future))
+            
+</code></pre>
+
+<p>我们可以看到，<code>add_future</code>为<code>future</code>添加了一个回调函数，当<code>future</code>完成的时候，也就是调用了<code>future.set_result</code>或<code>future.set_exception</code>后向<code>IOLoop</code>注册了<code>callback</code>函数，当<code>IOLoop</code>下一轮poll之前就会调用这个<code>callback</code>函数。下面是一个简单的使用例子，耗时任务使用另外的线程完成。</p>
+
+<pre><code>import time
+import threading
+import tornado.ioloop
+from tornado.concurrent import Future
+
+ioloop = tornado.ioloop.IOLoop.current()
+
+def long_task(future, sec=5):
+    print(&quot;long task start&quot;)
+    time.sleep(sec)
+    future.set_result(&quot;long task done in %s sec&quot; % sec)
+
+def after_task_done(future):
+    print(future.result())
+
+def test_future():
+    future = Future()
+    threading.Thread(target=long_task, args=(future,)).start()
+    ioloop.add_future(future, after_task_done)
+
+if __name__ == &quot;__main__&quot;:
+    ioloop.add_callback(test_future)
+    ioloop.start()
+</code></pre>
+
+<h2 id="coroutine">coroutine</h2>
+
+<p>异步的事件驱动最令人诟病的一点就是不停的回调回调，给写程序的时候带来很大的困难。针对这个痛点，tornado利用了基于python的生成器的协程来实现用同步的方式写异步的代码的。就让我们来看一看其背后的黑魔法吧。</p>
+
+<p>先从demo开始：</p>
+
+<pre><code>class GenAsyncHandler(RequestHandler):
+    @gen.coroutine
+    def get(self):
+        http_client = AsyncHTTPClient()
+        response = yield http_client.fetch(&quot;http://example.com&quot;)
+        do_something_with_response(response)
+        self.render(&quot;template.html&quot;)
+ 
+</code></pre>
+
+<p><code>get</code>方法在<code>gen.coroutine</code>装饰器的下在执行异步方法时yield就可以可以将控制权还给IOLoop，当异步方法回获得结果时返回<code>get</code>方法，将结果赋值给<code>response</code>后继续执行。我们知道在一个函数中有yield的话这个函数的返回值就变成了一个生成器，当异步函数的结果到来时，必定会调用生成器的<code>send</code>方法将结果传入里面。我们先来看<code>gen.coroutine</code>。</p>
+
+<p>gen.py</p>
+
+<pre><code>def coroutine(func, replace_callback=True):
+    return _make_coroutine_wrapper(func, replace_callback=True)
+</code></pre>
+
+<p>很简单，返回一个<code>_make_coroutine_wrapper</code>包装的函数。来看<code>_make_coroutine_wrapper</code>：</p>
+
+<pre><code>def _make_coroutine_wrapper(func, replace_callback):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        future = TracebackFuture()
+
+		# 有callback关键词的话为callback添加一个future，future完成时执行
+        if replace_callback and 'callback' in kwargs:
+            callback = kwargs.pop('callback')
+            IOLoop.current().add_future(
+                future, lambda future: callback(future.result()))
+        
+        # 调用func，根据结果的不同进行不同的处理
+        try:
+            result = func(*args, **kwargs)
+        except (Return, StopIteration) as e:
+            result = getattr(e, 'value', None)
+        except Exception:
+            future.set_exc_info(sys.exc_info())
+            return future
+        else:
+            if isinstance(result, types.GeneratorType):
+                # Inline the first iteration of Runner.run.  This lets us
+                # avoid the cost of creating a Runner when the coroutine
+                # never actually yields, which in turn allows us to
+                # use &quot;optional&quot; coroutines in critical path code without
+                # performance penalty for the synchronous case.
+                try:
+                    orig_stack_contexts = stack_context._state.contexts
+                    
+                    # 若result是一个生成器，则会调用一次next，在根据结果进行不同处理
+                    yielded = next(result)
+                    if stack_context._state.contexts is not orig_stack_contexts:
+                        yielded = TracebackFuture()
+                        yielded.set_exception(
+                            stack_context.StackContextInconsistentError(
+                                'stack_context inconsistency (probably caused '
+                                'by yield within a &quot;with StackContext&quot; block)'))
+                except (StopIteration, Return) as e:
+                    future.set_result(getattr(e, 'value', None))
+                except Exception:
+                    future.set_exc_info(sys.exc_info())
+                else:
+                    Runner(result, future, yielded)
+                try:
+                    return future
+                finally:
+                    # Subtle memory optimization: if next() raised an exception,
+                    # the future's exc_info contains a traceback which
+                    # includes this stack frame.  This creates a cycle,
+                    # which will be collected at the next full GC but has
+                    # been shown to greatly increase memory usage of
+                    # benchmarks (relative to the refcount-based scheme
+                    # used in the absence of cycles).  We can avoid the
+                    # cycle by clearing the local variable after we return it.
+                    future = None
+        future.set_result(result)
+        return future
+    return wrapper
+</code></pre>
+
+<p>被<code>gen.coroutine</code>装饰的函数返回结果都会变成一个<code>Future</code>,若<code>func</code>不是一个生成器，则将结果或异常放入<code>future</code>中返回。若<code>func</code>返回一个生成器，调用<code>next</code>一次，如果还有后续，则交给<code>Runner</code>这个类来执行。结合demo上的来看，此时的<code>yielded</code>是<code>http_client.fetch(&quot;http://example.com&quot;)</code>执行都结果，必须是一个<code>Future</code>(或者<code>YieldPoint</code>，早期版本使用的，后来由<code>Future</code>代替，保留只为了兼容旧版本，这里不再讨论)，后面我们可以看到。</p>
+
+<p>来看<code>Runner</code>类， 也在gen.py里面，在<code>Runner</code>里面最关键的是<code>run</code>和<code>handle_yield</code>方法。</p>
+
+<pre><code>class Runner(object):
+    def __init__(self, gen, result_future, first_yielded):
+        self.gen = gen
+        self.result_future = result_future
+        self.future = _null_future
+        self.yield_point = None
+        self.pending_callbacks = None
+        self.results = None
+        self.running = False
+        self.finished = False
+        self.had_exception = False
+        self.io_loop = IOLoop.current()
+
+        self.stack_context_deactivate = None
+        
+        # 若first_yielded的future以完成，则最少会run一次
+        if self.handle_yield(first_yielded):
+            self.run()
+            
+    # ...省略...
+    
+    def handle_yield(self, yielded):
+        # Lists containing YieldPoints require stack contexts;
+        # other lists are handled via multi_future in convert_yielded.
+        if (isinstance(yielded, list) and
+                any(isinstance(f, YieldPoint) for f in yielded)):
+            yielded = Multi(yielded)
+        elif (isinstance(yielded, dict) and
+              any(isinstance(f, YieldPoint) for f in yielded.values())):
+            yielded = Multi(yielded)
+
+        # 处理旧版本的YieldPoints的兼容，可以忽略...
+		
+		# future未完成则向ioloop注册这个future，当future完成时调用run继续执行
+        if not self.future.done() or self.future is moment:
+            self.io_loop.add_future(
+                self.future, lambda f: self.run())
+            return False
+        return True
+
+    def run(self):
+        &quot;&quot;&quot;Starts or resumes the generator, running until it reaches a
+        yield point that is not ready.
+        &quot;&quot;&quot;
+        if self.running or self.finished:
+            return
+        try:
+            self.running = True
+            while True:
+                future = self.future
+                if not future.done():
+                    return
+                self.future = None
+                try:
+                    orig_stack_contexts = stack_context._state.contexts
+                    exc_info = None
+
+                    try:
+                        value = future.result()
+                    except Exception:
+                        self.had_exception = True
+                        exc_info = sys.exc_info()
+					
+					# 有异常则设置异常
+                    if exc_info is not None:
+                        yielded = self.gen.throw(*exc_info)
+                        exc_info = None
+                   	# 将结果send回去继续执行
+                    else:
+                        yielded = self.gen.send(value)
+
+                    if stack_context._state.contexts is not orig_stack_contexts:
+                        self.gen.throw(
+                            stack_context.StackContextInconsistentError(
+                                'stack_context inconsistency (probably caused '
+                                'by yield within a &quot;with StackContext&quot; block)'))
+                except (StopIteration, Return) as e:
+                    self.finished = True
+                    self.future = _null_future
+                    if self.pending_callbacks and not self.had_exception:
+                        # If we ran cleanly without waiting on all callbacks
+                        # raise an error (really more of a warning).  If we
+                        # had an exception then some callbacks may have been
+                        # orphaned, so skip the check in that case.
+                        raise LeakedCallbackError(
+                            &quot;finished without waiting for callbacks %r&quot; %
+                            self.pending_callbacks)
+                    self.result_future.set_result(getattr(e, 'value', None))
+                    self.result_future = None
+                    self._deactivate_stack_context()
+                    return
+                except Exception:
+                    self.finished = True
+                    self.future = _null_future
+                    self.result_future.set_exc_info(sys.exc_info())
+                    self.result_future = None
+                    self._deactivate_stack_context()
+                    return
+                # handle_yield检查yielded，若还未完成则继续向IOLoop注册future等待完成。
+                if not self.handle_yield(yielded):
+                    return
+        finally:
+            self.running = False
+
+		# .......
+</code></pre>
+
+<p>在<code>Runner</code>中<code>handle_yield</code>帮我们向IOLoop注册了<code>future</code>,当<code>future</code>完成时也就是<code>http_client.fetch</code>的结果返回之后，IOLoop就好执行<code>Runner.run()</code>使我们从断点继续执行。在<code>Runner.run()</code>里将<code>future</code>的结果取出，发送进生成器里面继续执行。</p>
+
+<p>当我们要实现自己的异步函数时，需要将耗时任务的执行放在主线程外的其它地方，返回一个<code>Future</code>对象，当耗时任务结束时设在<code>Future</code>的结果即可。配合<code>gen.coroutine</code>即可实现同步的控制流写异步的代码。下面是一个例子：</p>
+
+<pre><code>import json
+import time
+import threading
+import tornado.httpserver
+import tornado.ioloop
+import tornado.options
+import tornado.web
+
+from tornado import gen
+from tornado.concurrent import Future
+from tornado.options import define, options
+
+define(&quot;port&quot;, default=8888, help=&quot;run on the given port&quot;, type=int)
+
+@gen.coroutine
+def logic_handler(pk):
+    data = yield get_data(pk)
+    
+    # 在python3里可以在生成器直接return data
+    raise gen.Return(data)
+
+def get_data(pk):
+    future = Future()
+    threading.Thread(target=fetch_data_from_db, args=(future, pk)).start()
+    return future
+
+def fetch_data_from_db(future, pk):
+    time.sleep(5)
+    future.set_result({&quot;pk&quot;: pk, &quot;data&quot;: &quot;Data from No.%s's&quot; % pk})
+
+
+class MainHandler(tornado.web.RequestHandler):
+    @gen.coroutine
+    def get(self, pk):
+        print(pk)
+        result = yield loginc_handler(pk)
+        self.write(json.dumps(result))
+
+def main():
+    tornado.options.parse_command_line()
+    application = tornado.web.Application([
+        (r&quot;/(\d+)&quot;, MainHandler),
+    ])
+    http_server = tornado.httpserver.HTTPServer(application)
+    http_server.listen(options.port)
+    tornado.ioloop.IOLoop.current().start()
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+
+<p>不过在实际应用中还是会有些地方需要注意。如当一个函数使用<code>gen.coroutine</code>装饰过后，其上层的调用者也要相应改成couroutine，如上面例子的<code>logic_handler</code>如果还有很多层级依赖于db的数据的话，它们也要加<code>@gen.coroutine</code>或者返回<code>Future</code>。</p>
+
+  </div>
+
+<footer>
+  <hr>
+  <small style="font-size:16px;float:right;margin:0 1rem;">
+    &copy; 2019 <a href="https://github.com/SineYuan">.</a>
+    
+  </small>
+</footer>
+</div> 
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+  crossorigin="anonymous"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+
+
+
+<script>
+ (function(){
+  var seriesA = document.getElementsByTagName("a");
+  seriesA = Array.from(seriesA).filter(x =>x.getAttribute("data-series"));
+  if(seriesA.length){
+    var nameSeries = {}
+    seriesA.forEach(x =>{
+      var xdata = x.getAttribute("data-series")
+      if(nameSeries[xdata]){
+        nameSeries[xdata].push(x)
+      }else{
+        nameSeries[xdata] = [x]
+      }
+    })
+  }
+
+  function createE(){
+    var detailsArr = [] 
+    var postPosArr = [] 
+    for(let i in nameSeries){
+      var dcreateE = document.createElement("details")
+      var screateE = document.createElement("summary")
+      screateE.textContent = i;
+      var inner = screateE.outerHTML + "<br >" 
+
+      nameSeries[i].forEach(x =>{
+        inner += x.outerHTML
+        x.parentElement.style.display = "none"
+      })
+      postPosArr.push(nameSeries[i][0])
+      dcreateE.innerHTML = inner
+      detailsArr.push(dcreateE)
+    }
+    console.info(postPosArr)
+    console.log(detailsArr[0])
+    postPosArr.forEach(a =>{
+      a.parentElement.style.display = "block"
+      a.outerHTML = detailsArr.shift().outerHTML
+    })
+  }
+  createE()
+ })()
+</script>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "sineyuansblog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</body>
+
+</html>
+

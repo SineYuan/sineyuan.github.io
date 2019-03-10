@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="en-us" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    
+    
+    <title>在Android Studio中使用tess-Two</title>
+    
+
+
+    
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/solarized-dark.min.css" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/go.min.js"></script>
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+        <link rel="stylesheet" href="/css/main.css">
+    
+
+    
+    
+
+    
+<script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+</head>
+
+
+<body>
+    <script>
+        window.addEventListener("resize", resizeThrottler, false);
+
+        var resizeTimeout;
+        function resizeThrottler() {
+        
+        if ( !resizeTimeout ) {
+            resizeTimeout = setTimeout(function() {
+            resizeTimeout = null;
+            actualResizeHandler();
+        
+            
+            }, 66);
+        }
+        }
+        actualResizeHandler()
+        function actualResizeHandler() {
+                if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent))
+                {
+                    document.body.classList.add('mobile');
+                }else{
+                    document.body.classList.remove('mobile');  
+                }
+        }</script>
+    
+
+
+    
+
+
+
+<div class="inner" style="position:relative;">
+  
+  <div class="side-btn"><a href="/" class="back">Home</a></div>
+  
+<div class="blog-post">
+  <h2>在Android Studio中使用tess-Two</h2>
+        
+
+<h2 id="tesseract-tess-two">Tesseract &amp; tess-two</h2>
+
+<p><a href="http://code.google.com/p/tesseract-ocr/">Tesseract</a>是一个开源的OCR(optical character Recognition)库，最初由惠普公司开发，然后开源之后由google维护。使用Tesseract可以从图片中识别出文字。Tesseract支持多种文字，还可以针对目标训练自己的识别模型，可以说大大方便了开发者。tess-two是Tesseract在Android平台上的移植。更多信息参阅<a href="https://github.com/rmtheis/tess-two">tess-two主页</a></p>
+
+<h2 id="tess-two在android-studio的配置">tess-two在Android Studio的配置</h2>
+
+<h4 id="1-下载安装android-ndk">1. 下载安装Android NDK</h4>
+
+<h4 id="2-下载解压-tess-two-https-github-com-rmtheis-tess-two-或者直接git-clone">2. 下载解压<a href="https://github.com/rmtheis/tess-two">tess-two</a>或者直接git clone</h4>
+
+<h4 id="3-使用ndk编译解压出来的-tess-two-下的-tess-two-文件夹">3. 使用NDK编译解压出来的 tess-two 下的 tess-two 文件夹</h4>
+
+<pre><code>cd tess-two/tess-two
+ndk-build
+</code></pre>
+
+<h4 id="4-配置android-studio">4. 配置Android Studio</h4>
+
+<p>在你的项目目录下新建一个libraries的文件夹，将NDK编译好的tess-two/tess-two目录复制到libraries下。<br />
+在libraries/tess-two目录下新建一个 build.gradle 的文件。将下面的内容复制进去</p>
+
+<pre><code>apply plugin: 'android-library'
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.5.0'   // 根据你的gradle版本进行调整
+    }
+}
+
+android {
+    compileSdkVersion 23             // 根据你的项目进行调整
+    buildToolsVersion &quot;23.0.2&quot;       // 根据你的项目进行调整
+
+    defaultConfig {
+        minSdkVersion 15             // 根据你的项目进行调整
+        targetSdkVersion 23          // 根据你的项目进行调整
+    }
+
+    sourceSets.main {
+        manifest.srcFile 'AndroidManifest.xml'
+        java.srcDirs = ['src']
+        resources.srcDirs = ['src']
+        res.srcDirs = ['res']
+        jniLibs.srcDirs = ['libs']
+    }
+}
+</code></pre>
+
+<p>然后在项目目录下的 setting.gradle 文件下加入一行</p>
+
+<pre><code>include ':libraries:tess-two'
+</code></pre>
+
+<p>在项目目录下的app/build.gradle 文件中的 dependencies 部分加入一行 <code>compile project(':libraries:tess-two')</code></p>
+
+<pre><code>dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:appcompat-v7:23.1.0'
+    ....
+
+    compile project(':libraries:tess-two')
+}
+</code></pre>
+
+<h4 id="使用tess-two">使用Tess-two</h4>
+
+<p>tess-two 的识别需要提供一个tessdata的文件夹，可以在<a href="http://code.google.com/p/tesseract-ocr/">http://code.google.com/p/tesseract-ocr/</a>中找到。</p>
+
+<p>这里提供一个简单的 demo</p>
+
+<pre><code>import com.googlecode.tesseract.android.TessBaseAPI;
+
+
+public class MainActivity extends AppCompatActivity {
+
+    private static final String SD_PATH= Environment.getExternalStorageDirectory().getPath();
+
+    private Button button;
+    private TextView textView;
+    private EditText editText;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        button = (Button) findViewById(R.id.button);
+        textView = (TextView) findViewById(R.id.textView);
+
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                TessBaseAPI baseApi = new TessBaseAPI();
+                // 指定语言集，sd卡根目录下放置Tesseract的tessdata文件夹   
+                baseApi.init(SD_PATH, &quot;eng&quot;);
+                // 设置psm模式
+                baseApi.setPageSegMode(TessBaseAPI.PageSegMode.PSM_SINGLE_LINE);
+
+                editText = (EditText) findViewById(R.id.editText);
+                String img = editText.getText().toString();
+                // 设置图片
+                baseApi.setImage(new File(SD_PATH + img));
+                // 获取结果
+                final String result = baseApi.getUTF8Text();
+                textView.setText(result);
+                // 释放内存
+                baseApi.clear();
+                baseApi.end();
+
+            }
+        });
+    }
+}
+</code></pre>
+
+<hr />
+
+<p>参考</p>
+
+<p><a href="https://coderwall.com/p/eurvaq/tesseract-with-andoird-and-gradle">https://coderwall.com/p/eurvaq/tesseract-with-andoird-and-gradle</a><br />
+<a href="http://www.kaustubhraghavan.com/ocr.html">http://www.kaustubhraghavan.com/ocr.html</a><br />
+<a href="http://hellosure.github.io/ocr/2014/10/11/tesseract-ocr/">http://hellosure.github.io/ocr/2014/10/11/tesseract-ocr/</a></p>
+
+  </div>
+
+<footer>
+  <hr>
+  <small style="font-size:16px;float:right;margin:0 1rem;">
+    &copy; 2019 <a href="https://github.com/SineYuan">.</a>
+    
+  </small>
+</footer>
+</div> 
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+  crossorigin="anonymous"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+
+
+
+<script>
+ (function(){
+  var seriesA = document.getElementsByTagName("a");
+  seriesA = Array.from(seriesA).filter(x =>x.getAttribute("data-series"));
+  if(seriesA.length){
+    var nameSeries = {}
+    seriesA.forEach(x =>{
+      var xdata = x.getAttribute("data-series")
+      if(nameSeries[xdata]){
+        nameSeries[xdata].push(x)
+      }else{
+        nameSeries[xdata] = [x]
+      }
+    })
+  }
+
+  function createE(){
+    var detailsArr = [] 
+    var postPosArr = [] 
+    for(let i in nameSeries){
+      var dcreateE = document.createElement("details")
+      var screateE = document.createElement("summary")
+      screateE.textContent = i;
+      var inner = screateE.outerHTML + "<br >" 
+
+      nameSeries[i].forEach(x =>{
+        inner += x.outerHTML
+        x.parentElement.style.display = "none"
+      })
+      postPosArr.push(nameSeries[i][0])
+      dcreateE.innerHTML = inner
+      detailsArr.push(dcreateE)
+    }
+    console.info(postPosArr)
+    console.log(detailsArr[0])
+    postPosArr.forEach(a =>{
+      a.parentElement.style.display = "block"
+      a.outerHTML = detailsArr.shift().outerHTML
+    })
+  }
+  createE()
+ })()
+</script>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "sineyuansblog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</body>
+
+</html>
+

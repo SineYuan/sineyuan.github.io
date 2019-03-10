@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="en-us" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    
+    
+    <title>使用LaTex写毕业论文</title>
+    
+
+
+    
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/solarized-dark.min.css" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/go.min.js"></script>
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+        <link rel="stylesheet" href="/css/main.css">
+    
+
+    
+    
+
+    
+<script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+</head>
+
+
+<body>
+    <script>
+        window.addEventListener("resize", resizeThrottler, false);
+
+        var resizeTimeout;
+        function resizeThrottler() {
+        
+        if ( !resizeTimeout ) {
+            resizeTimeout = setTimeout(function() {
+            resizeTimeout = null;
+            actualResizeHandler();
+        
+            
+            }, 66);
+        }
+        }
+        actualResizeHandler()
+        function actualResizeHandler() {
+                if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent))
+                {
+                    document.body.classList.add('mobile');
+                }else{
+                    document.body.classList.remove('mobile');  
+                }
+        }</script>
+    
+
+
+    
+
+
+
+<div class="inner" style="position:relative;">
+  
+  <div class="side-btn"><a href="/" class="back">Home</a></div>
+  
+<div class="blog-post">
+  <h2>使用LaTex写毕业论文</h2>
+        
+
+<p>临近毕业，又是大四狗们忙着写毕业论文的时候了。写论文烦，论文的排版更烦，要对照着论文格式要求，调整位置、大小、字体等细节，还有引用、目录、注脚、参考文献之类的。使用word对论文进行排版有着诸多的不便，那有没有其他更好的方法呢？今天我就来介绍一下使用latex对论文排版的方法。</p>
+
+<h2 id="什么是latex">什么是LaTex</h2>
+
+<blockquote>
+<p>LaTeX是一种基于TeX的排版系统，由美国电脑学家莱斯利·兰伯特在20世纪80年代初期开发，利用这种格式，即使用户没有排版和程序设计的知识也可以充分发挥由TeX所提供的强大功能，能在几天，甚至几小时内生成很多具有书籍质量的印刷品。对于生成复杂表格和数学公式，这一点表现得尤为突出。因此它非常适用于生成高印刷质量的科技和数学类文档。这个系统同样适用于生成从简单的信件到完整书籍的所有其他种类的文档。</p>
+</blockquote>
+
+<p>以上是wiki上的解释。总的来说，LaTex是一套排版系统，与word那种所见即所得对排版方式不太，用LaTex排版更像是写程序一样，将想要的排版效果用指令写出来，再通过LaTex编译成文档。简单来说，你只要按照要求撰写tex文件，就能够通过LaTex生成排版好的pdf文件。
+有些人可能听到写程序就头大了，其实使用命令来排版的好处正是我们可以将各种版式做成模板文件，使用者只要调用模板即可，完全不用去处理字体样大小、位置，目录生成，图片公式序号等诸多细节，使我们专注于内容。更多关于LaTex和word的比较<a href="http://zzg34b.w3.c361.com/homepage/compareWord.htm">这篇文章</a>有很详细的论述。现在使用LaTex听起来是不是很诱人？不过好处也不是白给的，就我的实践来说，LaTex还是有不足之处：</p>
+
+<ol>
+<li>某些项目如表格，图形比word更加复杂</li>
+<li>所见非所得，有错误的话需要重新编译，耗时间</li>
+<li>有一定的门槛，需要一定的学习才能使用</li>
+</ol>
+
+<p>综上所述，我认为学习使用LaTex还是有个不错的选择，LaTex也是可以用来做简历，PPT等文档的。本文的目的也是希望用一些指导来降低LaTex学习使用上的难度。</p>
+
+<h2 id="texlive的安装">TexLive的安装</h2>
+
+<p>LaTex是不支持中文，目前支持中文比较好的发行版是xelatex，安装TexLive就有了。由于大部分人使用的是windows操作系统，所以这里讲解windows下TexLive的安装。
+ 4. 首先我们去<a href="http://tug.org/texlive/acquire-netinstall.html">http://tug.org/texlive/acquire-netinstall.html</a>下载Texlive安装器 install-tl-windows.exe 。
+ 5. 运行install-tl-windows.exe进入安装界面，选择要安装方案
+TexLive全部的安装包有4G，里面有许多其他国家的语言包我们用不着的，所以出现的第一个对话窗选择Custom install。
+<img src="http://7vzu7p.com1.z0.glb.clouddn.com/texlive_install1.PNG" alt="安装界面" />
+点击“进一步定制”右边的“修改”，取消掉一些语言和包
+<img src="http://7vzu7p.com1.z0.glb.clouddn.com/texlive_install2.PNG" alt="此处输入图片的描述" />
+以上是我的选择，总大小在3G，这个方案应该还有再精简的空间，不过我也没精力再去实验了。
+ 3. 等待下载安装完成即可。</p>
+
+<h2 id="安装编辑器">安装编辑器</h2>
+
+<p>工欲善其事，必先利其器。TexLive自带的编辑器TeXworks功能太少，我们换一个更强大的编辑器TexMaker。TexMaker功能强大，对于公式表格等都有很好的支持。<a href="http://7x2vvx.com1.z0.glb.clouddn.com/texmakerwin32usb.zip">[点我下载]</a>直接解压运行文件夹里面的texmaker即可使用。</p>
+
+<h2 id="学习latex">学习LaTex</h2>
+
+<p>使用LaTex没有一点基础是不行的，但我们也无需成为一个LaTex的高手，除非是做科研的，那个时间成本可是很大的，一些基本入门教程，遇到问题勤搜索就可以了。下面是一些不错的基础教程推荐给大家。<br />
+<a href="http://liam0205.me/2014/09/08/latex-introduction/">一份其实很短的 LaTeX 入门文档</a><br />
+<a href="http://read.pudn.com/downloads64/doc/224777/lshort412.pdf">LATEX 2ε 入门指南</a><br />
+<a href="ftp://cs2.swfu.edu.cn/pub/resources/Books/TeX/xetex-tutorial.pdf">XeLaTEX/LATEX 中文排版之胡言乱语</a></p>
+
+<h2 id="模板">模板</h2>
+
+<p>自制模板是一件十分复杂麻烦的事情，不过好在很多高校都有LaTex论文模板，这里推荐一个网站<a href="http://www.latexstudio.net/">LaTexStudio</a>，上面收集有很多高校的论文模板和教程资源。
+<a href="http://www.latexstudio.net/category/latex-templates/internal-university-tex-template/">模板点我直达</a>
+一般下载文件里面都会说明使用方法的，跟着做就是了。</p>
+
+  </div>
+
+<footer>
+  <hr>
+  <small style="font-size:16px;float:right;margin:0 1rem;">
+    &copy; 2019 <a href="https://github.com/SineYuan">.</a>
+    
+  </small>
+</footer>
+</div> 
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+  crossorigin="anonymous"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+
+
+
+<script>
+ (function(){
+  var seriesA = document.getElementsByTagName("a");
+  seriesA = Array.from(seriesA).filter(x =>x.getAttribute("data-series"));
+  if(seriesA.length){
+    var nameSeries = {}
+    seriesA.forEach(x =>{
+      var xdata = x.getAttribute("data-series")
+      if(nameSeries[xdata]){
+        nameSeries[xdata].push(x)
+      }else{
+        nameSeries[xdata] = [x]
+      }
+    })
+  }
+
+  function createE(){
+    var detailsArr = [] 
+    var postPosArr = [] 
+    for(let i in nameSeries){
+      var dcreateE = document.createElement("details")
+      var screateE = document.createElement("summary")
+      screateE.textContent = i;
+      var inner = screateE.outerHTML + "<br >" 
+
+      nameSeries[i].forEach(x =>{
+        inner += x.outerHTML
+        x.parentElement.style.display = "none"
+      })
+      postPosArr.push(nameSeries[i][0])
+      dcreateE.innerHTML = inner
+      detailsArr.push(dcreateE)
+    }
+    console.info(postPosArr)
+    console.log(detailsArr[0])
+    postPosArr.forEach(a =>{
+      a.parentElement.style.display = "block"
+      a.outerHTML = detailsArr.shift().outerHTML
+    })
+  }
+  createE()
+ })()
+</script>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "sineyuansblog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</body>
+
+</html>
+

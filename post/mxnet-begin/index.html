@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="en-us" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    
+    
+    <title>MXNet上手</title>
+    
+
+
+    
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/solarized-dark.min.css" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/go.min.js"></script>
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+        <link rel="stylesheet" href="/css/main.css">
+    
+
+    
+    
+
+    
+<script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+</head>
+
+
+<body>
+    <script>
+        window.addEventListener("resize", resizeThrottler, false);
+
+        var resizeTimeout;
+        function resizeThrottler() {
+        
+        if ( !resizeTimeout ) {
+            resizeTimeout = setTimeout(function() {
+            resizeTimeout = null;
+            actualResizeHandler();
+        
+            
+            }, 66);
+        }
+        }
+        actualResizeHandler()
+        function actualResizeHandler() {
+                if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent))
+                {
+                    document.body.classList.add('mobile');
+                }else{
+                    document.body.classList.remove('mobile');  
+                }
+        }</script>
+    
+
+
+    
+
+
+
+<div class="inner" style="position:relative;">
+  
+  <div class="side-btn"><a href="/" class="back">Home</a></div>
+  
+<div class="blog-post">
+  <h2>MXNet上手</h2>
+        <p>折腾了一段时间Tensorflw后，感觉Tensorflow各方面都非常不错，无论是Tensorflow Serving还是TensorBoard，不得不说Google的大腿就是粗啊。不过Tensorflow在性能上的并不怎么好，训练的时间和内存占用都很高。不过Tensorflow 1.0后也加入了新的实验特性来提高性能，相信Tensorflow以后性能不会再是大的问题。穷人家的孩子还得节俭持家， 所以我把目光投向了MXNet。</p>
+
+<p>MXNet是一个兼具性灵活和效率的深度学习框架。灵活指的是MXNet兼容声明式和指令式两种编程方式，可以很灵活的定义自己需要的东西。而效率则指MXNet在底层做了很多的优化(具体可以看<a href="https://github.com/dmlc/mxnet/blob/master/docs/zh/note_memory.md">这篇文章</a>)，速度与内存消耗方面都做的很好。</p>
+
+<p>不过相比Tensorflow，MXNet的上手难度要高，文档方面对新手还是不太友好。入门教程可以很快的跑一个MNIST识别的demo，但用高级的<code>module</code>封装了很多细节，当新手要自定义loss函数时往往不知所措。其实我觉得学习MXNet基本概念最开始要看的是<a href="http://mxnet.io/api/python/symbol_in_pictures.html">Symbolic Configuration and Execution in Pictures</a>这篇文章。以这篇文章的例子来说
+<img src="https://raw.githubusercontent.com/dmlc/web-data/master/mxnet/symbol/executor_forward.png" alt="build process" /></p>
+
+<p>我们定义Symbol<code>A</code>,<code>B</code>,<code>C</code>,<code>D</code>,<code>E</code>，其中<code>A</code>, <code>B</code>, <code>D</code>为输入节点，<code>E</code>为输出节点，然后绑定输入数据<code>a</code>,<code>b</code>,<code>d</code>到<code>E</code>生成Executor， 最后Executor调用<code>forward</code>计算网络输出。</p>
+
+<p>除了多一步绑定数据生成Executor，其他跟Tensorflow还是很像的，可以类比Tensorflow的</p>
+
+<pre><code>sess.run(E, feed_dict={A: a, B: b, D: d})
+</code></pre>
+
+<p>当我们需要训练模型的时候，我们就需要计算模型中参数的梯度，计算梯度需要调用Executor的<code>backward</code>方法。
+<img src="https://raw.githubusercontent.com/dmlc/web-data/master/mxnet/symbol/executor_backward.png" alt="build process" /></p>
+
+<p>如上，绑定的时候通过<code>args_grad</code>对待求解参数输入一个空的<code>NDArray</code>用于存放梯度计算结果，新版MXNet的API和上图有些不同，如果需要计算梯度，调用<code>forward</code>时需要带上<code>is_train</code>参数</p>
+
+<pre><code>executor.forward(is_train=True)
+</code></pre>
+
+<p>执行<code>forward</code>后再执行<code>backward</code>方法求解梯度，之后就能得到节点<code>A</code>的梯度</p>
+
+<pre><code>In [4]: exec.grad_dict['A'].asnumpy()
+Out[4]: array([ 4.], dtype=float32)
+</code></pre>
+
+<p>计算出梯度后我们就可以根据梯度更新模型参数，一遍一遍的迭代直到训练结束。</p>
+
+<p>从上面的过程可以看出，<code>bind</code>这套api还是很低层的，很多东西都要我们手工完成，所以MXNet在这基础上提供了更高层的api方便开发。我们可以在MXNet项目代码的<code>example/module</code>中的demo里面学习基础用法，这里就直接copy过来</p>
+
+<p>中等层次的api</p>
+
+<pre><code>################################################################################
+# Intermediate-level API
+################################################################################
+mod = mx.mod.Module(softmax)
+mod.bind(data_shapes=train_dataiter.provide_data, label_shapes=train_dataiter.provide_label)
+mod.init_params()
+
+mod.init_optimizer(optimizer_params={'learning_rate':0.01, 'momentum': 0.9})
+metric = mx.metric.create('acc')
+
+for i_epoch in range(n_epoch):
+    for i_iter, batch in enumerate(train_dataiter):
+        mod.forward(batch)
+        mod.update_metric(metric, batch.label)
+
+        mod.backward()
+        mod.update()
+
+    for name, val in metric.get_name_value():
+        print('epoch %03d: %s=%f' % (i_epoch, name, val))
+    metric.reset()
+    train_dataiter.reset()
+</code></pre>
+
+<p>高级api，这个就很简单了</p>
+
+<pre><code>################################################################################
+# High-level API
+################################################################################
+logging.basicConfig(level=logging.DEBUG)
+train_dataiter.reset()
+mod = mx.mod.Module(softmax)
+mod.fit(train_dataiter, eval_data=val_dataiter,
+        optimizer_params={'learning_rate':0.01, 'momentum': 0.9}, num_epoch=n_epoch)
+</code></pre>
+
+<p>总的来说个人感觉MXNet还是一个非常不错的框架, 开发社区也很活跃，目前有了AWS官方的支持，希望后面越来越好。</p>
+
+  </div>
+
+<footer>
+  <hr>
+  <small style="font-size:16px;float:right;margin:0 1rem;">
+    &copy; 2019 <a href="https://github.com/SineYuan">.</a>
+    
+  </small>
+</footer>
+</div> 
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+  crossorigin="anonymous"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+
+
+
+<script>
+ (function(){
+  var seriesA = document.getElementsByTagName("a");
+  seriesA = Array.from(seriesA).filter(x =>x.getAttribute("data-series"));
+  if(seriesA.length){
+    var nameSeries = {}
+    seriesA.forEach(x =>{
+      var xdata = x.getAttribute("data-series")
+      if(nameSeries[xdata]){
+        nameSeries[xdata].push(x)
+      }else{
+        nameSeries[xdata] = [x]
+      }
+    })
+  }
+
+  function createE(){
+    var detailsArr = [] 
+    var postPosArr = [] 
+    for(let i in nameSeries){
+      var dcreateE = document.createElement("details")
+      var screateE = document.createElement("summary")
+      screateE.textContent = i;
+      var inner = screateE.outerHTML + "<br >" 
+
+      nameSeries[i].forEach(x =>{
+        inner += x.outerHTML
+        x.parentElement.style.display = "none"
+      })
+      postPosArr.push(nameSeries[i][0])
+      dcreateE.innerHTML = inner
+      detailsArr.push(dcreateE)
+    }
+    console.info(postPosArr)
+    console.log(detailsArr[0])
+    postPosArr.forEach(a =>{
+      a.parentElement.style.display = "block"
+      a.outerHTML = detailsArr.shift().outerHTML
+    })
+  }
+  createE()
+ })()
+</script>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "sineyuansblog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</body>
+
+</html>
+

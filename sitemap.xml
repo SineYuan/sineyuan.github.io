@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/simd-intuitive/</loc>
+    <lastmod>2019-01-08T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/clickhouse-source-guide/</loc>
+    <lastmod>2018-12-09T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/clickhouse-kafka/</loc>
+    <lastmod>2018-01-14T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/clickhouse-docker-quick-start/</loc>
+    <lastmod>2017-12-29T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/mxnet-begin/</loc>
+    <lastmod>2017-03-16T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/tensorflow-mnist-pratice/</loc>
+    <lastmod>2017-03-02T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/tensorflow-windows-installation/</loc>
+    <lastmod>2017-02-19T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/go-naming/</loc>
+    <lastmod>2017-01-27T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/go-error-handle/</loc>
+    <lastmod>2016-08-28T01:25:03+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/deploy-k8s-on-coreos/</loc>
+    <lastmod>2016-05-29T22:07:38+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/coreos-osx-without-vagrant/</loc>
+    <lastmod>2016-05-29T11:35:27+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/tornado-source-code-3/</loc>
+    <lastmod>2016-01-25T00:19:32+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/tornado-source-code-2/</loc>
+    <lastmod>2016-01-19T21:01:28+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/tornado-source-code-1/</loc>
+    <lastmod>2016-01-19T20:11:34+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/python-captcha/</loc>
+    <lastmod>2016-01-06T21:18:32+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/android-studio-tess-two/</loc>
+    <lastmod>2016-01-02T17:49:15+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/android-package-cmd/</loc>
+    <lastmod>2015-03-05T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/latex-thesis/</loc>
+    <lastmod>2015-03-02T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/pelican-configure/</loc>
+    <lastmod>2015-03-01T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/setup-blog/</loc>
+    <lastmod>2015-02-28T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/categories/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/pelican-configure/</loc>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/post/</loc>
+    <lastmod>2019-01-08T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/</loc>
+    <lastmod>2019-01-08T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://sineyuan.github.io/tags/</loc>
+    <priority>0</priority>
+  </url>
+  
+</urlset>

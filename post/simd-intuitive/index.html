@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="en-us" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    
+    
+    <title>SIMD直观介绍</title>
+    
+
+
+    
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/solarized-dark.min.css" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/go.min.js"></script>
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+        <link rel="stylesheet" href="/css/main.css">
+    
+
+    
+    
+
+    
+<script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+</head>
+
+
+<body>
+    <script>
+        window.addEventListener("resize", resizeThrottler, false);
+
+        var resizeTimeout;
+        function resizeThrottler() {
+        
+        if ( !resizeTimeout ) {
+            resizeTimeout = setTimeout(function() {
+            resizeTimeout = null;
+            actualResizeHandler();
+        
+            
+            }, 66);
+        }
+        }
+        actualResizeHandler()
+        function actualResizeHandler() {
+                if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent))
+                {
+                    document.body.classList.add('mobile');
+                }else{
+                    document.body.classList.remove('mobile');  
+                }
+        }</script>
+    
+
+
+    
+
+
+
+<div class="inner" style="position:relative;">
+  
+  <div class="side-btn"><a href="/" class="back">Home</a></div>
+  
+<div class="blog-post">
+  <h2>SIMD直观介绍</h2>
+        
+
+<p>上期讲到了Clickhoue性能高的原因是应用了向量化技术,也就是SIMD(Single Instruction Multiple Data，单指令多数据流)的指令来一次处理多个数据。这么讲有点抽象，今天就用几个例子感受一下SIMD具体是怎么运作的。</p>
+
+<p>本文例子来自<a href="https://dendibakh.github.io/blog/2017/10/24/Vectorization_part1">dendibakh的博客系列</a>，一个非常好的介绍SIMD的系列，十分推荐。</p>
+
+<h2 id="first-look">First Look</h2>
+
+<p>先来看个简单的例子</p>
+
+<pre><code>#include &lt;vector&gt;
+void foo( std::vector&lt;unsigned&gt;&amp; lhs, std::vector&lt;unsigned&gt;&amp; rhs )
+{
+    for( unsigned i = 0; i &lt; lhs.size(); i++ )
+    {
+            lhs[i] = ( rhs[i] + 1 ) &gt;&gt; 1;
+    }
+}
+
+</code></pre>
+
+<p>我们用clang加上 <code>-O2 -march=core-avx2 -std=c++14 -fno-unroll-loops</code> 的编译选项来编译上面这段代码，<code>-fno-unroll-loops</code>告诉编译器禁止做循环展开的优化，<code>-march=core-avx2</code>提示编译器使用 <code>avx2</code> 指令集来做向量话。编译生成的汇编代码可以直观的在<a href="https://godbolt.org/#g:!((g:!((g:!((h:codeEditor,i:(j:1,source:'%23include+%3Cvector%3E%0Avoid+foo(+std::vector%3Cunsigned%3E%26+lhs,+std::vector%3Cunsigned%3E%26+rhs+)%0A%7B%0A++++for(+unsigned+i+%3D+0%3B+i+%3C+lhs.size()%3B+i%2B%2B+)%0A++++%7B%0A++++++++++++lhs%5Bi%5D+%3D+(+rhs%5Bi%5D+%2B+1+)+%3E%3E+1%3B++++++++%0A++++%7D%0A%7D'),l:'5',n:'0',o:'C%2B%2B+source+%231',t:'0')),header:(),k:50,l:'4',m:100,n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:clang_trunk,filters:(b:'0',binary:'1',commentOnly:'0',demangle:'0',directives:'0',execute:'1',intel:'0',trim:'0'),libs:!(),options:'-O2+-march%3Dcore-avx2+-std%3Dc%2B%2B14+-fno-unroll-loops',source:1),l:'5',n:'0',o:'x86-64+clang+(trunk)+(Editor+%231,+Compiler+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4">Compiler Explorer</a>看到结果。</p>
+
+<p>我们可以看到，循环内的代码实际上生成来两个版本，一个是正常版</p>
+
+<pre><code>mov edx, dword ptr [r9 + 4*rsi]         # loading rhs[i]
+add edx, 1                              # rhs[i] + 1
+shr edx                                 # (rhs[i] + 1) &gt;&gt; 1
+mov dword ptr [rax + 4*rsi], edx        # store result to lhs
+mov esi, edi
+add edi, 1                              # incrementing i by 1
+cmp rcx, rsi
+ja &lt;next iteration&gt;
+</code></pre>
+
+<p>一个是使用了AVX2指令的向量化版本</p>
+
+<pre><code>vmovdqu ymm1, ymmword ptr [r9 + 4*rdi]  # loading 256 bits from rhs
+vpsubd ymm1, ymm1, ymm0                 # ymm0 has all bits set, like +1
+vpsrld ymm1, ymm1, 1                    # vector shift right.
+vmovdqu ymmword ptr [rax + 4*rdi], ymm1 # storing result 
+add rdi, 8                              # incrementing i by 8
+cmp rsi, rdi
+jne &lt;next iteration&gt;
+</code></pre>
+
+<p>在进入循环的时候会先判断<code>lhs</code>未处理的元素的大小是否大于8，若大于8个，则使用向量化的版本一次循环处理8个数字，若到后面小于8个待处理的元素，则使用正常的版本一个个数字处理。</p>
+
+<p>其实大部分的汇编代码模式都是类似的，遵循 加载数据-&gt;处理数据-&gt;写回数据 这样的模式。对比两个版本的代码也可以看出，向量版的也是这样的模式，只是指令变成了可以一次操作多个数的版本， <code>mov</code>变成了<code>vmovdqu</code>, <code>shr</code>变成了<code>vpsrld</code>之类的。寄存器使用的也是位数更多的寄存器(256位的YMM寄存器或128位的XMM寄存器)。</p>
+
+<h2 id="更复杂的例子">更复杂的例子</h2>
+
+<p>下面我们再来详细看一个复杂点的例子。(<a href="https://godbolt.org/#g:!((g:!((g:!((h:codeEditor,i:(j:1,source:'int+foo(+short+a%5B16%5D,+unsigned+short+b%5B16%5D,+unsigned+short+bias%5B16%5D+)%0A%7B%0A++++int+agg+%3D+0%3B%0A++++for(+int+i+%3D+0%3B+i+%3C+16%3B+i%2B%2B+)%0A++++%7B+%0A%09%09if(+a%5Bi%5D+%3E+0+)+%0A%09%09%09a%5Bi%5D+%3D+(bias%5Bi%5D+%2B+a%5Bi%5D)+*+b%5Bi%5D+%3E%3E+16%3B+%0A%09%09else+%0A%09%09%09a%5Bi%5D+%3D+-+((bias%5Bi%5D+-+a%5Bi%5D)+*+b%5Bi%5D+%3E%3E+16)%3B+%0A%09%09agg+%2B%3D+a%5Bi%5D%3B+%0A%09%7D%0A++++return+agg%3B%0A%7D'),l:'5',n:'0',o:'C%2B%2B+source+%231',t:'0')),header:(),k:50,l:'4',m:100,n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:gsnapshot,filters:(b:'0',binary:'1',commentOnly:'0',demangle:'0',directives:'0',execute:'1',intel:'0',trim:'0'),libs:!(),options:'-O3+-march%3Dcore-avx2',source:1),l:'5',n:'0',o:'x86-64+gcc+(trunk)+(Editor+%231,+Compiler+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4">godbolt</a>)</p>
+
+<pre><code>int foo( short a[16], unsigned short b[16], unsigned short bias[16] )
+{
+  int agg = 0;
+  for( int i = 0; i &lt; 16; i++ )
+  { 
+    if( a[i] &gt; 0 ) 
+      a[i] = (bias[i] + a[i]) * b[i] &gt;&gt; 16; 
+    else 
+      a[i] = - ((bias[i] - a[i]) * b[i] &gt;&gt; 16); 
+    agg += a[i]; 
+  }
+  return agg;
+}
+</code></pre>
+
+<p>我们一段一段来看：</p>
+
+<h3 id="加载数据">加载数据</h3>
+
+<pre><code> vmovdqu ymm4,YMMWORD PTR [rdi] # a[]
+ vmovdqu ymm2,YMMWORD PTR [rdx] # bias[]
+ vmovdqu ymm5,YMMWORD PTR [rsi] # b[]
+ vmovdqa ymm6,YMMWORD PTR [rip+0x5c6] # 400b00
+</code></pre>
+
+<p>上面的指令只是单纯的加载数据到YMM寄存器里面，执行之后结果如下</p>
+
+<p><img src="/imgs/Loading.png" alt="" /></p>
+
+<h3 id="解压">解压</h3>
+
+<p>由于16位数的相加可能会移除，所以我们要把16位的整数扩展成32位的整数。</p>
+
+<pre><code>vpmovzxwd ymm1,xmm2
+vextracti128 xmm8,ymm4,0x1
+vextracti128 xmm2,ymm2,0x1
+
+vpmovzxwd ymm9,xmm5
+vpmovzxwd ymm2,xmm2
+vpmovsxwd ymm0,xmm4
+vpmovsxwd ymm8,xmm8
+vextracti128 xmm5,ymm5,0x1
+</code></pre>
+
+<p>上面一顿操作之后，寄存器里面就变成了</p>
+
+<p><img src="/imgs/Extracting2.png" alt="" /></p>
+
+<h3 id="计算">计算</h3>
+
+<p>当数据都准备好后，就可以用<code>vpaddd</code>, <code>vpsubd</code>, <code>vpmuld</code>等指令批量做运算了</p>
+
+<pre><code>vpaddd ymm3,ymm1,ymm0
+vpmovzxwd ymm5,xmm5
+vpsubd ymm0,ymm1,ymm0
+vpsubd ymm1,ymm2,ymm8
+vpmulld ymm0,ymm0,ymm9
+vpmulld ymm1,ymm1,ymm5
+vpaddd ymm7,ymm2,ymm8
+vpmulld ymm3,ymm3,ymm9
+vpmulld ymm7,ymm7,ymm5
+</code></pre>
+
+<p>结果如下</p>
+
+<p><img src="/imgs/Computation.png" alt="" /></p>
+
+<p>注意，我们的循环代码里面有个if分支，那向量优化是如何做遇上if又是怎么做的呢？从上图的结果来看，十分的暴力，直接就都算了两个分支的结果，<code>(bias[i] + a[i]) * b[i]</code>的结果用<code>result of +</code>表示，保存在ymm3和ymm7。<code>(bias[i] - a[i]) * b[i]</code>的结果用<code>result of - *</code>表示，保存在ymm0和ymm1。</p>
+
+<p>后面还要再接一个位移操作</p>
+
+<pre><code>vpsrad ymm0,ymm0,0x10
+vpsrad ymm1,ymm1,0x10
+vpand ymm1,ymm6,ymm1
+vpsrad ymm3,ymm3,0x10
+vpand ymm0,ymm6,ymm0
+</code></pre>
+
+<p><img src="/imgs/Shifting.png" alt="" /></p>
+
+<h3 id="打包">打包</h3>
+
+<pre><code>vpackusdw ymm0,ymm0,ymm1
+vpsrad ymm7,ymm7,0x10
+vpxor xmm1,xmm1,xmm1
+</code></pre>
+
+<p>把32位的结果打包变回16位整数。</p>
+
+<p><img src="/imgs/Packing.png" alt="" /></p>
+
+<h3 id="处理if语句">处理If语句</h3>
+
+<pre><code>vpcmpgtw ymm4,ymm4,ymm1
+vpand ymm3,ymm6,ymm3
+vpand ymm7,ymm6,ymm7
+vpackusdw ymm3,ymm3,ymm7
+</code></pre>
+
+<p>指令<code>vpcmpgtw ymm4,ymm4,ymm1</code>一次性比较ymm4和ymm1中每个16位整数的大小，结果保存回ymm4里面，也就是代码里面的<code>if( a[i] &gt; 0 )</code>判断。</p>
+
+<p><img src="/imgs/IfStatement.png" alt="" /></p>
+
+<h3 id="写回">写回</h3>
+
+<pre><code>vpermq ymm0,ymm0,0xd8
+vpermq ymm3,ymm3,0xd8
+vpsubw ymm0,ymm1,ymm0
+vpblendvb ymm0,ymm0,ymm3,ymm4
+vpmovsxwd ymm1,xmm0
+vmovdqu YMMWORD PTR [rdi],ymm0
+</code></pre>
+
+<p><code>vpermq</code>用于整理数据，<code>vpsubw ymm0,ymm1,ymm0</code>把ymm0的数据取负数。</p>
+
+<p>最关键的是<code>vpblendvb ymm0,ymm0,ymm3,ymm4</code>，这条指令会根据ymm3的标示，从ymm0或者ymm3取数据到ymm0，由此就实现了if的功能。</p>
+
+<p>后面还有累加ymm0的结果到变量<code>agg</code>的代码就忽略了。</p>
+
+<h2 id="数据依赖">数据依赖</h2>
+
+<p>有时候数据之间会有依赖关系，不能简单的并行化，就比如</p>
+
+<pre><code>void foo( unsigned short * a, unsigned short * b )
+{
+  for( int i = 0; i &lt; 128; i++ )
+  {
+    a[i] += b[i]; 
+  }
+}
+</code></pre>
+
+<p>我们调用的<code>foo</code>函数的时候有</p>
+
+<pre><code>  unsigned short x[] = {1, 1, 1, 1, ... , 1}; // 129 elements
+  unsigned short* a = x + 1;
+  unsgined short* b = x;
+  foo (a, b);
+</code></pre>
+
+<p>正常的计算由于a和b是指向的是同一个数组，会得出结果 <code>x = {1, 2, 3, 4, 5, ... }</code>，但若是向量化的话，就会得出<code>x = (2, 2, 2, 2, ...)</code>的结果。</p>
+
+<p>但实际上我们的计算结果是正确的，那是因为编译器在会为在计算前为我们做个变量的别名检查(<a href="https://godbolt.org/#g:!((g:!((g:!((h:codeEditor,i:(j:1,source:'void+foo(+unsigned+short+*+a,+unsigned+short+*+b+)%0A%7B%0A++++for(+int+i+%3D+0%3B+i+%3C+128%3B+i%2B%2B+)%0A%09%7B%0A++++++++a%5Bi%5D+%2B%3D+b%5Bi%5D%3B+%0A%09%7D%0A%7D'),l:'5',n:'0',o:'C%2B%2B+source+%231',t:'0')),header:(),k:50,l:'4',m:100,n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:clang500,filters:(b:'0',binary:'1',commentOnly:'0',demangle:'0',directives:'0',execute:'1',intel:'0',trim:'0'),libs:!(),options:'-O3+-march%3Dcore-avx2',source:1),l:'5',n:'0',o:'x86-64+clang+5.0.0+(Editor+%231,+Compiler+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4">godbolt</a>)</p>
+
+<pre><code>lea rax, [rsi + 256] # calculating the end of b (b + 128)
+cmp rax, rdi         # comparing the beginning of a and the end of b
+jbe .LBB0_4
+lea rax, [rdi + 256] # calculating the end of a (a + 128)
+cmp rax, rsi         # comparing the beginning of b and the end of a
+jbe .LBB0_4
+xor eax, eax
+  &lt;scalar version&gt;
+.LBB0_4:
+  &lt;vector version&gt;`
+</code></pre>
+
+<p>若发现这种变量别名的时候就会走正常的版本，确保计算结果的正确性，但这也引入了检查的开销。</p>
+
+<p>当然如果你确定你的程序不会出现这种情况，可以通过<code>__restrict__</code>关键字取消检查(<a href="https://godbolt.org/#g:!((g:!((g:!((h:codeEditor,i:(j:1,source:'void+foo(+unsigned+short+*+__restrict__++a,+unsigned+short+*+__restrict__+b+)%0A%7B%0A++++for(+int+i+%3D+0%3B+i+%3C+128%3B+i%2B%2B+)%0A%09%7B%0A++++++++a%5Bi%5D+%2B%3D+b%5Bi%5D%3B+%0A%09%7D%0A%7D'),l:'5',n:'0',o:'C%2B%2B+source+%231',t:'0')),header:(),k:50,l:'4',m:100,n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:clang500,filters:(b:'0',binary:'1',commentOnly:'0',demangle:'0',directives:'0',execute:'1',intel:'0',trim:'0'),libs:!(),options:'-O3+-march%3Dcore-avx2',source:1),l:'5',n:'0',o:'x86-64+clang+5.0.0+(Editor+%231,+Compiler+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4">link to godbolt</a>）</p>
+
+<h2 id="最后">最后</h2>
+
+<p>其实大部分时候编译器都会帮助我们自动的做向量化的优化，我们是不需要自己手动使用SIMD指令去写代码的。不过了解一点相关知识还是有助于写出性能更高的代码的。</p>
+
+  </div>
+
+<footer>
+  <hr>
+  <small style="font-size:16px;float:right;margin:0 1rem;">
+    &copy; 2019 <a href="https://github.com/SineYuan">.</a>
+    
+  </small>
+</footer>
+</div> 
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+  crossorigin="anonymous"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+
+
+
+<script>
+ (function(){
+  var seriesA = document.getElementsByTagName("a");
+  seriesA = Array.from(seriesA).filter(x =>x.getAttribute("data-series"));
+  if(seriesA.length){
+    var nameSeries = {}
+    seriesA.forEach(x =>{
+      var xdata = x.getAttribute("data-series")
+      if(nameSeries[xdata]){
+        nameSeries[xdata].push(x)
+      }else{
+        nameSeries[xdata] = [x]
+      }
+    })
+  }
+
+  function createE(){
+    var detailsArr = [] 
+    var postPosArr = [] 
+    for(let i in nameSeries){
+      var dcreateE = document.createElement("details")
+      var screateE = document.createElement("summary")
+      screateE.textContent = i;
+      var inner = screateE.outerHTML + "<br >" 
+
+      nameSeries[i].forEach(x =>{
+        inner += x.outerHTML
+        x.parentElement.style.display = "none"
+      })
+      postPosArr.push(nameSeries[i][0])
+      dcreateE.innerHTML = inner
+      detailsArr.push(dcreateE)
+    }
+    console.info(postPosArr)
+    console.log(detailsArr[0])
+    postPosArr.forEach(a =>{
+      a.parentElement.style.display = "block"
+      a.outerHTML = detailsArr.shift().outerHTML
+    })
+  }
+  createE()
+ })()
+</script>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "sineyuansblog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</body>
+
+</html>
+

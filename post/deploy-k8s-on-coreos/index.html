@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="en-us" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    
+    
+    <title>CoreOS部署kubernetes</title>
+    
+
+
+    
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/solarized-dark.min.css" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/go.min.js"></script>
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+        <link rel="stylesheet" href="/css/main.css">
+    
+
+    
+    
+
+    
+<script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+</head>
+
+
+<body>
+    <script>
+        window.addEventListener("resize", resizeThrottler, false);
+
+        var resizeTimeout;
+        function resizeThrottler() {
+        
+        if ( !resizeTimeout ) {
+            resizeTimeout = setTimeout(function() {
+            resizeTimeout = null;
+            actualResizeHandler();
+        
+            
+            }, 66);
+        }
+        }
+        actualResizeHandler()
+        function actualResizeHandler() {
+                if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent))
+                {
+                    document.body.classList.add('mobile');
+                }else{
+                    document.body.classList.remove('mobile');  
+                }
+        }</script>
+    
+
+
+    
+
+
+
+<div class="inner" style="position:relative;">
+  
+  <div class="side-btn"><a href="/" class="back">Home</a></div>
+  
+<div class="blog-post">
+  <h2>CoreOS部署kubernetes</h2>
+        
+
+<h2 id="准备工作">准备工作</h2>
+
+<h3 id="下载kubernetes">下载Kubernetes</h3>
+
+<p>在<a href="https://github.com/kubernetes/kubernetes/releases">github</a>下载最新的kuberbetes二进制包，这里我下载的是v1.2.4的版本。</p>
+
+<pre><code>tar zxvf kubernetes.tar.gz
+cd kubernetes
+// 解压amd64的版本
+tar zxvf kubernetes/server/kubernetes-server-linux-amd64.tar.gz
+cd kubernetes/server/kubernetes/server/bin
+
+// 将下列文件复制到各个节点上
+cp kube-apiserver kube-proxy kubelet kube-scheduler kube-controller-manager /opt/bin
+</code></pre>
+
+<p>将kube-apiserver kube-proxy kubelet kube-scheduler kube-controller-manager复制到各个节点上，我这里放到各个节点到<code>/opt/bin</code>文件夹里</p>
+
+<h3 id="启动etcd">启动etcd</h3>
+
+<p>可以参考<a href="http://sineyuan.github.io/2016/05/29/coreos-osx-without-vagrant/">前文</a>。确保etcdctl命令可用。在这里我用etcd2代替etcd</p>
+
+<h2 id="配置网络">配置网络</h2>
+
+<p>由于每个节点docker容器的ip可能是相同的，为了使不同节点上的docker容器能够互相连接，所以需要有一种方法来统一分配每个节点的docker容器ip，防止冲突，并提供不同节点容器的连接能力，也就是SDN(software defined network) kubernetes没有提供这个功能，不过有许多的kubernetes社区有许多解决方案。如<code>flannel</code>,<code>calico</code>, <code>OVS</code> 等</p>
+
+<p>这里我选用CoreOS的flannel</p>
+
+<p>flannel使用etcd来保存子网ip等分配，新加入节点的flanned通过访问etcd来获取一个可用的子网网段，并负责容器间的代理转发。</p>
+
+<p>在CoreOS中自带flannel.service，但实际上CoreOS为了节省空间，这个service实际上是运行了一个flannel的docker容器，第一次启动时需要从网络下载flannel的镜像。由于众所周知的原因，我们还是下载编译好的二进制包吧。</p>
+
+<p>在<a href="https://github.com/coreos/flannel">https://github.com/coreos/flannel</a>下载最新的release，解压出flanneld，同样放入<code>/opt/bin</code>里</p>
+
+<p>在所有节点<code>/etc/systemd/system/*.service</code>里添加<code>flannel.service</code>文件</p>
+
+<pre><code>[Unit]
+Description=Flannel network fabric for CoreOS
+Requires=etcd2.service
+After=etcd2.service
+
+[Service]
+EnvironmentFile=/etc/environment
+ExecStartPre=-/bin/bash -c &quot;until /usr/bin/etcdctl set /coreos.com/network/config '{\&quot;Network\&quot;: \&quot;10.100.0.0/16\&quot;}'; do echo \&quot;waiting for etcd to become available...\&quot;; sleep 5; done&quot;
+ExecStart=/opt/bin/flanneld -iface=$private_ipv4
+ExecStartPost=-/bin/bash -c &quot;until [ -e /run/flannel/subnet.env ]; do echo \&quot;waiting for write.\&quot;; sleep 3; done&quot;
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target    
+</code></pre>
+
+<p>flanneld成功获取到子网网段后会以环境变量的形式保存在<code>/run/flannel/subnet.env</code>文件里。我们再修改<code>docker.service</code></p>
+
+<pre><code>[Unit]
+Description=Docker Application Container Engine
+Documentation=http://docs.docker.com
+After=docker.socket early-docker.target network.target flannel.service
+Requires=docker.socket early-docker.target flannel.service
+
+[Service]
+Environment=&quot;DOCKER_CGROUPS=--exec-opt native.cgroupdriver=systemd&quot;
+EnvironmentFile=/run/flannel/subnet.env
+MountFlags=slave
+LimitNOFILE=1048576
+LimitNPROC=1048576
+ExecStartPre=-/usr/bin/ip link set dev docker0 down
+ExecStartPre=-/usr/sbin/brctl delbr docker0
+ExecStart=/usr/lib/coreos/dockerd daemon --host=fd:// $DOCKER_OPTS $DOCKER_CGROU --bip=${FLANNEL_SUBNET} --mtu=${FLANNEL_MTU} $DOCKER_OPTS
+
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+
+<p>使用subnet.env中的参数启动docker service, 保证不同节点的docker容器网段不同。</p>
+
+<h3 id="配置kubernetes组件">配置kubernetes组件</h3>
+
+<p>etcd和网络配置好了以后后面的就没什么的了。
+在<code>/etc/systemd/system/*.service</code>下创建systemd服务文件方便我们管理这些服务</p>
+
+<p>在master节点创建</p>
+
+<p><code>kube-apiserver.service</code></p>
+
+<pre><code>[Unit]
+Description=Kubernetes API Server
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+Requires=etcd2.service
+After=etcd2.service
+
+[Service]
+ExecStart=/opt/bin/kube-apiserver \
+        --allow-privileged=true \
+        --etcd-servers=http://$private_ipv4:2379 \
+        --admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ResourceQuota \
+        --insecure-bind-address=0.0.0.0 \
+        --advertise-address=$private_ipv4 \
+        --service-cluster-ip-range=10.100.0.0/16 \
+        --runtime-config=extensions/v1beta1/daemonsets=true,extensions/v1beta1/deployments=true,extensions/v1beta1/ingress=true \
+        --logtostderr=true
+Restart=always
+RestartSec=10
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+
+<p><code>kube-controller-manager.service</code></p>
+
+<pre><code>[Unit]
+Description=Kubernetes Controller Manager
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+Requires=kube-apiserver.service
+After=kube-apiserver.service
+
+[Service]
+ExecStart=/opt/bin/kube-controller-manager \
+        --master=$private_ipv4:8080 \
+        --logtostderr=true
+Restart=always
+RestartSec=10
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+
+<p><code>kube-scheduler.service</code></p>
+
+<pre><code>[Unit]
+Description=Kubernetes Scheduler
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+Requires=kube-apiserver.service
+After=kube-apiserver.service
+
+[Service]
+ExecStart=/opt/bin/kube-scheduler --master=$private_ipv4:8080 --logtostderr=true
+Restart=always
+RestartSec=10
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+
+<p>在node节点创建</p>
+
+<p><code>kubelet.service</code></p>
+
+<pre><code>[Unit]
+ Description=Kubernetes Kubelet
+ Documentation=https://github.com/kubernetes/kubernetes
+ After=docker.service
+ Requires=docker.service
+
+ [Service]
+ ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
+ ExecStart=/opt/bin/kubelet \
+        --address=0.0.0.0 \
+        --allow-privileged=true \
+        --cluster-dns=10.100.0.10 \
+        --cluster-domain=cluster.local \
+        --config=/etc/kubernetes/manifests \
+        --hostname-override=$private_ipv4 \
+        --api-servers=http://&lt;API_SERVER_IP&gt;:8080 \
+        --pod-infra-container-image=&quot;kubernetes/pause&quot; \
+        --network-plugin-dir=/etc/cni/net.d \
+        --network-plugin=cni \
+        --logtostderr=true
+ Restart=always
+ RestartSec=10
+
+ [Install]
+ WantedBy=multi-user.target
+</code></pre>
+
+<p><code>kube-proxy.service</code></p>
+
+<pre><code>Unit]
+Description=Kubernetes Proxy
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+Requires=kubelet.service
+After=kubelet.service
+
+[Service]
+ExecStart=/opt/bin/kube-proxy \
+        --master=http://&lt;API_SERVER_IP&gt;:8080 \
+        --proxy-mode=iptables \
+        --logtostderr=true
+Restart=always
+RestartSec=10
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+
+<p><API_SERVER_IP>部分替换成master的ip</p>
+
+<h3 id="小试牛刀">小试牛刀</h3>
+
+<p>启动上面的所以service kubernetes集群应该就搭建起来了。我们来测试一下</p>
+
+<p>新建一个<code>nginx.yaml</code></p>
+
+<pre><code>apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: my-nginx
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        run: my-nginx
+    spec:
+      containers:
+      - name: my-nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+</code></pre>
+
+<p>执行</p>
+
+<pre><code>&gt; create -f ./nginx.yaml
+// 查看pod运行状况
+&gt; kubectl get pods -l run=my-nginx -o wide
+NAME                        READY     STATUS    RESTARTS   AGE       NODE
+my-nginx-2643493705-274ab   1/1       Running   0          1m        192.168.64.9
+my-nginx-2643493705-8wr06   1/1       Running   0          1m        192.168.64.109
+</code></pre>
+
+<p>我们可以看到启动了两个nginx的pod</p>
+
+<p>查看每个pod的ip</p>
+
+<pre><code>&gt; kubectl get pods -l run=my-nginx -o yaml | grep podIP
+    podIP: 10.100.73.2
+    podIP: 10.100.63.2
+</code></pre>
+
+<p>我们在内任一台机上执行</p>
+
+<pre><code>&gt; curl http://10.100.73.2
+</code></pre>
+
+<p>应该会看到nginx的欢迎页面打印出来。</p>
+
+<hr />
+
+<p>参考资料</p>
+
+<p>[1]<a href="http://qiankunli.github.io/2015/01/29/Kubernetes_installation.html">http://qiankunli.github.io/2015/01/29/Kubernetes_installation.html</a></p>
+
+<p>[2]<a href="https://github.com/shenshouer/calico-kubernetes">https://github.com/shenshouer/calico-kubernetes</a></p>
+
+<p>[3]<a href="http://qinghua.github.io/kubernetes-in-mesos-8/">http://qinghua.github.io/kubernetes-in-mesos-8/</a></p>
+
+<p>[4]<a href="http://kubernetes.io/docs/user-guide/connecting-applications/">http://kubernetes.io/docs/user-guide/connecting-applications/</a></p>
+
+  </div>
+
+<footer>
+  <hr>
+  <small style="font-size:16px;float:right;margin:0 1rem;">
+    &copy; 2019 <a href="https://github.com/SineYuan">.</a>
+    
+  </small>
+</footer>
+</div> 
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+  crossorigin="anonymous"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+
+
+
+<script>
+ (function(){
+  var seriesA = document.getElementsByTagName("a");
+  seriesA = Array.from(seriesA).filter(x =>x.getAttribute("data-series"));
+  if(seriesA.length){
+    var nameSeries = {}
+    seriesA.forEach(x =>{
+      var xdata = x.getAttribute("data-series")
+      if(nameSeries[xdata]){
+        nameSeries[xdata].push(x)
+      }else{
+        nameSeries[xdata] = [x]
+      }
+    })
+  }
+
+  function createE(){
+    var detailsArr = [] 
+    var postPosArr = [] 
+    for(let i in nameSeries){
+      var dcreateE = document.createElement("details")
+      var screateE = document.createElement("summary")
+      screateE.textContent = i;
+      var inner = screateE.outerHTML + "<br >" 
+
+      nameSeries[i].forEach(x =>{
+        inner += x.outerHTML
+        x.parentElement.style.display = "none"
+      })
+      postPosArr.push(nameSeries[i][0])
+      dcreateE.innerHTML = inner
+      detailsArr.push(dcreateE)
+    }
+    console.info(postPosArr)
+    console.log(detailsArr[0])
+    postPosArr.forEach(a =>{
+      a.parentElement.style.display = "block"
+      a.outerHTML = detailsArr.shift().outerHTML
+    })
+  }
+  createE()
+ })()
+</script>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "sineyuansblog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</body>
+
+</html>
+

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="en-us" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    
+    
+    <title>命令行编译打包android应用</title>
+    
+
+
+    
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/solarized-dark.min.css" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/go.min.js"></script>
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+        <link rel="stylesheet" href="/css/main.css">
+    
+
+    
+    
+
+    
+<script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+</head>
+
+
+<body>
+    <script>
+        window.addEventListener("resize", resizeThrottler, false);
+
+        var resizeTimeout;
+        function resizeThrottler() {
+        
+        if ( !resizeTimeout ) {
+            resizeTimeout = setTimeout(function() {
+            resizeTimeout = null;
+            actualResizeHandler();
+        
+            
+            }, 66);
+        }
+        }
+        actualResizeHandler()
+        function actualResizeHandler() {
+                if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent))
+                {
+                    document.body.classList.add('mobile');
+                }else{
+                    document.body.classList.remove('mobile');  
+                }
+        }</script>
+    
+
+
+    
+
+
+
+<div class="inner" style="position:relative;">
+  
+  <div class="side-btn"><a href="/" class="back">Home</a></div>
+  
+<div class="blog-post">
+  <h2>命令行编译打包android应用</h2>
+        
+
+<p>在eclipse中点击一下就能将android项目一键构建，但在这个过程中发生了什么？我们亲手用命令行来实践一下吧.</p>
+
+<h2 id="构建流程">构建流程</h2>
+
+<p>先上一张google官方的构建流程图
+<img src="http://7vzu7p.com1.z0.glb.clouddn.com/Android_build.png" alt="build process" /></p>
+
+<ul>
+<li>Android Asset Packaging Tool (aapt) 将文资源件如AndroidManifest.xml还有其他Activity的XML文件编译成二进制文件。将他们打包和生成R.java文件</li>
+<li>aidl将.aidl接口文件转换为java代码</li>
+<li>将所有的java代码包括 R.java and aidl生成的java代码编译成.class文件</li>
+<li>用dx将.class文件编译成Dalvik虚拟机使用的字符码</li>
+<li>将所有的文件打包成.apk文件，包括编译的资源包，未编译的资源文件，.dex文件</li>
+<li>用debug或release key对apk文件签名。</li>
+<li>发布应用</li>
+</ul>
+
+<h2 id="命令行构建">命令行构建</h2>
+
+<p>下面我们就来用命令行实践一下,我所使用的sdk版本是android-sdk_r24.0.2-linux
+首先新建一个Android应用项目
+    android create project &ndash;target 19 &ndash;name TestApp &ndash;path ~/workspace/TestApp &ndash;activity MainActivity &ndash;package com.example.testapp</p>
+
+<h3 id="使用aapt生成r-java和编译的资源包">使用aapt生成R.java和编译的资源包</h3>
+
+<p>aapt在sdk中的build-tools中找到，从build-tools中选最新的版本的aapt
+appt的使用方法</p>
+
+<pre><code>aapt package -f -M ${manifest.file}   
+-F ${packaged.resource.file}     
+-I ${path.to.android-jar.library}   
+-S ${android-resource-directory}    
+[-m -J ${folder.to.output.the.R.java}]
+</code></pre>
+
+<p>实践：</p>
+
+<pre><code>mkdir ~/workspace/TestApp/gen
+./aapt package -f -M ~/workspace/TestApp/AndroidManifest.xml \  
+-F ~/workspace/TestApp/bin/resources.arsc \  
+-I ~/Android/SDK/platforms/android-21/android.jar \  
+-S ~/workspace/TestApp/res/   \  
+-m -J ~/workspace/TestApp/gen/
+</code></pre>
+
+<h3 id="使用aidl命令把-aidl转成-java文件">使用aidl命令把.aidl转成.java文件</h3>
+
+<pre><code>aidl -p ${android-framework} -I ${srcdir} dir=&quot;${srcdir}&quot; ${.aidl files}
+</code></pre>
+
+<p>这里我们没有.aidl文件，所以跳过</p>
+
+<h3 id="编译-java文件">编译.java文件</h3>
+
+<p>使用javac编译所有的.java文件</p>
+
+<pre><code>mkdir ~/workspace/TestApp/bin/classes  
+javac -encoding UTF-8 -source 1.6 -target 1.6 \  
+-bootclasspath  ~/Android/SDK/platforms/android-21/android.jar \  
+-d ~/workspace/TestApp/bin/classes \   
+~/workspace/TestApp/src/com/example/testapp/*.java \  
+~/workspace/TestApp/gen/com/example/testapp/R.java
+</code></pre>
+
+<h3 id="生成dex文件">生成dex文件</h3>
+
+<p>生成dex文件的工具是dx，跟aapt在同一目录。
+dx用法：</p>
+
+<pre><code>dx -–dex --dump-to ${output.dex.file}  --core-library ${compiled.classes.directory} 
+</code></pre>
+
+<p>实践：</p>
+
+<pre><code>./dx --dex --dump-to ~/workspace/TestApp/bin/classes.dex \  
+--core-library  ~/workspace/TestApp/bin/classes
+</code></pre>
+
+<p>注意在我使用的build-tools/21.1.2中的dx还不兼容使用jdk 8及以上版本，所以在用javac编译时需指定source和target为1.6或1.7。这点需要注意，不然会出现下面的异常</p>
+
+<pre><code>UNEXPECTED TOP-LEVEL EXCEPTION:
+</code></pre>
+
+<h3 id="打包所有文件成apk文件">打包所有文件成apk文件</h3>
+
+<p>打包所有文件成apk文件使用的工具是apkbuilder，不过在较新的android sdk中取消了这个工具，不过apkbuilder只是个批处理文件，我们可以自己生成它。在sdk/tools目录中：</p>
+
+<pre><code>cat android | sed -e 's/com.android.sdkmanager.Main/com.android.sdklib.build.ApkBuilderMain/g' &gt; apkbuilder
+chmod a+x apkbuilder
+</code></pre>
+
+<p>详情查看stackoverflow的<a href="http://stackoverflow.com/questions/19273237/android-build-fails-no-such-file-or-directory-apkbuilder">这个问答</a>
+  apkbuilder用法：</p>
+
+<pre><code>apkbuilder  ${output.apk.file} -u -z  ${packagedresource.file} -f  ${dex.file}
+</code></pre>
+
+<p>实践：</p>
+
+<pre><code>mkdir ~/workspace/TestApp/build  
+./apkbuilder ~/workspace/TestApp/build/TestApp-unsigned.apk  -u \  
+-z ~/workspace/TestApp/bin/resources.arsc \  
+-f ~/workspace/TestApp/bin/classes.dex
+</code></pre>
+
+<h3 id="签名">签名</h3>
+
+<p>apk需要正确的签名才能在android系统上安装，要签名apk就需要密钥key。生成key使用jdk中的keytool生成密钥证书</p>
+
+<pre><code>keytool -genkeypair -alias ${别名} -keyalg RSA -keystore ${keystore文件的路径+文件名}.keystore
+</code></pre>
+
+<p>实践：</p>
+
+<pre><code>keytool -genkeypair -alias &quot;testkey&quot; -keyalg &quot;RSA&quot; -keystore &quot;test.keystore&quot; 
+</code></pre>
+
+<p>输入之后回答一堆问题之后就会生成.keystore文件
+在debug的时候可以使用googleg提供的debug key，debug证书存放可以在$HOME/.android/debug.keystore中。
+下一步是使用jarsigner给apk文件签名</p>
+
+<pre><code>jarsigner  -keystore ${keystore} -storepass  ${keystore.password} -keypass ${keypass密钥别名密码} -signedjar ${signed.apkfile} ${unsigned.apkfile} ${keyalias密钥别名}
+</code></pre>
+
+<p>实践：</p>
+
+<pre><code>jarsigner -keystore test.keystore -storepass 1234567890 -keypass 1234567890 -signedjar \  
+~/workspace/TestApp/build/TestApp-signed.apk \  
+~/workspace/TestApp/buildTestApp-unsigned.apk testkey
+</code></pre>
+
+<h2 id="一步到位">一步到位</h2>
+
+<p>由上可见，apk的构建非常的繁杂。不过好在android应用在创建的时候就已经配置好ant自动构建脚本了。在项目主目录下直接</p>
+
+<pre><code>ant debug
+</code></pre>
+
+<p>就可在bin下生成debug模式的apk
+生产release使用</p>
+
+<pre><code>ant release
+</code></pre>
+
+  </div>
+
+<footer>
+  <hr>
+  <small style="font-size:16px;float:right;margin:0 1rem;">
+    &copy; 2019 <a href="https://github.com/SineYuan">.</a>
+    
+  </small>
+</footer>
+</div> 
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+  crossorigin="anonymous"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+
+
+
+<script>
+ (function(){
+  var seriesA = document.getElementsByTagName("a");
+  seriesA = Array.from(seriesA).filter(x =>x.getAttribute("data-series"));
+  if(seriesA.length){
+    var nameSeries = {}
+    seriesA.forEach(x =>{
+      var xdata = x.getAttribute("data-series")
+      if(nameSeries[xdata]){
+        nameSeries[xdata].push(x)
+      }else{
+        nameSeries[xdata] = [x]
+      }
+    })
+  }
+
+  function createE(){
+    var detailsArr = [] 
+    var postPosArr = [] 
+    for(let i in nameSeries){
+      var dcreateE = document.createElement("details")
+      var screateE = document.createElement("summary")
+      screateE.textContent = i;
+      var inner = screateE.outerHTML + "<br >" 
+
+      nameSeries[i].forEach(x =>{
+        inner += x.outerHTML
+        x.parentElement.style.display = "none"
+      })
+      postPosArr.push(nameSeries[i][0])
+      dcreateE.innerHTML = inner
+      detailsArr.push(dcreateE)
+    }
+    console.info(postPosArr)
+    console.log(detailsArr[0])
+    postPosArr.forEach(a =>{
+      a.parentElement.style.display = "block"
+      a.outerHTML = detailsArr.shift().outerHTML
+    })
+  }
+  createE()
+ })()
+</script>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "sineyuansblog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</body>
+
+</html>
+

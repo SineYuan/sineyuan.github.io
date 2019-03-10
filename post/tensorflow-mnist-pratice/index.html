@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="en-us" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    
+    
+    <title>Tensorflow Mnist手写数字识别Go实战</title>
+    
+
+
+    
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/solarized-dark.min.css" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/go.min.js"></script>
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+        <link rel="stylesheet" href="/css/main.css">
+    
+
+    
+    
+
+    
+<script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+</head>
+
+
+<body>
+    <script>
+        window.addEventListener("resize", resizeThrottler, false);
+
+        var resizeTimeout;
+        function resizeThrottler() {
+        
+        if ( !resizeTimeout ) {
+            resizeTimeout = setTimeout(function() {
+            resizeTimeout = null;
+            actualResizeHandler();
+        
+            
+            }, 66);
+        }
+        }
+        actualResizeHandler()
+        function actualResizeHandler() {
+                if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent))
+                {
+                    document.body.classList.add('mobile');
+                }else{
+                    document.body.classList.remove('mobile');  
+                }
+        }</script>
+    
+
+
+    
+
+
+
+<div class="inner" style="position:relative;">
+  
+  <div class="side-btn"><a href="/" class="back">Home</a></div>
+  
+<div class="blog-post">
+  <h2>Tensorflow Mnist手写数字识别Go实战</h2>
+        
+
+<p>Tensflow安装好以后，当然要上手折腾一下啦。其实Tensorflow的入门教程很多地方都有，官方的Tutorials也写的很好。所以在这里记录一下本人折腾的过程，做一些补充。</p>
+
+<h2 id="基础知识">基础知识</h2>
+
+<p>首先学习Tensorflow的基本使用和关于神经网络的知识，这里推荐的教程有：</p>
+
+<ul>
+<li><a href="https://www.tensorflow.org/get_started/mnist/beginners">Tensorflow官方教程</a></li>
+<li><a href="http://mp.weixin.qq.com/s/E6SsvWofiN94JtZWf1f-Ug">没有博士学位，照样玩转TensorFlow深度学习</a></li>
+</ul>
+
+<p>本文所用代码放在了<a href="https://github.com/SineYuan/tensorflow-demo">github</a>上，如果想编译运行请将项目clone到<code>$GOPATH/src</code>下</p>
+
+<h2 id="训练模型">训练模型</h2>
+
+<p>我们先训练一个最简单的识别模型，代码码改自<a href="https://github.com/martin-gorner/tensorflow-mnist-tutorial">https://github.com/martin-gorner/tensorflow-mnist-tutorial</a></p>
+
+<pre><code># mnist_softmax.py
+import argparse
+
+import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
+from tensorflow.contrib.session_bundle import exporter
+
+
+def main(flags):
+    mnist = input_data.read_data_sets(flags.mnist_data_dir, reshape=False, one_hot=True)
+
+    # neural network with 1 layer of 10 softmax neurons
+    #
+    # · · · · · · · · · ·       (input data, flattened pixels)       X [batch, 784]        # 784 = 28 * 28
+    # \x/x\x/x\x/x\x/x\x/    -- fully connected layer (softmax)      W [784, 10]     b[10]
+    #   · · · · · · · ·                                              Y [batch, 10]
+
+    # The model is:
+    #
+    # Y = softmax( X * W + b)
+    #              X: matrix for 100 grayscale images of 28x28 pixels, flattened (there are 100 images in a mini-batch)
+    #              W: weight matrix with 784 lines and 10 columns
+    #              b: bias vector with 10 dimensions
+    #              +: add with broadcasting: adds the vector to each line of the matrix (numpy)
+    #              softmax(matrix) applies softmax on each line
+    #              softmax(line) applies an exp to each value then divides by the norm of the resulting line
+    #              Y: output matrix with 100 lines and 10 columns
+
+    # input X: 28x28 grayscale images, the first dimension (None) will index the images in the mini-batch
+    X = tf.placeholder(tf.float32, [None, 28, 28, 1])
+    # correct answers will go here
+    Y_ = tf.placeholder(tf.float32, [None, 10])
+    # weights W[784, 10]   784=28*28
+    W = tf.Variable(tf.zeros([784, 10]))
+    # biases b[10]
+    b = tf.Variable(tf.zeros([10]))
+
+    # flatten the images into a single line of pixels
+    # -1 in the shape definition means &quot;the only possible dimension that will preserve the number of elements&quot;
+    XX = tf.reshape(X, [-1, 784])
+
+    # The model
+    Y = tf.nn.softmax(tf.matmul(XX, W) + b)
+
+    # loss function: cross-entropy = - sum( Y_i * log(Yi) )
+    #                           Y: the computed output vector
+    #                           Y_: the desired output vector
+
+    # cross-entropy
+    # log takes the log of each element, * multiplies the tensors element by element
+    # reduce_mean will add all the components in the tensor
+    # so here we end up with the total cross-entropy for all images in the batch
+    cross_entropy = -tf.reduce_mean(Y_ * tf.log(Y)) * 1000.0  # normalized for batches of 100 images,
+    # *10 because  &quot;mean&quot; included an unwanted division by 10
+
+    # accuracy of the trained model, between 0 (worst) and 1 (best)
+    correct_prediction = tf.equal(tf.argmax(Y, 1), tf.argmax(Y_, 1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+    # training, learning rate = 0.005
+    train_step = tf.train.GradientDescentOptimizer(0.005).minimize(cross_entropy)
+
+    # init
+    init = tf.global_variables_initializer()
+    sess = tf.Session()
+    sess.run(init)
+
+    for i in range(flags.iterations):
+        batch_X, batch_Y = mnist.train.next_batch(flags.batch_size)
+
+        # the backpropagation training step
+        sess.run(train_step, feed_dict={X: batch_X, Y_: batch_Y})
+
+        print(&quot;Iteration:&quot; + str(i) + &quot;/&quot; + str(flags.iterations))
+
+    print(&quot;******* Training is Done! *******&quot;)
+
+    print(&quot;Accuracy:&quot;, sess.run(accuracy, feed_dict={X: mnist.test.images, Y_: mnist.test.labels}))
+
+    # Export model to Tensorflow Serving
+    saver = tf.train.Saver()
+
+    model_exporter = exporter.Exporter(saver)
+    model_exporter.init(
+        sess.graph.as_graph_def(),
+        named_graph_signatures={
+            'inputs': exporter.generic_signature({'x': X}),
+            'outputs': exporter.generic_signature({'y': Y})
+        }
+    )
+    model_exporter.export(flags.model_dir, tf.constant(flags.model_version), sess)
+    print(&quot;Model Saved at&quot;, str(flags.model_dir), &quot;version:&quot;, flags.model_version)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--learning_rate',
+        type=float,
+        default=0.05,
+        help='Initial learning rate.'
+    )
+    parser.add_argument(
+        '--iterations',
+        type=int,
+        default=2000,
+        help='Number of iterations to run trainer.'
+    )
+    parser.add_argument(
+        '--batch_size',
+        type=int,
+        default=100,
+        help='Batch size.  Must divide evenly into the dataset sizes.'
+    )
+    parser.add_argument(
+        '--mnist_data_dir',
+        type=str,
+        default='./MNIST_data',
+        help='Directory to put the mnist data.'
+    )
+    parser.add_argument(
+        '--model_dir',
+        type=str,
+        default='./model',
+        help='Directory to export model.'
+    )
+    parser.add_argument(
+        '--model_version',
+        type=int,
+        default=1,
+        help='Model version'
+    )
+
+    FLAGS, unparsed = parser.parse_known_args()
+
+    main(FLAGS)
+
+</code></pre>
+
+<p>运行<code>mnist_softmax.py</code>, 第一次运行会在默认路径下载mnist数据。</p>
+
+<pre><code>python mnist_softmax.py
+</code></pre>
+
+<p>softmax模型正确率在92%的左右。训练的模型默认保存在<code>./model</code>目录下。 可以在<code>./model/</code>下看的多了个<code>00000001</code>的文件夹，里面存放的是版本号为1的模型数据。</p>
+
+<h2 id="tensorflow-serving">Tensorflow Serving</h2>
+
+<p>有了模型之后我们还要将其做成产品，Tensorflow提供了Tensorflow Serving，可以将训练的模型直接做成一个rpc服务，外部可以通过调用rpc来获取模型输出的结果。
+下面我们做一个MNIST手写数字识别的web应用来实践一下。</p>
+
+<p>项目代码在放在[github]()上，前端用jquery + <a href="http://leimi.github.io/drawingboard.js/">drawingboard.js</a>, 后端用Go做API Server, 通过grpc调用Tensorflow Sering获取识别结果。</p>
+
+<h3 id="编译tensorflow-model-server">编译Tensorflow Model Server</h3>
+
+<p>具体参照<a href="https://tensorflow.github.io/serving/setup">Tensorflow Serving官方文档</a>, 目前版本的Tensorflow Serving在OSX上编译有问题，不过还好官方提供了编译环境的Dockerfile， 跟着走一遍<a href="https://tensorflow.github.io/serving/docker">教程</a>就好。</p>
+
+<p>配置好环境以后我们编译tensorflow_model_server。</p>
+
+<pre><code>cd serving
+bazel build //tensorflow_serving/model_servers:tensorflow_model_server
+</code></pre>
+
+<p>如果不想编译那么麻烦的话，可以用我做的tensorflow_model_server的docker镜像, 当前对应的tensorflow serving的版本是v0.5.1</p>
+
+<pre><code>docker pull sineyuan/tensorflow_model_server
+cd tensorflow-demo
+docker run  -v $PWD:/work -p 8500:8500  sineyuan/tensorflow_model_server --model_base_path=/work/mnist/model
+</code></pre>
+
+<h3 id="运行tensorflow-model-server">运行Tensorflow Model Server</h3>
+
+<p>运行<code>tensorflow_model_server</code>, 指定训练模型的路径：</p>
+
+<pre><code>bazel-bin/tensorflow_serving/model_servers/tensorflow_model_server --model_base_path=${path_to_tensorflow_demo_root}/model
+</code></pre>
+
+<p><code>tensorflow_model_server</code>默认监听8500端口。</p>
+
+<h3 id="生成tensorflow-serving的go客户端包">生成Tensorflow Serving的Go客户端包</h3>
+
+<p>tensorflow_model_server使用的是google自家的grpc框架, 官方例子的客户端是基于python的，没有提供Go客户端包。不过grpc是跨语言的，我们需要通过tensorflow serving提供的protobuf文件自己编译。</p>
+
+<p>先安装grpc, 看官方的安装文档<a href="http://www.grpc.io/docs/quickstart/go.html">http://www.grpc.io/docs/quickstart/go.html</a>。</p>
+
+<p>下载Tensorflow Serving源码。</p>
+
+<pre><code>git clone --recurse-submodules https://github.com/tensorflow/serving
+cd serving
+</code></pre>
+
+<p>准备编译脚本<code>gen_proto.sh</code>：</p>
+
+<pre><code>#!/bin/sh
+
+output=${1:-vendor}
+
+echo $output
+
+mkdir -p $output
+
+mkdir -p protobuf/src/google/protobuf
+cp $GOPATH/src/github.com/golang/protobuf/ptypes/any/any.proto protobuf/src/google/protobuf/any.proto
+cp $GOPATH/src/github.com/golang/protobuf/ptypes/wrappers/wrappers.proto protobuf/src/google/protobuf/wrappers.proto
+
+protoc -I=. -I=./tensorflow -I=./protobuf/src --go_out=plugins=grpc:$output ./tensorflow_serving/apis/*.proto
+
+protoc -I=./tensorflow --go_out=plugins=grpc:$output tensorflow/tensorflow/core/example/*.proto
+protoc -I=./tensorflow --go_out=plugins=grpc:$output tensorflow/tensorflow/core/framework/*.proto
+
+protoc -I=./tensorflow -I=./protobuf/src --go_out=plugins=grpc:$output \
+	tensorflow/tensorflow/core/protobuf/saver.proto  \
+	tensorflow/tensorflow/core/protobuf/meta_graph.proto
+
+rm -r protobuf
+
+</code></pre>
+
+<p>将<code>gen_proto.sh</code>放在下载的Tensorflow Serving源码目录下， 在源码目录下执行：</p>
+
+<pre><code>sh gen_proto.sh
+</code></pre>
+
+<p>在源码目录下即可生成<code>vendor</code>文件夹，将<code>vendor</code>文件夹放到我们的Demo项目目录下即可。</p>
+
+<h3 id="go-api-server">Go API Server</h3>
+
+<p>用Go写一个简单的API Server展示Tensorflow Serving的调用方法, 为了省事，直接用了<a href="https://github.com/labstack/echo">echo</a>这个web框架。</p>
+
+<p>gprc调用Tensorflow Serving的具体方法参见下面代码</p>
+
+<pre><code>package main
+
+import (
+	&quot;fmt&quot;
+	&quot;flag&quot;
+	&quot;context&quot;
+	&quot;strconv&quot;
+	&quot;net/http&quot;
+	&quot;io/ioutil&quot;
+
+	&quot;github.com/labstack/echo&quot;
+	&quot;google.golang.org/grpc&quot;
+
+	tf_framework &quot;tensorflow/core/framework&quot;
+	pb &quot;tensorflow_serving/apis&quot;
+)
+
+var (
+	port         int
+	model_server string
+	model_name   string
+)
+
+func init() {
+	flag.IntVar(&amp;port, &quot;port&quot;, 1323, &quot;concurrent processing ,default 1 .&quot;)
+	flag.StringVar(&amp;model_server, &quot;model_server&quot;, &quot;localhost:8500&quot;, &quot;concurrent processing ,default 1 .&quot;)
+	flag.StringVar(&amp;model_name, &quot;model_name&quot;, &quot;default&quot;, &quot;concurrent processing ,default 1 .&quot;)
+
+	flag.Parse()
+}
+
+type Resp struct {
+	Success bool
+	Msg     string
+	Result  [10]float32
+}
+
+func main() {
+	e := echo.New()
+	// Set up a connection to the model server.
+	conn, err := grpc.Dial(model_server, grpc.WithInsecure())
+	if err != nil {
+		e.Logger.Fatalf(&quot;can not connect model_server: %v&quot;, err)
+	}
+	defer conn.Close()
+
+	client := pb.NewPredictionServiceClient(conn)
+
+	e.Static(&quot;/&quot;, &quot;templates&quot;)
+	e.Static(&quot;/static&quot;, &quot;static&quot;)
+
+	e.POST(&quot;/api/mnist&quot;, func(c echo.Context) error {
+		req := c.Request()
+		body, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			return err
+		}
+		result, err := Predict(client, body)
+		if err != nil {
+			e.Logger.Error(err.Error())
+			return c.JSON(http.StatusOK, &amp;Resp{
+				Msg: err.Error(),
+			})
+		}
+
+		return c.JSON(http.StatusOK, &amp;Resp{
+			Success: true,
+			Result:  result,
+		})
+	})
+
+	e.Logger.Fatal(e.Start(&quot;:&quot; + strconv.Itoa(port)))
+}
+
+func Predict(c pb.PredictionServiceClient, imgBytes []byte) (result [10]float32, err error) {
+	// 构造请求
+	req := &amp;pb.PredictRequest{
+		// model名由tensorflow_model_server的启动参数 --model_name 指定, 默认是default
+		ModelSpec: &amp;pb.ModelSpec{Name: model_name},
+		Inputs:    make(map[string]*tf_framework.TensorProto),
+	}
+	in := normalize(imgBytes)
+
+	// 输入数据
+	tp := &amp;tf_framework.TensorProto{
+		Dtype:    tf_framework.DataType_DT_FLOAT,
+		FloatVal: in,
+		// 由于输入只能是一个slice，所以要在这里声明输入数据的shape
+		// Tensorflow Model Server将数据resize成输入Tensor需要的shape
+		TensorShape: &amp;tf_framework.TensorShapeProto{
+			Dim: []*tf_framework.TensorShapeProto_Dim{
+				&amp;tf_framework.TensorShapeProto_Dim{
+					Size: int64(1),
+					Name: &quot;batch&quot;,
+				},
+				&amp;tf_framework.TensorShapeProto_Dim{
+					Size: int64(784),
+					Name: &quot;data&quot;,
+				},
+			},
+		},
+	}
+	// 输入参数名要与模型导出时指定的一致
+	req.Inputs[&quot;x&quot;] = tp
+
+	// 请求Model Server
+	resp, err := c.Predict(context.Background(), req)
+
+	// 输出参数名要与模型导出时指定的一致
+	output, ok := resp.Outputs[&quot;y&quot;]
+	if !ok {
+		err = fmt.Errorf(&quot;can not find output data with label y&quot;)
+		return
+	}
+	if len(output.FloatVal) != 10 {
+		err = fmt.Errorf(&quot;wrong output dimension, it should be 10, now got %d&quot;, len(output.FloatVal))
+		return
+	}
+	copy(result[:], output.FloatVal)
+	return
+}
+
+func normalize(bytes []byte) (r []float32) {
+	r = make([]float32, 0, len(bytes))
+	for _, b := range bytes {
+		r = append(r, float32(255-b)/255)
+	}
+	return
+}
+
+</code></pre>
+
+<p>注意输入输出的签名是在模型导出的时候指定的</p>
+
+<pre><code># mnist_softmax.py
+   .....
+    model_exporter.init(
+        sess.graph.as_graph_def(),
+        named_graph_signatures={
+            'inputs': exporter.generic_signature({'x': X}),  # 指明输入的参数名为x，类型维度和Tensor X 一样
+            'outputs': exporter.generic_signature({'y': Y})  # 指明输出的参数名为x，类型维度和Tensor Y 一样
+        }
+   )
+   ....
+</code></pre>
+
+<p>运行main.go后可以在<a href="http://localhost:1323">http://localhost:1323</a>访问web页面。</p>
+
+<p>效果图:</p>
+
+<p><img src="https://github.com/SineYuan/tensorflow-demo/blob/master/doc/images/mnist_web.png?raw=true" alt="" /></p>
+
+<h3 id="模型更新">模型更新</h3>
+
+<p>有了前面的工作后，下面的就轻松了。现在我们来升级模型，直接上卷积神经网络。代码在<a href="https://github.com/SineYuan/tensorflow-demo/blob/master/mnist/mnist_cnn.py">https://github.com/SineYuan/tensorflow-demo/blob/master/mnist/mnist_cnn.py</a></p>
+
+<pre><code>cd mnist
+python mnist_cnn.py --model_version=2
+</code></pre>
+
+<p>卷积神经网络正确率在98%的左右。我们可以看到<code>model</code>目录下多了个<code>00000002</code>的文件夹，此时如何<code>tensorflow_model_server</code>还在运行的话会自动加载新的版本为2的模型，就是那么简单。</p>
+
+  </div>
+
+<footer>
+  <hr>
+  <small style="font-size:16px;float:right;margin:0 1rem;">
+    &copy; 2019 <a href="https://github.com/SineYuan">.</a>
+    
+  </small>
+</footer>
+</div> 
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+  crossorigin="anonymous"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+
+
+
+<script>
+ (function(){
+  var seriesA = document.getElementsByTagName("a");
+  seriesA = Array.from(seriesA).filter(x =>x.getAttribute("data-series"));
+  if(seriesA.length){
+    var nameSeries = {}
+    seriesA.forEach(x =>{
+      var xdata = x.getAttribute("data-series")
+      if(nameSeries[xdata]){
+        nameSeries[xdata].push(x)
+      }else{
+        nameSeries[xdata] = [x]
+      }
+    })
+  }
+
+  function createE(){
+    var detailsArr = [] 
+    var postPosArr = [] 
+    for(let i in nameSeries){
+      var dcreateE = document.createElement("details")
+      var screateE = document.createElement("summary")
+      screateE.textContent = i;
+      var inner = screateE.outerHTML + "<br >" 
+
+      nameSeries[i].forEach(x =>{
+        inner += x.outerHTML
+        x.parentElement.style.display = "none"
+      })
+      postPosArr.push(nameSeries[i][0])
+      dcreateE.innerHTML = inner
+      detailsArr.push(dcreateE)
+    }
+    console.info(postPosArr)
+    console.log(detailsArr[0])
+    postPosArr.forEach(a =>{
+      a.parentElement.style.display = "block"
+      a.outerHTML = detailsArr.shift().outerHTML
+    })
+  }
+  createE()
+ })()
+</script>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "sineyuansblog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</body>
+
+</html>
+

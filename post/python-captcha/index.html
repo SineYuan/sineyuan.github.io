@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="en-us" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    
+    
+    <title>使用Python做验证码识别</title>
+    
+
+
+    
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/solarized-dark.min.css" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/go.min.js"></script>
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+        <link rel="stylesheet" href="/css/main.css">
+    
+
+    
+    
+
+    
+<script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+</head>
+
+
+<body>
+    <script>
+        window.addEventListener("resize", resizeThrottler, false);
+
+        var resizeTimeout;
+        function resizeThrottler() {
+        
+        if ( !resizeTimeout ) {
+            resizeTimeout = setTimeout(function() {
+            resizeTimeout = null;
+            actualResizeHandler();
+        
+            
+            }, 66);
+        }
+        }
+        actualResizeHandler()
+        function actualResizeHandler() {
+                if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent))
+                {
+                    document.body.classList.add('mobile');
+                }else{
+                    document.body.classList.remove('mobile');  
+                }
+        }</script>
+    
+
+
+    
+
+
+
+<div class="inner" style="position:relative;">
+  
+  <div class="side-btn"><a href="/" class="back">Home</a></div>
+  
+<div class="blog-post">
+  <h2>使用Python做验证码识别</h2>
+        
+
+<p>平常我们上网经常遇到的验证码英文名为CAPTCHA， 这其实是一个非常炫酷的名字的缩写，全称为全自动区分计算机和人类的图灵测试（英语：Completely Automated Public Turing test to tell Computers and Humans Apart) 。看起来是不是很高大上啊，图灵测试都出来了。不过确实，对于识别验证码这种对人来说很容易的任务（普通验证码，非12306的）对于计算机来说可不简单。</p>
+
+<h2 id="工具">工具</h2>
+
+<p>有用的工具：</p>
+
+<ul>
+<li><a href="http://www.pythonware.com/products/pil/">PIL</a>(Python Image Library)——图片处理库</li>
+<li><a href="http://www.numpy.org/">numpy</a>——矩阵运算</li>
+<li><a href="https://github.com/tesseract-ocr/tesseract">tesseract</a>——开源的ORC库</li>
+<li><a href="http://scikit-learn.org/stable/index.html">scikit-learn</a>——机器学习方面的集成包</li>
+</ul>
+
+<h2 id="分析验证码">分析验证码</h2>
+
+<p>验证码也是有计算机生成的，所以不同的验证码有不同的处理方法。所以验证码识别的第一步是观察目标验证码的规律。这次面对的验证码张这样子</p>
+
+<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/shot.png" alt=" " /></p>
+
+<p>一般来说第一步首先是要将验证码图片转换为二值图去除干扰信息，便于进一步处理。
+观察分析验证码的字体都是同样的颜色，背景有横的或斜的条纹。直接二值化效果并不好。但是字符之间是没有粘连的，所以我们可以利用这一点提取出字符。</p>
+
+<h2 id="预处理">预处理</h2>
+
+<h3 id="寻找字符像素">寻找字符像素</h3>
+
+<p>首先第一步是提取出字符的颜色也就是RGB值，观察到字符的颜色相同，占整个验证码图片的比例基本上是差不多的。所以我们可以通过分析像素的直方图找出字符的像素值出来。不过我偷懒没用这样的方法，因为图片开头都是横向的条纹，所以我就直接从左往右扫描图片横向中线的像素值，找出像素值突变的地方就可以找到字符的像素值了。</p>
+
+<h3 id="floodfill算法提取字符">FloodFill算法提取字符</h3>
+
+<p>Flood fill算法是从一个区域中提取若干个连通的点与其他相邻区域区分开（或分别染成不同颜色）的经典算法。处理这种没有粘连字符或者粘连但是字符每个颜色不一样的验证码效果拔群。多说无益，看图就明白了</p>
+
+<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/floodfill4.gif" alt=" " />
+<img src="http://7vzu7p.com1.z0.glb.clouddn.com/floodfill8.gif" alt=" " /></p>
+
+<p>FloodFill最简单的实现是用递归</p>
+
+<pre><code>def flood_fill(img, x0, y0, blank_color, color_to_fill, cmp_func): 
+    pix = img.load()
+    pix[x0, y0] = color_to_fill
+    offsets = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+    for xoffset, yoffset in offsets:
+        x, y = x0 + xoffset, y0 + yoffset
+        try:
+            if cmp_func(pix[x, y], blank_color):
+                flood_fill(img, x, y, blank_color)
+        except IndexError:
+            pass
+</code></pre>
+
+<p>不过python不支持尾递归优化，所以运行时回出现异常提示到达最大递归限制。所以改用基于队列的广度优先搜索
+实现</p>
+
+<pre><code>def flood_fill2(img, x0, y0, blank_color, color_to_fill, cmp_func):
+    pix = img.load()
+    visited = set()
+    q = queue.Queue()
+    q.put((x0, y0))
+    visited.add((x0, y0))
+    offsets = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+    while not q.empty():
+        x, y = q.get()
+        pix[x, y] = color_to_fill
+        for xoffset, yoffset in offsets:
+            x1, y1 = x + xoffset, y + yoffset
+            if (x1, y1) in (visited):
+                continue  # 已经访问过了
+            visited.add((x1, y1))
+            try:
+                if cmp_func(pix[x1, y1], blank_color):
+                    q.put((x1, y1))
+            except IndexError:
+                pass
+    return visited
+</code></pre>
+
+<h3 id="字符分割">字符分割</h3>
+
+<p>字符串的分割也是非常重要的一步，对于复杂的验证码，目前还没有非常有效的字符串分割方法。 对于不粘连并且字符之间没有重叠的字符串直接在上下左右四个方向扫描整行或整列是否空白来分割字符</p>
+
+<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/rrr.png" alt=" " /></p>
+
+<p>对于字符间有重叠的，如下图的2和F。</p>
+
+<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/linkchar.png" alt="" /></p>
+
+<p>一种方法是使用斜向的切割法，但更好的方法还是统计x坐标上的黑白像素占比，在字符分隔处会有白像素占比的波谷。根据这个波谷的来分割图片。</p>
+
+<h3 id="标准化-normalize">标准化(normalize)</h3>
+
+<p>这一步将切割出来的字符摆正并且统一成一样的大小</p>
+
+<p>摆正字符的方法是使用旋转卡壳算法。即从 -30度 ~ 30度旋转图片，检测字符间距，取最小间距对应的角度。</p>
+
+<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/trible91.png" alt="" /></p>
+
+<p>最后在四周填充像素，把所以字符图片统一成一样的尺寸。</p>
+
+<h3 id="识别">识别</h3>
+
+<h4 id="tesseract">Tesseract</h4>
+
+<p>识别方面可以使用ORC库<a href="https://github.com/tesseract-ocr/tesseract">tesseract</a></p>
+
+<p>在安装tesseract后 python使用<a href="https://pypi.python.org/pypi/pytesseract/0.1">pytessract</a>方便的调用tesseractF</p>
+
+<pre><code> import pytesseract
+ from PIL import Image
+
+ img = Image.open(&quot;captcha.png&quot;)
+
+ result = pytesseract.image_to_string(img, config='-psm 7')
+</code></pre>
+
+<p>不过经测试tesseract的对于标准的印刷体的英文识别效果还是可以的，但若有旋转扭曲等扰动等话识别率就不是很高了。不过tesseract通过训练自己的识别模型来提高识别率。</p>
+
+<h4 id="机器学习">机器学习</h4>
+
+<p>另外一个看起来更高大上的方法是应用机器学习的方法来做识别，常用的有SVM和神经网络。</p>
+
+<p>python下机器学习的库首推<a href="http://scikit-learn.org/stable/index.html">scikit-learn</a>。scikit-learn里面集成了各种常用的识别模型，降纬，聚类等算法，还要非常棒的文档，可以说是机器学习方面的百宝箱。</p>
+
+<p>使用scikit-learn训练验证码识别模型这事。。。还是先挖个坑，下回再填吧</p>
+
+<hr />
+
+<h3 id="reference">Reference</h3>
+
+<p><a href="http://drops.wooyun.org/tips/141">http://drops.wooyun.org/tips/141</a><br />
+<a href="http://drops.wooyun.org/tips/6313">http://drops.wooyun.org/tips/6313</a><br />
+<a href="http://pillow.readthedocs.org/en/3.0.x/reference/Image.html">http://pillow.readthedocs.org/en/3.0.x/reference/Image.html</a></p>
+
+  </div>
+
+<footer>
+  <hr>
+  <small style="font-size:16px;float:right;margin:0 1rem;">
+    &copy; 2019 <a href="https://github.com/SineYuan">.</a>
+    
+  </small>
+</footer>
+</div> 
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+  crossorigin="anonymous"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+
+
+
+<script>
+ (function(){
+  var seriesA = document.getElementsByTagName("a");
+  seriesA = Array.from(seriesA).filter(x =>x.getAttribute("data-series"));
+  if(seriesA.length){
+    var nameSeries = {}
+    seriesA.forEach(x =>{
+      var xdata = x.getAttribute("data-series")
+      if(nameSeries[xdata]){
+        nameSeries[xdata].push(x)
+      }else{
+        nameSeries[xdata] = [x]
+      }
+    })
+  }
+
+  function createE(){
+    var detailsArr = [] 
+    var postPosArr = [] 
+    for(let i in nameSeries){
+      var dcreateE = document.createElement("details")
+      var screateE = document.createElement("summary")
+      screateE.textContent = i;
+      var inner = screateE.outerHTML + "<br >" 
+
+      nameSeries[i].forEach(x =>{
+        inner += x.outerHTML
+        x.parentElement.style.display = "none"
+      })
+      postPosArr.push(nameSeries[i][0])
+      dcreateE.innerHTML = inner
+      detailsArr.push(dcreateE)
+    }
+    console.info(postPosArr)
+    console.log(detailsArr[0])
+    postPosArr.forEach(a =>{
+      a.parentElement.style.display = "block"
+      a.outerHTML = detailsArr.shift().outerHTML
+    })
+  }
+  createE()
+ })()
+</script>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "sineyuansblog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</body>
+
+</html>
+

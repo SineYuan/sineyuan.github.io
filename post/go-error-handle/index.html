@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="en-us" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    
+    
+    <title>Golang错误处理</title>
+    
+
+
+    
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/solarized-dark.min.css" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/go.min.js"></script>
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+        <link rel="stylesheet" href="/css/main.css">
+    
+
+    
+    
+
+    
+<script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+</head>
+
+
+<body>
+    <script>
+        window.addEventListener("resize", resizeThrottler, false);
+
+        var resizeTimeout;
+        function resizeThrottler() {
+        
+        if ( !resizeTimeout ) {
+            resizeTimeout = setTimeout(function() {
+            resizeTimeout = null;
+            actualResizeHandler();
+        
+            
+            }, 66);
+        }
+        }
+        actualResizeHandler()
+        function actualResizeHandler() {
+                if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent))
+                {
+                    document.body.classList.add('mobile');
+                }else{
+                    document.body.classList.remove('mobile');  
+                }
+        }</script>
+    
+
+
+    
+
+
+
+<div class="inner" style="position:relative;">
+  
+  <div class="side-btn"><a href="/" class="back">Home</a></div>
+  
+<div class="blog-post">
+  <h2>Golang错误处理</h2>
+        
+
+<p>本文是GopherCon 2016的演讲<a href="https://www.youtube.com/watch?v=lsBF58Q-DnY">Dont Just Check Errors Handle Them Gracefully</a>的笔记，详情可点击链接观看(请带梯子上油管)</p>
+
+<h2 id="常见错误处理策略">常见错误处理策略</h2>
+
+<h3 id="sentiel-errors">Sentiel errors</h3>
+
+<pre><code>if err == ErrSomething { ... } 
+</code></pre>
+
+<p>这是最常见的处理方法，通过判断错误类型来做相应的处理。常见的有</p>
+
+<pre><code>io.EOF
+syscall.ENOENT
+go/build.NoGoError
+path/filepath.SkipDir
+</code></pre>
+
+<p>但这种处理方法是最不灵活的一种方法，因为我们必须知道确定的错误类型。如果我们需要使用自定义的一些错误类型，当我们的代码作为一个package导出时，错误变成了api的一部分，这样就有了强耦合，以后要是修改错误会很麻烦。</p>
+
+<p>另外，当我们使用<code>fmt.Errorf</code>的时候，我们需要通过判断错误string的内容来区分错误，如：</p>
+
+<pre><code>func readfile(path string) error {
+		err := openfile(path)
+		if err != nil {
+				return fmt.Errorf(&quot;cannot open file: %v&quot;, err)
+		}
+		...
+}
+
+func main() {
+		err := readfile(&quot;.bash&quot;)
+		if strings.Contains(err.Error(), &quot;not found&quot;) {
+				// handle error
+		}
+}
+</code></pre>
+
+<p>这是种非常糟糕的做法，当错误信息改变时，对应的错误处理也要相应改变， 另外还要性能的问题。</p>
+
+<p>除非是标准库里面的函数，否则避免使用Sentiel errors</p>
+
+<h3 id="error-types">Error Types</h3>
+
+<pre><code>if err, ok := err.(SomeType); ok { ... }
+</code></pre>
+
+<p>配合Type assertion使用</p>
+
+<pre><code>err := somethint()
+switch err := err.(type) {
+case nil:
+		// call succeed
+case *os.PathError:
+		// handle PathError
+default:
+		// handle Unknow error			
+}
+</code></pre>
+
+<p>这个其实没什么好讲的，同样的，Error Types也会造成包之间的强耦合，除非是在包内部使用，否则不推荐使用</p>
+
+<h3 id="opaque-errors">Opaque errors</h3>
+
+<p>Opaque是不透明的意思，这个是讲者自己的叫法，具体的思想就是:</p>
+
+<blockquote>
+<p>Assert errors for behaviour, not type<br />
+通过行为来判断错误而不是类型</p>
+</blockquote>
+
+<p>说起行为，很自然的就联想到了interface，对的，不使用type，使用interface来处理。</p>
+
+<pre><code>type temporary interface {
+		Tepporary() bool
+}
+
+func IsTemporary(err error) bool {
+		te, ok := err.(temporary)
+		return ok &amp;&amp; te.Temporary()
+}
+</code></pre>
+
+<p>这种方法的耦合度更低一些，不过无法完全避免依赖度，毕竟interface也是api的一部分。</p>
+
+<h2 id="don-t-just-check-errors-handle-then-greacefully">Don&rsquo;t just check errors, handle then greacefully</h2>
+
+<pre><code>if err != nil {
+		return err
+}
+</code></pre>
+
+<p>这应该最常见的错误处理，不过想想当一个错误经过层层的return，当到达最外面的log记录了下来。但当你debug查找日志时只看到一句</p>
+
+<blockquote>
+<p>No such file or directory</p>
+</blockquote>
+
+<p>心里会不会万匹草泥马奔腾(╯‵□′)╯︵┴─┴</p>
+
+<p>是的，这种方法坏处就是破坏了错误发生的上线文环境，debug起来就很困难。</p>
+
+<p>当然我们使用<code>fmt.Errorf</code>为错误加上一些信息</p>
+
+<pre><code>func AuthenticatRequest(r *Request) error {
+		err := authenticate(r.User)
+		if err != nil {
+				return fmt.Errorf(&quot;authenticat failed: %v&quot;, err)
+		
+		}
+		return nil
+}
+</code></pre>
+
+<p>为了更优雅一点，讲者提供了一个包<code>github.com/pkg/errors</code>做这个事情。</p>
+
+<p>这个包的api也很简单</p>
+
+<h4 id="errors-new">errors.New</h4>
+
+<pre><code>err := errors.New(&quot;kerboom&quot;)
+fmt.Printf(&quot;%v\n&quot;, err)
+</code></pre>
+
+<p>使用<code>errors.New</code>新建的err打印时会展示出调用堆栈</p>
+
+<h4 id="errors-wrap">errors.Wrap</h4>
+
+<pre><code>err := errors.Warp(
+			syscall.EBADF, &quot;couldn't write to stream&quot;)
+fmt.Printf(&quot;%v\n&quot;, err)
+
+// 输出			
+／／ couldn't write to stream: bad file descriptor
+</code></pre>
+
+<h4 id="errors-cause">errors.Cause</h4>
+
+<p>有Wrap方法那也会有UnWrap的方法，这就是<code>errors.Cause</code></p>
+
+<pre><code>errors.Cause(err)  // 返回Wrap之前的error
+</code></pre>
+
+<p>前面的例子需要改成这样</p>
+
+<pre><code>type temporary interface {
+		Tepporary() bool
+}
+
+func IsTemporary(err error) bool {
+		te, ok := err.Cause(err).(temporary)
+		return ok &amp;&amp; te.Temporary()
+}
+</code></pre>
+
+<p><code>github.com/pkg/errors</code>代码也就几百行，还是很不错的，值得推荐。</p>
+
+<p>以上</p>
+
+  </div>
+
+<footer>
+  <hr>
+  <small style="font-size:16px;float:right;margin:0 1rem;">
+    &copy; 2019 <a href="https://github.com/SineYuan">.</a>
+    
+  </small>
+</footer>
+</div> 
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+  crossorigin="anonymous"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+
+
+
+<script>
+ (function(){
+  var seriesA = document.getElementsByTagName("a");
+  seriesA = Array.from(seriesA).filter(x =>x.getAttribute("data-series"));
+  if(seriesA.length){
+    var nameSeries = {}
+    seriesA.forEach(x =>{
+      var xdata = x.getAttribute("data-series")
+      if(nameSeries[xdata]){
+        nameSeries[xdata].push(x)
+      }else{
+        nameSeries[xdata] = [x]
+      }
+    })
+  }
+
+  function createE(){
+    var detailsArr = [] 
+    var postPosArr = [] 
+    for(let i in nameSeries){
+      var dcreateE = document.createElement("details")
+      var screateE = document.createElement("summary")
+      screateE.textContent = i;
+      var inner = screateE.outerHTML + "<br >" 
+
+      nameSeries[i].forEach(x =>{
+        inner += x.outerHTML
+        x.parentElement.style.display = "none"
+      })
+      postPosArr.push(nameSeries[i][0])
+      dcreateE.innerHTML = inner
+      detailsArr.push(dcreateE)
+    }
+    console.info(postPosArr)
+    console.log(detailsArr[0])
+    postPosArr.forEach(a =>{
+      a.parentElement.style.display = "block"
+      a.outerHTML = detailsArr.shift().outerHTML
+    })
+  }
+  createE()
+ })()
+</script>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "sineyuansblog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</body>
+
+</html>
+

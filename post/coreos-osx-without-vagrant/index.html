@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="en-us" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    
+    
+    <title>OSX上摆脱vagrant搭建CoreOS集群</title>
+    
+
+
+    
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/solarized-dark.min.css" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/go.min.js"></script>
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+        <link rel="stylesheet" href="/css/main.css">
+    
+
+    
+    
+
+    
+<script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+</head>
+
+
+<body>
+    <script>
+        window.addEventListener("resize", resizeThrottler, false);
+
+        var resizeTimeout;
+        function resizeThrottler() {
+        
+        if ( !resizeTimeout ) {
+            resizeTimeout = setTimeout(function() {
+            resizeTimeout = null;
+            actualResizeHandler();
+        
+            
+            }, 66);
+        }
+        }
+        actualResizeHandler()
+        function actualResizeHandler() {
+                if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent))
+                {
+                    document.body.classList.add('mobile');
+                }else{
+                    document.body.classList.remove('mobile');  
+                }
+        }</script>
+    
+
+
+    
+
+
+
+<div class="inner" style="position:relative;">
+  
+  <div class="side-btn"><a href="/" class="back">Home</a></div>
+  
+<div class="blog-post">
+  <h2>OSX上摆脱vagrant搭建CoreOS集群</h2>
+        
+
+<p>一般我们在OSX下使用vagrant＋virtualbox部署虚拟机集群做开发测试。现在我们还可以有更轻量的选择——<a href="https://github.com/xhyve-xyz/xhyve">xhyve</a>。xhyve是FreeBSD 下的虚拟技术 <a href="http://bhyve.org/">bhyve</a> (The BSD Hypervisor) 的OSX移植，在OS X 10.10.3 Yosemite 之后的版本中可以使用。由于xhyve是基于FreeBSD原生的虚拟方案，所以它性能好并且非常的轻量，只有 230 KB，不依赖其他软件或库。当xhyve发布时CoreOS快速的跟进，推出了基于xhyve的<a href="https://github.com/coreos/coreos-xhyve">coreos-xhyve</a>。这里我们使用<a href="https://github.com/TheNewNormal/corectl">corectl</a>——一个coreos-xhyve的命令行工具来搭建CoreOS集群。</p>
+
+<h2 id="安装corectl">安装corectl</h2>
+
+<p>最快的方法使用brew</p>
+
+<pre><code> brew install corectl 
+</code></pre>
+
+<p>从源码编译</p>
+
+<pre><code>git clone git@github.com:TheNewNormal/corectl.git
+cd corectl
+make
+</code></pre>
+
+<p>安装好后运行<code>corectl -h</code>可以看到所支持的命令</p>
+
+<pre><code>corectl -h
+CoreOS over OSX made simple.
+❯❯❯ http://github.com/TheNewNormal/corectl
+
+
+Usage:
+  corectl [flags]
+  corectl [command]
+
+Available Commands:
+  rm          Removes one or more CoreOS images from local fs
+  kill        Halts one or more running CoreOS instances
+  ls          Lists locally available CoreOS images
+  load        Loads CoreOS instances defined in an instrumentation file.
+  version     Shows corectl version information
+  ps          Lists running CoreOS instances
+  query       Display information about the running CoreOS instances
+  pull        Pulls a CoreOS image from upstream
+  run         Starts a new CoreOS instance
+  ssh         Attach to or run commands inside a running CoreOS instance
+  put         copy file to inside VM
+
+Flags:
+      --debug   adds extra verbosity, and options, for debugging purposes and/or power users
+
+Use &quot;corectl [command] --help&quot; for more information about a command.
+
+All flags can also be configured via upper-case environment variables prefixed with &quot;COREOS_&quot;
+For example, &quot;--debug&quot; =&gt; &quot;COREOS_DEBUG&quot;
+</code></pre>
+
+<h2 id="运行coreos-vm">运行CoreOS VM</h2>
+
+<h3 id="加载镜像">加载镜像</h3>
+
+<p>第一次输入<code>sudo corectl run</code>即会自动下载最新的 CoreOS Alpha 镜像并加载运行，镜像文件放置的位置是<code>$HOME/.coreos/</code></p>
+
+<p>run的参数还有</p>
+
+<pre><code>Usage:
+  corectl run [flags]
+
+Aliases:
+  run, start
+
+Flags:
+      --cdrom string          append an CDROM (.iso) to VM
+      --channel string        CoreOS channel (default &quot;alpha&quot;)
+      --cloud_config string   cloud-config file location (either a remote URL or a local path)
+      --cpus int              VM's vCPUS (default 1)
+  -d, --detached              starts the VM in detached (background) mode
+  -h, --help                  help for run
+  -l, --local latest          consumes whatever image is latest locally instead of looking online unless there's nothing available.
+      --memory int            VM's RAM, in MB, per instance (1024 &lt; memory &lt; 8192) (default 1024)
+  -n, --name string           names the VM. (if absent defaults to VM's UUID)
+      --root string           append a (persistent) root volume to VM
+      --sshkey string         VM's default ssh key
+      --tap string            append tap interface to VM
+      --uuid string           VM's UUID (default &quot;random&quot;)
+      --version string        CoreOS version (default &quot;latest&quot;)
+      --volume value          append disk volumes to VM (default [])
+
+Global Flags:
+      --debug   adds extra verbosity, and options, for debugging purposes and/or power users
+
+All flags can also be configured via upper-case environment variables prefixed with &quot;COREOS_&quot;
+For example, &quot;--debug&quot; =&gt; &quot;COREOS_DEBUG&quot;
+</code></pre>
+
+<p>想使用不同的镜像版本可以由<code>--channel alpha/beta/stable</code>指定</p>
+
+<h3 id="数据持久化">数据持久化</h3>
+
+<p>先新建一个5G的persistent.img盘</p>
+
+<pre><code>dd if=/dev/zero of= persistent.img  bs=1g count=5
+</code></pre>
+
+<p>格式化成ext4(需要e2fsprogs工具，安装<code>brew install e2fsprogs</code>)</p>
+
+<pre><code>/usr/local/Cellar/e2fsprogs/1.42.12/sbin/mke2fs  -t ext4 -m0 -F persistent.img
+</code></pre>
+
+<p>运行时加上</p>
+
+<pre><code>corectl run --name core --volume absolute_or_relative_path/to/persistent.img
+</code></pre>
+
+<p>启动后persistent.img被挂载在/dev/vda</p>
+
+<p>ssh进入VM将/dev/vda 挂载 在 /data上</p>
+
+<pre><code>corectl ssh core
+mkdir /data
+sudo mount /dev/vda /data
+</code></pre>
+
+<p>后面数据就可以写入/data</p>
+
+<h3 id="启动集群">启动集群</h3>
+
+<p>从<a href="https://discovery.etcd.io">https://discovery.etcd.io</a> 获取token</p>
+
+<pre><code>curl -X GET 'https://discovery.etcd.io/new?size=3'
+</code></pre>
+
+<p>将token写入loud-config文件</p>
+
+<pre><code>#cloud-config
+
+coreos:
+  etcd2:
+    # generate a new token for each unique cluster
+    # from https://discovery.etcd.io/new?size=n where n = cluster size
+    # discovery url to bootstrap the cluster
+    discovery: hhttps://discovery.etcd.io/{$TOKEN}
+    # multi-region and multi-cloud deployments need to use $public_ipv4
+    # list of member’s client urls to advertise information to the rest of the cluster
+    advertise-client-urls: http://$public_ipv4:2379
+    # this address is used to communicate etcd data around the cluster
+    initial-advertise-peer-urls: http://$private_ipv4:2380
+    # listen on both the official ports and the legacy ports
+    # legacy ports can be omitted if your application doesn't depend on them
+    # url to listen for client traffic
+    listen-client-urls: http://0.0.0.0:2379,http://0.0.0.0:4001
+    # url to listen for peer traffic
+    listen-peer-urls: http://$private_ipv4:2380,http://$private_ipv4:7001
+  fleet:
+    public-ip: $public_ipv4
+  flannel:
+    interface: $public_ipv4
+  units:
+    - name: etcd2.service
+      command: start
+    - name: fleet.service
+      command: start
+</code></pre>
+
+<p>启动三个CoreVM</p>
+
+<pre><code>sudo corectl run --cloud_config ./cloud-config-file --name core-1
+sudo corectl run --cloud_config ./cloud-config-file --name core-2
+sudo corectl run --cloud_config ./cloud-config-file --name core-3
+</code></pre>
+
+<p>随便ssh进一个VM使用<code>etcdctl  member list</code>看到集群已经建立</p>
+
+<pre><code>etcdctl  member list
+28fede81eb6ee920: name=78c956f8b901497fbd909c0a4fa4a9f7 peerURLs=http://192.168.64.30:2380 clientURLs=http://192.168.64.30:2379 isLeader=false
+a4661fcb2e28c76a: name=1a7f48cd84c540528b0a61483f071307 peerURLs=http://192.168.64.31:2380 clientURLs=http://192.168.64.31:2379 isLeader=false
+eebd0c9e16e3e5be: name=fd92329bf3004bf98f3a6553606a00b0 peerURLs=http://192.168.64.32:2380 clientURLs=http://192.168.64.32:2379 isLeader=true
+</code></pre>
+
+<p>更多信息可以参考这个项目<a href="https://github.com/TheNewNormal/coreos-osx">coreos-osx</a></p>
+
+  </div>
+
+<footer>
+  <hr>
+  <small style="font-size:16px;float:right;margin:0 1rem;">
+    &copy; 2019 <a href="https://github.com/SineYuan">.</a>
+    
+  </small>
+</footer>
+</div> 
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+  crossorigin="anonymous"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+
+
+
+<script>
+ (function(){
+  var seriesA = document.getElementsByTagName("a");
+  seriesA = Array.from(seriesA).filter(x =>x.getAttribute("data-series"));
+  if(seriesA.length){
+    var nameSeries = {}
+    seriesA.forEach(x =>{
+      var xdata = x.getAttribute("data-series")
+      if(nameSeries[xdata]){
+        nameSeries[xdata].push(x)
+      }else{
+        nameSeries[xdata] = [x]
+      }
+    })
+  }
+
+  function createE(){
+    var detailsArr = [] 
+    var postPosArr = [] 
+    for(let i in nameSeries){
+      var dcreateE = document.createElement("details")
+      var screateE = document.createElement("summary")
+      screateE.textContent = i;
+      var inner = screateE.outerHTML + "<br >" 
+
+      nameSeries[i].forEach(x =>{
+        inner += x.outerHTML
+        x.parentElement.style.display = "none"
+      })
+      postPosArr.push(nameSeries[i][0])
+      dcreateE.innerHTML = inner
+      detailsArr.push(dcreateE)
+    }
+    console.info(postPosArr)
+    console.log(detailsArr[0])
+    postPosArr.forEach(a =>{
+      a.parentElement.style.display = "block"
+      a.outerHTML = detailsArr.shift().outerHTML
+    })
+  }
+  createE()
+ })()
+</script>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "sineyuansblog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</body>
+
+</html>
+

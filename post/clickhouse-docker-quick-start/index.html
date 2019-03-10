@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="en-us" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    
+    
+    <title>用Docker快速上手Clickhouse</title>
+    
+
+
+    
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/solarized-dark.min.css" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/go.min.js"></script>
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+        <link rel="stylesheet" href="/css/main.css">
+    
+
+    
+    
+
+    
+<script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+</head>
+
+
+<body>
+    <script>
+        window.addEventListener("resize", resizeThrottler, false);
+
+        var resizeTimeout;
+        function resizeThrottler() {
+        
+        if ( !resizeTimeout ) {
+            resizeTimeout = setTimeout(function() {
+            resizeTimeout = null;
+            actualResizeHandler();
+        
+            
+            }, 66);
+        }
+        }
+        actualResizeHandler()
+        function actualResizeHandler() {
+                if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent))
+                {
+                    document.body.classList.add('mobile');
+                }else{
+                    document.body.classList.remove('mobile');  
+                }
+        }</script>
+    
+
+
+    
+
+
+
+<div class="inner" style="position:relative;">
+  
+  <div class="side-btn"><a href="/" class="back">Home</a></div>
+  
+<div class="blog-post">
+  <h2>用Docker快速上手Clickhouse</h2>
+        
+
+<h1 id="用docker快速上手clickhouse">用Docker快速上手Clickhouse</h1>
+
+<p><a href="https://clickhouse.yandex/">ClickHouse</a> 是一个由俄罗斯搜索巨头Yandex开源的分布式列存储OLAP数据库。主要的特点有</p>
+
+<ul>
+<li>非常快</li>
+<li>分布式，高可用，线性拓展</li>
+<li>功能强大</li>
+</ul>
+
+<p>看起来非常厉害的样子，但 Clickhouse 最吸引人的一点应该就是一个“快”字吧。但是骡子是马拉出来溜溜，让我们开始吧。</p>
+
+<h2 id="单机">单机</h2>
+
+<p>Clickhouse官方有提供 clickhouse 的<a href="https://hub.docker.com/r/yandex/clickhouse-server/">docker镜像</a>, 只要简单运行</p>
+
+<pre><code>docker run -d --name clickhouse-server --ulimit nofile=262144:262144 -p 9000:9000 yandex/clickhouse-server:1.1
+</code></pre>
+
+<p><code>clickhouse-server</code> 就可以跑起来了。但我们想有更多的控制项。</p>
+
+<p>先将默认的配置拷贝出来</p>
+
+<pre><code>mkdir etc
+mkdir data
+
+docker run -it --rm --entrypoint=/bin/bash -v $PWD:/work --privileged=true --user=root yandex/clickhouse-server:1.1
+cp -r /etc/clickhouse-server/* /work/etc/
+exit
+</code></pre>
+
+<p>再运行</p>
+
+<pre><code>docker run -d --name clickhouse-server \
+	--ulimit nofile=262144:262144 \
+	-p 9000:9000 \
+	-v $PWD:/etc/clickhouse-server \
+	-v $PWD/data:/var/lib/clickhosue \
+	--privileged=true --user=root \
+	yandex/clickhouse-server:1.1
+</code></pre>
+
+<p>clickhouse 跑起来之后，就可以去 <a href="https://clickhouse.yandex/tutorial.html">官方教程</a> 那里玩一玩啦。</p>
+
+<h2 id="集群部署">集群部署</h2>
+
+<p>clickhouse性能再好，单机总是有上限的。但 clickhouse 可以通过集群分片来应对数据的增长。</p>
+
+<p>用 docker-compose 我们可以很轻松的跑一个 clickhouse 集群。
+下面我们来跑一个3节点分片的 clickhouse 集群</p>
+
+<pre><code>mkdir -p clickhouse-3shards/ch01
+mkdir -p clickhouse-3shards/ch02
+mkdir -p clickhouse-3shards/ch03
+
+mkdir -p clickhouse-3shards/ch01/data
+mkdir -p clickhouse-3shards/ch02/data
+mkdir -p clickhouse-3shards/ch03/data
+
+cp -r etc clickhouse-3shards/ch01/etc
+cp -r etc clickhouse-3shards/ch02/etc
+cp -r etc clickhouse-3shards/ch03/etc
+
+vim docker-compose.yaml
+</code></pre>
+
+<p>配置 clickhouse 集群</p>
+
+<p>为方便管理，我们将集群相关的配置拿出来，放在<code>metrika.xml</code>。在每个<code>config.xml</code>文件里面加入下面一行引入<code>metrika.xml</code>。</p>
+
+<pre><code>&lt;include_from&gt;/etc/clickhouse-server/metrika.xml&lt;/include_from&gt;
+</code></pre>
+
+<p><code>metrika.xml</code></p>
+
+<pre><code>&lt;yandex&gt;
+&lt;clickhouse_remote_servers&gt;
+    &lt;!-- 集群名 --&gt;
+    &lt;perftest_3shards_1replicas&gt;
+        &lt;!-- 分片地址 --&gt;
+        &lt;shard&gt;
+            &lt;internal_replication&gt;true&lt;/internal_replication&gt;
+            &lt;replica&gt;
+                &lt;host&gt;clickhouse01&lt;/host&gt;
+                &lt;port&gt;9000&lt;/port&gt;
+            &lt;/replica&gt;
+        &lt;/shard&gt;
+        &lt;shard&gt;
+            &lt;internal_replication&gt;true&lt;/internal_replication&gt;
+            &lt;replica&gt; 
+                &lt;host&gt;clickhouse02&lt;/host&gt;
+                &lt;port&gt;9000&lt;/port&gt;
+            &lt;/replica&gt;
+        &lt;/shard&gt;
+        &lt;shard&gt;
+            &lt;internal_replication&gt;true&lt;/internal_replication&gt;
+            &lt;replica&gt;
+                &lt;host&gt;clickhouse03&lt;/host&gt;
+                &lt;port&gt;9000&lt;/port&gt;
+            &lt;/replica&gt;
+        &lt;/shard&gt;
+    &lt;/perftest_3shards_1replicas&gt;
+&lt;/clickhouse_remote_servers&gt;
+
+&lt;!-- 宏配置，用于分布式建表时做替换，每个节点配置不能相同 --&gt;
+&lt;macros&gt;
+    &lt;shard&gt;01&lt;/shard&gt;
+    &lt;replica&gt;01&lt;/replica&gt;
+&lt;/macros&gt;
+
+
+&lt;networks&gt;
+   &lt;ip&gt;::/0&lt;/ip&gt;
+&lt;/networks&gt;
+
+&lt;/yandex&gt;
+</code></pre>
+
+<p><code>docker-compose.yaml</code></p>
+
+<pre><code>version: '2'
+
+services:
+  clickhouse01:
+    image: yandex/clickhouse-server:1.1
+    expose:
+      - &quot;9000&quot;
+    user: root
+    ports:
+      - &quot;9001:9000&quot;
+    volumes:
+      - ./ch01/etc:/etc/clickhouse-server 
+      - ./ch01/data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144  
+        hard: 262144  
+    privileged: true
+
+  clickhouse02:
+    image: yandex/clickhouse-server:1.1
+    expose:
+      - &quot;9000&quot;
+    user: root
+    ports:
+      - &quot;9002:9000&quot;  
+    volumes:
+      - ./ch02/etc:/etc/clickhouse-server 
+      - ./ch02/data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144  
+        hard: 262144  
+    privileged: true
+
+  clickhouse03:
+    image: yandex/clickhouse-server:1.1
+    expose:
+      - &quot;9000&quot;
+    user: root
+    ports:
+      - &quot;9003:9000&quot;  
+    volumes:
+      - ./ch03/etc:/etc/clickhouse-server 
+      - ./ch03/data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144  
+        hard: 262144  
+    privileged: true  
+
+</code></pre>
+
+<p>配置之后启动集群</p>
+
+<pre><code>docker-compose -d up
+</code></pre>
+
+<p>事不宜迟，我们来先在每个 clickhouse-server 上都建一个本地表和 Distributed 表。</p>
+
+<pre><code>clickhouse-client --port=9001
+# 其他clickhouse-server 同样处理
+# clickhouse-client --port=9002
+# clickhouse-client --port=9003
+
+CREATE TABLE chtest_local (TDate Date,Value UInt16) ENGINE = MergeTree(TDate, (Value, TDate), 8192);
+
+CREATE TABLE chtest_all AS chtest_local ENGINE = Distributed(perftest_3shards_1replicas, default, chtest_local, rand());
+</code></pre>
+
+<p>在任意一台插入一些数据</p>
+
+<pre><code>clickhouse-client --port=9001
+
+insert into chtest_all (TDate,Value) values ('2017-12-25', 111);
+insert into chtest_all (TDate,Value) values ('2017-12-25', 222);
+insert into chtest_all (TDate,Value) values ('2017-12-26', 333);
+insert into chtest_local (TDate,Value) values ('2017-12-26', 444);
+
+</code></pre>
+
+<p>之后就可以查 chtest_all 获取全部都数据。注意的是写入 chtest_local 的数据也是可以在 chtest_all 查出来的。</p>
+
+<pre><code>:) select * from chtest_all;
+
+SELECT *
+FROM chtest_all 
+
+┌──────TDate─┬─Value─┐
+│ 2017-12-26 │   444 │
+└────────────┴───────┘
+┌──────TDate─┬─Value─┐
+│ 2017-12-25 │   111 │
+└────────────┴───────┘
+┌──────TDate─┬─Value─┐
+│ 2017-12-25 │   222 │
+└────────────┴───────┘
+┌──────TDate─┬─Value─┐
+│ 2017-12-26 │   333 │
+└────────────┴───────┘
+
+4 rows in set. Elapsed: 0.008 sec. 
+
+:) select * from chtest_local;
+
+SELECT *
+FROM chtest_local 
+
+┌──────TDate─┬─Value─┐
+│ 2017-12-26 │   444 │
+└────────────┴───────┘
+┌──────TDate─┬─Value─┐
+│ 2017-12-25 │   111 │
+└────────────┴───────┘
+
+2 rows in set. Elapsed: 0.006 sec. 
+
+:) select * from chtest_local;
+
+SELECT *
+FROM chtest_local 
+
+┌──────TDate─┬─Value─┐
+│ 2017-12-25 │   222 │
+└────────────┴───────┘
+
+1 rows in set. Elapsed: 0.005 sec. 
+
+
+:) select * from chtest_local;
+
+SELECT *
+FROM chtest_local 
+
+┌──────TDate─┬─Value─┐
+│ 2017-12-25 │   222 │
+└────────────┴───────┘
+
+1 rows in set. Elapsed: 0.005 sec. 
+</code></pre>
+
+<p>当我们任意分片挂掉的时候，是无法读的 Distributed 表的，当写入 Distributed 表是数据分片到挂了的服务时是会报错的。</p>
+
+<pre><code>docker stop cluster3shards_clickhouse03_1
+
+clickhouse-client --port=9001
+</code></pre>
+
+<h2 id="高可用集群">高可用集群</h2>
+
+<p>在分布式系统里面，为保证服务的可用性，我们需要数据多副本存储。</p>
+
+<p>clickhouse 的 数据副本同步需要用到 zookeeper，所以我们修改<code>docker-compose.yaml</code>，加多一个节点，配置成2个分片，2个副本的高可用集群。</p>
+
+<pre><code>version: '2'
+
+services:
+  zookeeper:
+    image: zookeeper:3.5
+    ports:
+      - &quot;2181:2181&quot;
+      - &quot;2182:2182&quot;
+
+  clickhouse01:
+    image: yandex/clickhouse-server:1.1
+    expose:
+      - &quot;9000&quot;
+    user: root
+    privileged: true
+    ports:
+      - &quot;9001:9000&quot;
+    volumes:
+      - ./ch01/etc:/etc/clickhouse-server 
+      - ./ch01/data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144  
+        hard: 262144  
+    depends_on:
+      - &quot;zookeeper&quot;
+
+  clickhouse02:
+    image: yandex/clickhouse-server:1.1
+    expose:
+      - &quot;9000&quot;
+    user: root
+    privileged: true
+    ports:
+      - &quot;9002:9000&quot;  
+    volumes:
+      - ./ch02/etc:/etc/clickhouse-server 
+      - ./ch02/data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144  
+        hard: 262144  
+    depends_on:
+      - &quot;zookeeper&quot;
+
+  clickhouse03:
+    image: yandex/clickhouse-server:1.1
+    expose:
+      - &quot;9000&quot;
+    user: root
+    privileged: true  
+    ports:
+      - &quot;9003:9000&quot;  
+    volumes:
+      - ./ch03/etc:/etc/clickhouse-server 
+      - ./ch03/data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144  
+        hard: 262144  
+    depends_on:
+      - &quot;zookeeper&quot;
+
+  clickhouse04:
+    image: yandex/clickhouse-server:1.1
+    expose:
+      - &quot;9000&quot;
+    user: root
+    privileged: true    
+    ports:
+      - &quot;9004:9000&quot;  
+    volumes:
+      - ./ch04/etc:/etc/clickhouse-server 
+      - ./ch04/data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144  
+        hard: 262144  
+    depends_on:
+      - &quot;zookeeper&quot;
+
+</code></pre>
+
+<p>集群配置</p>
+
+<pre><code>&lt;yandex&gt;
+&lt;clickhouse_remote_servers&gt;
+    &lt;perftest_2shards_2replicas&gt;
+        &lt;shard&gt;
+            &lt;internal_replication&gt;true&lt;/internal_replication&gt;
+            &lt;replica&gt;
+                &lt;host&gt;clickhouse01&lt;/host&gt;
+                &lt;port&gt;9000&lt;/port&gt;
+            &lt;/replica&gt;
+            &lt;replica&gt;
+                &lt;host&gt;clickhouse03&lt;/host&gt;
+                &lt;port&gt;9000&lt;/port&gt;
+            &lt;/replica&gt;
+        &lt;/shard&gt;
+        &lt;shard&gt;
+            &lt;internal_replication&gt;true&lt;/internal_replication&gt;
+            &lt;replica&gt;
+                &lt;host&gt;clickhouse02&lt;/host&gt;
+                &lt;port&gt;9000&lt;/port&gt;
+            &lt;/replica&gt;
+            &lt;replica&gt;
+                &lt;host&gt;clickhouse04&lt;/host&gt;
+                &lt;port&gt;9000&lt;/port&gt;
+            &lt;/replica&gt;
+        &lt;/shard&gt;
+    &lt;/perftest_2shards_2replicas&gt;
+&lt;/clickhouse_remote_servers&gt;
+
+&lt;macros&gt;
+    &lt;shard&gt;01&lt;/shard&gt;
+    &lt;replica&gt;02&lt;/replica&gt;
+&lt;/macros&gt;
+
+&lt;zookeeper-servers&gt;
+  &lt;node index=&quot;1&quot;&gt;
+    &lt;host&gt;zookeeper&lt;/host&gt;
+    &lt;port&gt;2181&lt;/port&gt;
+  &lt;/node&gt;
+&lt;/zookeeper-servers&gt;
+
+&lt;networks&gt;
+   &lt;ip&gt;::/0&lt;/ip&gt;
+&lt;/networks&gt;
+
+&lt;/yandex&gt;
+</code></pre>
+
+<p>集群起来之后，在每一个节点创建表</p>
+
+<pre><code>CREATE TABLE chtest_local (TDate Date,Value UInt16) ENGINE = MergeTree(TDate, (Value, TDate), 8192);
+
+CREATE TABLE chtest_replica (TDate Date,Value UInt16)
+ENGINE = ReplicatedMergeTree(
+    '/clickhouse_perftest/tables/{shard}/ontime',
+    '{replica}',
+    TDate,
+    (Value, TDate),
+    8192);
+    
+CREATE TABLE chtest_all AS chtest_replica ENGINE = Distributed(perftest_2shards_2replicas, default, chtest_replica, rand());    
+</code></pre>
+
+<p>后面再任意一台机器往 chtest_all 插入数据，可以看到ch01 与 ch03, ch02 与 ch04 都存有相同的数据。</p>
+
+<h2 id="总结">总结</h2>
+
+<p>总的来说 clickhouse 的体验还是很不错的。性能不错，分布式比较方便，开箱即用。不过 clickhouse 的集群管理方面还是很弱，没有一个中央的控制节点。例如增减节点需要更新所有节点的配置，需要自己弄一套管理的工具。</p>
+
+<hr />
+
+<p>参考资料</p>
+
+<p><a href="https://clickhouse.yandex/tutorial.html">https://clickhouse.yandex/tutorial.html</a><br />
+<a href="http://www.cnblogs.com/gomysql/p/6708650.html">http://www.cnblogs.com/gomysql/p/6708650.html</a><br />
+<a href="http://jackpgao.github.io/2017/12/13/ClickHouse-Cluster-Beginning-to-End/">http://jackpgao.github.io/2017/12/13/ClickHouse-Cluster-Beginning-to-End/</a></p>
+
+  </div>
+
+<footer>
+  <hr>
+  <small style="font-size:16px;float:right;margin:0 1rem;">
+    &copy; 2019 <a href="https://github.com/SineYuan">.</a>
+    
+  </small>
+</footer>
+</div> 
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+  crossorigin="anonymous"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+
+
+
+<script>
+ (function(){
+  var seriesA = document.getElementsByTagName("a");
+  seriesA = Array.from(seriesA).filter(x =>x.getAttribute("data-series"));
+  if(seriesA.length){
+    var nameSeries = {}
+    seriesA.forEach(x =>{
+      var xdata = x.getAttribute("data-series")
+      if(nameSeries[xdata]){
+        nameSeries[xdata].push(x)
+      }else{
+        nameSeries[xdata] = [x]
+      }
+    })
+  }
+
+  function createE(){
+    var detailsArr = [] 
+    var postPosArr = [] 
+    for(let i in nameSeries){
+      var dcreateE = document.createElement("details")
+      var screateE = document.createElement("summary")
+      screateE.textContent = i;
+      var inner = screateE.outerHTML + "<br >" 
+
+      nameSeries[i].forEach(x =>{
+        inner += x.outerHTML
+        x.parentElement.style.display = "none"
+      })
+      postPosArr.push(nameSeries[i][0])
+      dcreateE.innerHTML = inner
+      detailsArr.push(dcreateE)
+    }
+    console.info(postPosArr)
+    console.log(detailsArr[0])
+    postPosArr.forEach(a =>{
+      a.parentElement.style.display = "block"
+      a.outerHTML = detailsArr.shift().outerHTML
+    })
+  }
+  createE()
+ })()
+</script>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "sineyuansblog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</body>
+
+</html>
+
