@@ -110,7 +110,7 @@ In [4]: exec.grad_dict[&#39;A&#39;].asnumpy() Out[4]: array([ 4.], dtype=float32
 C:\&amp;gt; pip3 install --upgrade tensorflow  GPU版本用
 C:\&amp;gt; pip3 install --upgrade tensorflow-gpu  安装CUDA和cuDNN(GPU版本) 若是用gpu版本的Tensorflow还需要安装CUDA和cuDNN才能够跑gpu任务。不过在此之前需要确认你的NVIDIA支持CUDA Compute Capability 3.0 以上版本，具体型号可以在这里查看。
 安装CUDA CUDA（Compute Unified Device Architecture）是由NVIDIA所推出的一种集成技术通过CUDA我们可以调用GPU来运行密集的计算。
-在NVIDIA官网这里下载并安装CUDA驱动(版本 &amp;gt;= 7.0)即可。我这里安装的是CUDA 8.0
+在NVIDIA官网这里下载并安装CUDA驱动(版本 &amp;gt;= 7.0)即可。我这里安装的是CUDA 8.0。
 安装cuDNN cuDNN是NVIDIA推出的深度学习GPU加速库，提供向前向后传播，卷积, pooling, normalization等深度学习常用函数的GPU加速功能。
 官网下载cuDNN。选择CUDA8.0对应的cuDNN v5.1 Library for Windows 10。
 解压下载下来的cudnn-8.0-windows10-x64-v5.1.zip文件，将里面的bin，include，lib文件夹覆盖到C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0目录下。
@@ -183,7 +183,7 @@ corectl -h CoreOS over OSX made simple. ❯❯❯ http://github.com/TheNewNormal
     </item>
     
     <item>
-      <title>tornado源码分析笔记(3)</title>
+      <title>Tornado源码分析笔记(3)</title>
       <link>http://sineyuan.github.io/post/tornado-source-code-3/</link>
       <pubDate>Mon, 25 Jan 2016 00:19:32 +0000</pubDate>
       
@@ -198,7 +198,7 @@ import time import threading import tornado.ioloop from tornado.concurrent impor
     </item>
     
     <item>
-      <title>tornado源码分析笔记(2)</title>
+      <title>Tornado源码分析笔记(2)</title>
       <link>http://sineyuan.github.io/post/tornado-source-code-2/</link>
       <pubDate>Tue, 19 Jan 2016 21:01:28 +0000</pubDate>
       
@@ -209,7 +209,7 @@ class Configurable(object): __impl_class = None __impl_kwargs = None def __new__
     </item>
     
     <item>
-      <title>tornado源码分析笔记(1)</title>
+      <title>Tornado源码分析笔记(1)</title>
       <link>http://sineyuan.github.io/post/tornado-source-code-1/</link>
       <pubDate>Tue, 19 Jan 2016 20:11:34 +0000</pubDate>
       
@@ -275,7 +275,7 @@ mkdir ~/workspace/TestApp/gen ./aapt package -f -M ~/workspace/TestApp/AndroidMa
  以上是wiki上的解释。总的来说，LaTex是一套排版系统，与word那种所见即所得对排版方式不太，用LaTex排版更像是写程序一样，将想要的排版效果用指令写出来，再通过LaTex编译成文档。简单来说，你只要按照要求撰写tex文件，就能够通过LaTex生成排版好的pdf文件。 有些人可能听到写程序就头大了，其实使用命令来排版的好处正是我们可以将各种版式做成模板文件，使用者只要调用模板即可，完全不用去处理字体样大小、位置，目录生成，图片公式序号等诸多细节，使我们专注于内容。更多关于LaTex和word的比较这篇文章有很详细的论述。现在使用LaTex听起来是不是很诱人？不过好处也不是白给的，就我的实践来说，LaTex还是有不足之处：
  某些项目如表格，图形比word更加复杂 所见非所得，有错误的话需要重新编译，耗时间 有一定的门槛，需要一定的学习才能使用  综上所述，我认为学习使用LaTex还是有个不错的选择，LaTex也是可以用来做简历，PPT等文档的。本文的目的也是希望用一些指导来降低LaTex学习使用上的难度。
 TexLive的安装 LaTex是不支持中文，目前支持中文比较好的发行版是xelatex，安装TexLive就有了。由于大部分人使用的是windows操作系统，所以这里讲解windows下TexLive的安装。 4. 首先我们去http://tug.org/texlive/acquire-netinstall.html下载Texlive安装器 install-tl-windows.exe 。 5. 运行install-tl-windows.exe进入安装界面，选择要安装方案 TexLive全部的安装包有4G，里面有许多其他国家的语言包我们用不着的，所以出现的第一个对话窗选择Custom install。 点击“进一步定制”右边的“修改”，取消掉一些语言和包 以上是我的选择，总大小在3G，这个方案应该还有再精简的空间，不过我也没精力再去实验了。 3. 等待下载安装完成即可。
-安装编辑器 工欲善其事，必先利其器。TexLive自带的编辑器TeXworks功能太少，我们换一个更强大的编辑器TexMaker。TexMaker功能强大，对于公式表格等都有很好的支持。[点我下载]直接解压运行文件夹里面的texmaker即可使用。
+安装编辑器 工欲善其事，必先利其器。TexLive自带的编辑器TeXworks功能太少，我们换一个更强大的编辑器TexMaker。TexMaker功能强大，对于公式表格等都有很好的支持。直接解压运行文件夹里面的texmaker即可使用。
 学习LaTex 使用LaTex没有一点基础是不行的，但我们也无需成为一个LaTex的高手，除非是做科研的，那个时间成本可是很大的，一些基本入门教程，遇到问题勤搜索就可以了。下面是一些不错的基础教程推荐给大家。
 一份其实很短的 LaTeX 入门文档
 LATEX 2ε 入门指南

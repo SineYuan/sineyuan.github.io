@@ -125,7 +125,7 @@ code.has-jax {
 
 <p>验证码也是有计算机生成的，所以不同的验证码有不同的处理方法。所以验证码识别的第一步是观察目标验证码的规律。这次面对的验证码张这样子</p>
 
-<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/shot.png" alt=" " /></p>
+<p><img src="/imgs/shot.png" alt=" " /></p>
 
 <p>一般来说第一步首先是要将验证码图片转换为二值图去除干扰信息，便于进一步处理。
 观察分析验证码的字体都是同样的颜色，背景有横的或斜的条纹。直接二值化效果并不好。但是字符之间是没有粘连的，所以我们可以利用这一点提取出字符。</p>
@@ -140,8 +140,8 @@ code.has-jax {
 
 <p>Flood fill算法是从一个区域中提取若干个连通的点与其他相邻区域区分开（或分别染成不同颜色）的经典算法。处理这种没有粘连字符或者粘连但是字符每个颜色不一样的验证码效果拔群。多说无益，看图就明白了</p>
 
-<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/floodfill4.gif" alt=" " />
-<img src="http://7vzu7p.com1.z0.glb.clouddn.com/floodfill8.gif" alt=" " /></p>
+<p><img src="/imgs/floodfill4.gif" alt=" " />
+<img src="/imgs/floodfill8.gif" alt=" " /></p>
 
 <p>FloodFill最简单的实现是用递归</p>
 
@@ -188,11 +188,11 @@ code.has-jax {
 
 <p>字符串的分割也是非常重要的一步，对于复杂的验证码，目前还没有非常有效的字符串分割方法。 对于不粘连并且字符之间没有重叠的字符串直接在上下左右四个方向扫描整行或整列是否空白来分割字符</p>
 
-<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/rrr.png" alt=" " /></p>
+<p><img src="/imgs/rrr.png" alt=" " /></p>
 
 <p>对于字符间有重叠的，如下图的2和F。</p>
 
-<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/linkchar.png" alt="" /></p>
+<p><img src="/imgs/linkchar.png" alt="" /></p>
 
 <p>一种方法是使用斜向的切割法，但更好的方法还是统计x坐标上的黑白像素占比，在字符分隔处会有白像素占比的波谷。根据这个波谷的来分割图片。</p>
 
@@ -202,7 +202,7 @@ code.has-jax {
 
 <p>摆正字符的方法是使用旋转卡壳算法。即从 -30度 ~ 30度旋转图片，检测字符间距，取最小间距对应的角度。</p>
 
-<p><img src="http://7vzu7p.com1.z0.glb.clouddn.com/trible91.png" alt="" /></p>
+<p><img src="/imgs/trible91.png" alt="" /></p>
 
 <p>最后在四周填充像素，把所以字符图片统一成一样的尺寸。</p>
 

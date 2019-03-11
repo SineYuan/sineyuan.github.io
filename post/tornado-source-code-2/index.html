@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=0.5">
     
     
-    <title>tornado源码分析笔记(2)</title>
+    <title>Tornado源码分析笔记(2)</title>
     
 
 
@@ -105,7 +105,7 @@ code.has-jax {
   <div class="side-btn"><a href="/" class="back">Home</a></div>
   
 <div class="blog-post">
-  <h2>tornado源码分析笔记(2)</h2>
+  <h2>Tornado源码分析笔记(2)</h2>
         <p><code>IOLoop</code>就是 tornado 的事件循环，是一个全局的单例，通过<code>IOLoop.current()</code>或<code>IOLoop.instance()</code>访问。<code>IOLoop.current()</code>内部调用的也是<code>instance()</code>方法。所以我们来看<code>instance()</code>:</p>
 
 <pre><code>class IOLoop(Configurable):
