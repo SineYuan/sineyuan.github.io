@@ -6,10 +6,23 @@
     <description>Recent content in Posts on Step By Step</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 08 Jan 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 11 Mar 2019 14:47:29 +0800</lastBuildDate>
     
 	<atom:link href="http://sineyuan.github.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Etcd/Raft源码导读</title>
+      <link>http://sineyuan.github.io/post/etcd-raft-source-guide/</link>
+      <pubDate>Mon, 11 Mar 2019 14:47:29 +0800</pubDate>
+      
+      <guid>http://sineyuan.github.io/post/etcd-raft-source-guide/</guid>
+      <description>最近希望学习一下Raft协议，所以看了看Etcd的Raft模块源码实现，在此做些记录，做个索引。
+直接来到Etcd项目的raft的目录下面，里面的README文档写了如何使用raft库使用的一些用法，我们先从暴露的 Node API看起
+// Node represents a node in a raft cluster. type Node interface { Tick() Campaign(ctx context.Context) error Propose(ctx context.Context, data []byte) error ProposeConfChange(ctx context.Context, cc pb.ConfChange) error Step(ctx context.Context, msg pb.Message) error Ready() &amp;lt;-chan Ready Advance() ApplyConfChange(cc pb.ConfChange) *pb.ConfState TransferLeadership(ctx context.Context, lead, transferee uint64) ReadIndex(ctx context.Context, rctx []byte) error Status() Status ReportUnreachable(id uint64) ReportSnapshot(id uint64, status SnapshotStatus) Stop() }  初看起来有点一头雾水，不过API如此设计是有原因的。我们知道Raft算法可以将节点描述为一个状态机。
+我们知道状态机接收输入，然后根据自身状态和输入数据转变改变自身的状态，然后再输出数据。所以我们要寻找输入输出和状态，带着这些概念我们来看StartNode函数
+// StartNode returns a new Node given configuration and a list of raft peers.</description>
+    </item>
     
     <item>
       <title>SIMD直观介绍</title>

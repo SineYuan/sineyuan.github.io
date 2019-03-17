@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>http://sineyuan.github.io/post/etcd-raft-source-guide/</loc>
+    <lastmod>2019-03-11T14:47:29+08:00</lastmod>
+  </url>
+  
+  <url>
     <loc>http://sineyuan.github.io/post/simd-intuitive/</loc>
     <lastmod>2019-01-08T00:00:00+00:00</lastmod>
   </url>
@@ -99,13 +104,13 @@
   
   <url>
     <loc>http://sineyuan.github.io/post/</loc>
-    <lastmod>2019-01-08T00:00:00+00:00</lastmod>
+    <lastmod>2019-03-11T14:47:29+08:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://sineyuan.github.io/</loc>
-    <lastmod>2019-01-08T00:00:00+00:00</lastmod>
+    <lastmod>2019-03-11T14:47:29+08:00</lastmod>
     <priority>0</priority>
   </url>
   
